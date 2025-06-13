@@ -13,14 +13,13 @@ export type UserSimpleInfo = {
 }
 
 export type UserSimpleInfoWithStatus = {
-  user_id: number
-  username: string
+  base: UserSimpleInfo
   online: boolean
 }
 
 export type GroupSimpleInfo = {
-  title: number
-  group_name: string
+  group_id: number
+  title: string
 }
 
 export type UserDetailedInfo = {

@@ -27,6 +27,12 @@
   border-right:0 ;
   border-left:0 ;
 }
+.online{
+  color: red;
+}
+.notonline{
+  color: black;
+}
 #grouplist{
   height:40%;
   backdrop-filter: blur(10px) brightness(90%);

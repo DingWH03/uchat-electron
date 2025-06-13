@@ -4,8 +4,8 @@ import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.jpg?asset'
 import { Apis } from './api/index.js'
 
-const login_width=300
-const login_height=370
+const login_width=1000
+const login_height=700
 const register_height=490
 
 function createLoginWindow(): BrowserWindow {
@@ -16,7 +16,6 @@ function createLoginWindow(): BrowserWindow {
     show: false,
     autoHideMenuBar: true,
     // titleBarStyle:"hidden",
-    resizable:false,
     frame:true,
     transparent:true,
     ...(process.platform === 'linux' ? { icon } : {}),

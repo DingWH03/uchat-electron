@@ -9,11 +9,11 @@
       <div id="friendlist">
         <div
           v-for="(item, index) in friendList"
-          :key="item.user_id"
-          class="friendname"
+          :key="item.base.user_id"
+          :class="['friendname', item.online==true ? 'online' : 'notonline']"
           @click="friendChat(index)"
         >
-          {{ item.username }}
+          {{ item.base.username }}
         </div>
       </div>
       <div id="grouplist">
@@ -118,7 +118,7 @@ const f5 = async () => {
   const glist: ServerResponse = await group_list()
   if (glist.action === 'group_list') {
     groupList.value = glist.groups
-    console.log(groupList.value)
+    // console.log(groupList.value)
   }
 }
 const cg = async (): Promise<void> => {
@@ -135,10 +135,10 @@ const cg = async (): Promise<void> => {
 const friendChat = async (index) => {
   console.log('你点击了第', index, '个好友')
   // 你可以这样获取到对应的数据：
-  friend_id = friendList.value[index].user_id
+  friend_id = friendList.value[index].base.user_id
   console.log('具体好友信息为', friend_id)
   const request: MessageRequest = {
-    id: friendList.value[index].user_id, // 用户ID或群组ID
+    id: friendList.value[index].base.user_id, // 用户ID或群组ID
     offset: 0
   }
   const result = await friend_messages(request)
