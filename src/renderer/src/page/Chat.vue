@@ -76,6 +76,7 @@ onMounted(async () => {
     console.error('加载好友列表失败:', error)
   }
 })
+
 onMounted(() => {
   console.log('[App.vue] 注册 WebSocket 监听')
 
