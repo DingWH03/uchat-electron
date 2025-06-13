@@ -1,108 +1,163 @@
 <template>
-  <div class="login-container">
-    <!-- 设置按钮 -->
-    <div class="settings-btn">
-      <button @click="openSettings">⚙️</button>
+  <div class="login-panel">
+    <div class="title drag">Uchat</div>
+    <div class="login-form">
+      <div class="error_msg"></div>
+      <el-form :model="formData" :rules="rules" ref="formDataRef" label-width="0px" @submit.prevent>
+        <!--input输入-->
+        <el-form-item prop="username">
+          <el-input size="large" clearable placeholder="请输入用户名" v-model="username" required>
+            《<template #prefix>
+              <span class="iconfont icon-email"></span>
+            </template>
+          </el-input>
+        </el-form-item>
+        <el-form-item prop="password">
+          <el-input
+            size="large"
+            show-password
+            clearable
+            placeholder="请输入密码"
+            v-model="password"
+            required
+          >
+            《<template #prefix>
+              <span class="iconfont icon-password"></span>
+            </template>
+          </el-input>
+        </el-form-item>
+        <el-form-item prop="password">
+          <el-button type="primary" class="login-btn" @click="testr">{{
+            isLogin ? '登录' : '注册'
+          }}</el-button>
+        </el-form-item>
+        <div class="botton-link">
+          <span class="a-link" @click="changeOpType">{{ isLogin ? '注册' : '返回登录' }}</span>
+        </div>
+      </el-form>
     </div>
-
-    <h1>登录</h1>
-
-    <form @submit.prevent="handleLogin">
-      <input v-model="username" placeholder="用户名" required />
-      <input v-model="password" type="password" placeholder="密码" required />
-      <button type="submit">登录</button>
-    </form>
-
-    <button class="register-btn" @click="handleRegister">注册新账号</button>
-
-    <!-- 设置弹窗 -->
-    <SettingsDialog v-if="showSettings" @close="showSettings = false" />
   </div>
 </template>
-
 <script setup lang="ts">
 import { ref } from 'vue'
 import SettingsDialog from '../components/SettingsDialog.vue'
-import { register, login, sendMessage, friend_add } from '../ipcApi'
-import { LoginRequest, FriendRequest, FriendRequestType } from '@/types/HttpRequest'
-import { ClientMessage } from 'src/types/WebsocketRequest'
+import { register, login, sendMessage, logout, electronAlert } from '../ipcApi'
+import { LoginRequest, RegisterRequest } from '@apiType/HttpRequest'
+import { ClientMessage } from '@apiType/WebsocketRequest'
+import { ElMessage } from 'element-plus'
+import '../assets/iconfont/iconfont.css'
+import '../assets/base.scss'
 
 const username = ref('')
 const password = ref('')
-const showSettings = ref(false)
-
-const openSettings = () => {
-  showSettings.value = true
+const isLogin = ref(true)
+const changeOpType = () => {
+  isLogin.value = !isLogin.value
 }
-
-const handleLogin = async () => {
-  try {
-    const loginData: LoginRequest = {
-      userid: Number(username.value), // ⚠️ 确保转换为 number
-      password: password.value
-    }
-    const success = await login(loginData)
-    if (success) {
-      alert('登录成功')
-      const message: ClientMessage = {
-        type: 'SendMessage',
-        receiver: 6,
-        message: 'Hellooooooooo'
+const testr = async () => {
+  if (isLogin.value) {
+    try {
+      const loginData: LoginRequest = {
+        userid: Number(username.value), // ⚠️ 确保转换为 number
+        password: password.value
       }
-      sendMessage(message)
-      // const request: FriendRequest = {
-      //   request_type: FriendRequestType.Add,
-      //   id: 1
-      // }
-      // friend_add(request)
-    } else {
-      alert('登录失败')
+      const success = await login(loginData)
+      if (success) {
+        ElMessage('登录成功');
+      } else {
+        ElMessage('登录失败')
+      }
+    } catch (err) {
+      console.error('登录失败:', err)
     }
-  } catch (err) {
-    console.error('登录失败:', err)
-    alert('登录失败')
-  }
-  // logout()
-}
-
-const handleRegister = async () => {
-  try {
-    await register({ username: username.value, password: password.value })
-    alert('注册成功')
-  } catch (err) {
-    console.error('注册失败:', err)
-    alert('注册失败')
+  } else {
+    try {
+      const request: RegisterRequest = {
+        username: username.value,
+        password: password.value
+      }
+      const result = await register(request)
+      if (result.action == 'register_response') {
+        ElMessage(result.message)
+      }
+    } catch (err) {
+      console.error('注册失败:', err)
+      ElMessage('注册失败')
+    }
   }
 }
 </script>
 
-<style scoped>
-.login-container {
-  width: 300px;
-  margin: 80px auto;
-  padding: 20px;
+<style lang="scss" scoped>
+.email-select {
+  width: 250px;
+}
+.loading-panel {
+  height: calc(100vh - 32px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+  img {
+    white-space: 300px;
+  }
+}
+.login-panel {
+  background-color: #fff;
+  border-radius: 3px;
   border: 1px solid #ddd;
-  border-radius: 8px;
-  position: relative;
-  text-align: center;
-}
-input {
-  display: block;
-  width: 100%;
-  padding: 8px;
-  margin: 10px 0;
-}
-button {
-  padding: 8px 16px;
-  margin-top: 10px;
-}
-.settings-btn {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-}
-.register-btn {
-  background-color: #eee;
-  border: none;
+  .title {
+    height: 30px;
+    padding: 5px 0px 0px 10px;
+  }
+
+  .login-form {
+    padding: 0px 15px 29px 15px;
+    :deep(.el-input__wrapper) {
+      box-shadow: none;
+      border-radius: none;
+    }
+    .el-form-item {
+      border-bottom: 1px solid #ddd;
+    }
+
+    .email-panel {
+      align-items: center;
+      width: 100%;
+      display: flex;
+      .input {
+        flex: 1;
+      }
+      .icon-down {
+        margin-left: 3px;
+        width: 16px;
+        cursor: pointer;
+        border: none;
+      }
+    }
+    .error-msg {
+      line-height: 30px;
+      height: 30px;
+      color: #fb7373;
+    }
+    .check-code-panel {
+      display: flex;
+      .check-code {
+        cursor: pointer;
+        width: 120px;
+        margin-left: 5px;
+      }
+    }
+    .login-btn {
+      margin-top: 20px;
+      width: 100%;
+      background: #0066ff;
+      height: 36px;
+      font-size: 16px;
+    }
+    .botton-link {
+      text-align: right;
+    }
+  }
 }
 </style>
