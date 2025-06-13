@@ -35,6 +35,8 @@ export function registerAnthenticationApi(win: BrowserWindow): void {
       setSessionId(data.message)
       setupWebSocket(win)
       loginUser = loginData.userid // 保存登陆用户的id
+      win.setResizable(true)
+      // win.setTitleBarOverlay()
     }
     return data.status
   })

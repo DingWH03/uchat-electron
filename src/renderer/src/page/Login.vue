@@ -47,6 +47,7 @@ import { ClientMessage } from '@apiType/WebsocketRequest'
 import { ElMessage } from 'element-plus'
 import '../assets/iconfont/iconfont.css'
 import '../assets/base.scss'
+import router from '@renderer/router'
 
 const username = ref('')
 const password = ref('')
@@ -64,6 +65,7 @@ const testr = async () => {
       const success = await login(loginData)
       if (success) {
         ElMessage('登录成功');
+        router.push('/chat')
       } else {
         ElMessage('登录失败')
       }

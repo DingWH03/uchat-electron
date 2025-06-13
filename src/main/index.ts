@@ -8,14 +8,14 @@ const login_width=300
 const login_height=370
 const register_height=490
 
-function createWindow(): BrowserWindow {
+function createLoginWindow(): BrowserWindow {
   // Create the browser window.
   const mainWindow = new BrowserWindow({
     width: login_width,
     height: login_height,
     show: false,
     autoHideMenuBar: true,
-    titleBarStyle:"hidden",
+    // titleBarStyle:"hidden",
     resizable:false,
     frame:true,
     transparent:true,
@@ -59,14 +59,14 @@ app.whenReady().then(() => {
     optimizer.watchWindowShortcuts(window)
   })
 
-  const win = createWindow()
+  const win = createLoginWindow()
 
   Apis(win)
 
   app.on('activate', function () {
     // On macOS it's common to re-create a window in the app when the
     // dock icon is clicked and there are no other windows open.
-    if (BrowserWindow.getAllWindows().length === 0) createWindow()
+    if (BrowserWindow.getAllWindows().length === 0) createLoginWindow()
   })
 })
 

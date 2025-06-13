@@ -13,7 +13,7 @@ export type UserSimpleInfo = {
 }
 
 export type GroupSimpleInfo = {
-  group_id: number
+  title: number
   group_name: string
 }
 

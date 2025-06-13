@@ -14,7 +14,8 @@
       "@renderer/*": [
         "src/renderer/src/*",
       ],
-      "@/*": ["src/*"]
+      "@/*": ["src/*"],
+      "@apiType/*": ["src/types/*"]
     }
   }
 }
