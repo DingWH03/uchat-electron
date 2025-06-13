@@ -50,14 +50,17 @@ export function setupWebSocket(win: BrowserWindow): void {
 
   // 支持渲染进程发消息
   // 限制发送数据必须是 ClientMessage
-  ipcMain.handle('ws:send', (_, message: unknown) => {
+  ipcMain.handle('ws:send', async (_, message: unknown): Promise<boolean> => {
     try {
       const validated: ClientMessage = ClientMessageSchema.parse(message)
       if (ws && ws.readyState === WebSocket.OPEN) {
         ws.send(JSON.stringify(validated))
+        return true
       }
+      return false
     } catch (err) {
       console.error('[WebSocket] 尝试发送非法消息:', err)
+      return false
     }
   })
 }

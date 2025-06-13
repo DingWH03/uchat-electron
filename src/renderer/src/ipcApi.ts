@@ -126,6 +126,6 @@ const friend_messages = async (requestData: MessageRequest): Promise<ServerRespo
 }
 
 /// 发送消息到联系人或群聊的api
-const sendMessage = async (message: ClientMessage): Promise<void> => {
-  window.api.sendMessage(message)
+const sendMessage = async (message: ClientMessage): Promise<boolean> => {
+  return window.api.sendMessage(message)
 }

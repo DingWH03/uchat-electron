@@ -39,7 +39,7 @@ declare global {
       friend_messages: (requestData: MessageRequest) => Promise<ServerRespond>
       group_messages: (requestData: MessageRequest) => Promise<ServerRespond>
       // ws
-      sendMessage: (msg: ClientMessage) => Promise<void> // ws发送消息
+      sendMessage: (msg: ClientMessage) => Promise<boolean> // ws发送消息
       onWSStatus: (callback: (status: string) => void) => void // ws状态提示
       onWSMessage: (callback: (msg: ServerMessage) => void) => void // ws接受消息
     }
