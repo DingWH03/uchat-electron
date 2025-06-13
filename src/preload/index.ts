@@ -36,6 +36,10 @@ const api = {
   password: async (requestData: PasswordRequest) => {
     return await ipcRenderer.invoke('api:auth/password', requestData)
   },
+  // 获取登陆用户的id
+  myid: () => {
+    return ipcRenderer.invoke('api:auth/myid')
+  },
   // Http: 添加好友
   friend_add: async (requestData: FriendRequest) => {
     return await ipcRenderer.invoke('api:friend/add', requestData)

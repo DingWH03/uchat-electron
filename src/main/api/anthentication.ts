@@ -6,6 +6,8 @@ import { RegisterRequest, LoginRequest, PasswordRequest } from '../../types/Http
 import { closeWebSocket, setupWebSocket } from '../WebSocket/wsClient'
 import { ServerResponse } from '../../types/HttpRespond'
 
+let loginUser: number = 0
+
 export function registerAnthenticationApi(win: BrowserWindow): void {
   // 注册账号的后端接口调用
   ipcMain.handle(
@@ -32,6 +34,7 @@ export function registerAnthenticationApi(win: BrowserWindow): void {
     if (data.status) {
       setSessionId(data.message)
       setupWebSocket(win)
+      loginUser = loginData.userid // 保存登陆用户的id
     }
     return data.status
   })
@@ -48,6 +51,7 @@ export function registerAnthenticationApi(win: BrowserWindow): void {
       }
     })
     setSessionId(null)
+    loginUser = 0
     return res.json()
   })
   // 修改密码的后端接口调用
@@ -63,4 +67,8 @@ export function registerAnthenticationApi(win: BrowserWindow): void {
       return res.json()
     }
   )
+  // 获取登陆用户id的后端api
+  ipcMain.handle('api:auth/myid', (): number => {
+    return loginUser
+  })
 }

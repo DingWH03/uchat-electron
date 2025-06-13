@@ -10,13 +10,15 @@ export function registerMessageApi(): void {
   ipcMain.handle('api:message/group', async (_, Data: MessageRequest): Promise<ServerResponse> => {
     const sessionId = getSessionId()
     const baseUrl = getApiBaseUrl()
-    const res = await fetch(`${baseUrl}/message/group`, {
+    const query = new URLSearchParams({
+      id: Data.id.toString(),
+      offset: Data.offset.toString()
+    })
+    const res = await fetch(`${baseUrl}/message/group?${query.toString()}`, {
       method: 'GET',
       headers: {
-        'Content-Type': 'application/json',
         Cookie: `session_id=${sessionId}`
       },
-      body: JSON.stringify(Data)
     })
     return res.json()
   })
@@ -24,13 +26,15 @@ export function registerMessageApi(): void {
   ipcMain.handle('api:message/user', async (_, Data: MessageRequest): Promise<ServerResponse> => {
     const sessionId = getSessionId()
     const baseUrl = getApiBaseUrl()
-    const res = await fetch(`${baseUrl}/message/user`, {
+    const query = new URLSearchParams({
+      id: Data.id.toString(),
+      offset: Data.offset.toString()
+    })
+    const res = await fetch(`${baseUrl}/message/user?${query.toString()}`, {
       method: 'GET',
       headers: {
-        'Content-Type': 'application/json',
         Cookie: `session_id=${sessionId}`
       },
-      body: JSON.stringify(Data)
     })
     return res.json()
   })

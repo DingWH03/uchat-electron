@@ -1,5 +1,13 @@
 import { ElectronAPI } from '@electron-toolkit/preload'
-import { RegisterRequest, LoginRequest, MessageRequest, FriendRequest, PasswordRequest, GroupRequest, CreateGroupRequest } from '../types/HttpRequest'
+import {
+  RegisterRequest,
+  LoginRequest,
+  MessageRequest,
+  FriendRequest,
+  PasswordRequest,
+  GroupRequest,
+  CreateGroupRequest
+} from '../types/HttpRequest'
 import { ClientMessage } from 'src/types/WebsocketRequest'
 import { ServerMessage } from 'src/types/WebsocketRespond'
 import { ServerResponse } from 'src/types/HttpRespond'
@@ -15,6 +23,7 @@ declare global {
       login: (loginData: LoginRequest) => Promise<boolean>
       logout: () => Promise<ServerResponse>
       password: (requestData: PasswordRequest) => Promise<ServerResponse>
+      myid: () => number
       // friend
       friend_add: (requestData: FriendRequest) => Promise<ServerResponse>
       friend_list: () => Promise<ServerResponse>

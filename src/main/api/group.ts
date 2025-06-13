@@ -22,13 +22,15 @@ export function registerGroupApi(): void {
   ipcMain.handle('api:group/info', async (_, Data: GroupRequest): Promise<ServerResponse> => {
     const sessionId = getSessionId()
     const baseUrl = getApiBaseUrl()
-    const res = await fetch(`${baseUrl}/group/info`, {
+    const query = new URLSearchParams({
+      request_type: Data.request_type,
+      user_id: Data.id.toString()
+    })
+    const res = await fetch(`${baseUrl}/group/info?${query.toString()}`, {
       method: 'GET',
       headers: {
-        'Content-Type': 'application/json',
         Cookie: `session_id=${sessionId}`
       },
-      body: JSON.stringify(Data)
     })
     return res.json()
   })

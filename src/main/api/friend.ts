@@ -36,13 +36,15 @@ export function registerFriendApi(): void {
   ipcMain.handle('api:friend/info', async (_, Data: FriendRequest): Promise<ServerResponse> => {
     const sessionId = getSessionId()
     const baseUrl = getApiBaseUrl()
-    const res = await fetch(`${baseUrl}/friend/info`, {
+    const query = new URLSearchParams({
+      request_type: Data.request_type,
+      user_id: Data.id.toString()
+    })
+    const res = await fetch(`${baseUrl}/friend/info?${query.toString()}`, {
       method: 'GET',
       headers: {
-        'Content-Type': 'application/json',
         Cookie: `session_id=${sessionId}`
       },
-      body: JSON.stringify(Data)
     })
     return res.json()
   })

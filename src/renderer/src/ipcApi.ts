@@ -17,6 +17,7 @@ export {
   register,
   login,
   logout,
+  myid,
   friend_add,
   sendMessage,
   password,
@@ -61,6 +62,11 @@ const logout = async (): Promise<ServerResponse> => {
 /// 修改密码的api
 const password = async (requestData: PasswordRequest): Promise<ServerResponse> => {
   return window.api.password(requestData)
+}
+
+/// 获取登陆user id
+const myid = (): number => {
+  return window.api.myid()
 }
 
 /// 添加好友的api
