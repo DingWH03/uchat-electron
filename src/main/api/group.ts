@@ -34,6 +34,22 @@ export function registerGroupApi(): void {
     })
     return res.json()
   })
+  // 获取群组成员的后端http api
+  ipcMain.handle('api:group/members', async (_, Data: GroupRequest): Promise<ServerResponse> => {
+    const sessionId = getSessionId()
+    const baseUrl = getApiBaseUrl()
+    const query = new URLSearchParams({
+      request_type: Data.request_type,
+      user_id: Data.id.toString()
+    })
+    const res = await fetch(`${baseUrl}/group/members?${query.toString()}`, {
+      method: 'GET',
+      headers: {
+        Cookie: `session_id=${sessionId}`
+      },
+    })
+    return res.json()
+  })
   // 创建群聊的后端http api
   ipcMain.handle('api:group/new', async (_, Data: CreateGroupRequest): Promise<ServerResponse> => {
     const sessionId = getSessionId()

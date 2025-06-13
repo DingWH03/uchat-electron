@@ -60,6 +60,10 @@ const api = {
   group_info: async (requestData: GroupRequest) => {
     return await ipcRenderer.invoke('api:group/info', requestData)
   },
+  // Http: 群组成员
+  group_members: async (requestData: GroupRequest) => {
+    return await ipcRenderer.invoke('api:group/members', requestData)
+  },
   // Http: 新建群组
   group_new: async (requestData: CreateGroupRequest) => {
     return await ipcRenderer.invoke('api:group/new', requestData)

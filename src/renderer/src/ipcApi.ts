@@ -25,6 +25,7 @@ export {
   friend_info,
   group_list,
   group_info,
+  group_members,
   group_new,
   group_join,
   group_leave,
@@ -92,6 +93,11 @@ const group_list = async (): Promise<ServerResponse> => {
 /// 群组信息的api
 const group_info = async (requestData: GroupRequest): Promise<ServerResponse> => {
   return window.api.group_info(requestData)
+}
+
+/// 群组成员的api
+const group_members = async (requestData: GroupRequest): Promise<ServerResponse> => {
+  return window.api.group_members(requestData)
 }
 
 /// 创建群组的api

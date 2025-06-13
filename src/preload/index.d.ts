@@ -31,6 +31,7 @@ declare global {
       // group
       group_list: () => Promise<ServerResponse>
       group_info: (requestData: GroupRequest) => Promise<ServerResponse>
+      group_members: (requestData: GroupRequest) => Promise<ServerResponse>
       group_new: (requestData: CreateGroupRequest) => Promise<ServerResponse>
       group_join: (requestData: GroupRequest) => Promise<ServerResponse>
       group_leave: (requestData: GroupRequest) => Promise<ServerResponse>
