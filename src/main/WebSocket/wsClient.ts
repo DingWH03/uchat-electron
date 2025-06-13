@@ -65,4 +65,5 @@ export function setupWebSocket(win: BrowserWindow): void {
 export function closeWebSocket(): void {
   if (reconnectTimeout) clearTimeout(reconnectTimeout)
   ws?.close()
+  ipcMain.removeHandler('ws:send')
 }

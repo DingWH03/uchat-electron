@@ -2,7 +2,7 @@
 
 import { ipcMain } from 'electron'
 
-let apiBaseUrl = 'http://localhost:8080'
+let apiBaseUrl = 'http://ssh.cxhap.top:25597'
 
 export function setApiBaseUrl(newUrl: string): void {
   apiBaseUrl = newUrl

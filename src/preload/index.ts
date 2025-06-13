@@ -16,6 +16,10 @@ const api = {
   ping: async () => {
     return await ipcRenderer.invoke('api:ping')
   },
+  // 修改后端url
+  setBaseUrl: async (URL: string) => {
+    return await ipcRenderer.invoke('api:setBaseUrl', URL)
+  },
   // Http: 注册账号
   register: async (registerData: RegisterRequest) => {
     return await ipcRenderer.invoke('api:auth/register', registerData)

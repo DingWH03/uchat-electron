@@ -9,6 +9,7 @@ declare global {
     electron: ElectronAPI
     api: {
       ping: () => Promise<string>
+      setBaseUrl: (URL: string) => Promise<boolean>
       // auth
       register: (registerData: RegisterRequest) => Promise<ServerResponse>
       login: (loginData: LoginRequest) => Promise<boolean>

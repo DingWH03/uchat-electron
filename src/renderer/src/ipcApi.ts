@@ -13,6 +13,7 @@ import { ServerResponse } from 'src/types/HttpRespond'
 export {
   ipcHandle,
   ping,
+  setBaseUrl,
   register,
   login,
   logout,
@@ -35,6 +36,11 @@ const ipcHandle = (): void => window.electron.ipcRenderer.send('ping')
 // 测试方法：进程间通信
 const ping = async (): Promise<string> => {
   return await window.api.ping()
+}
+
+// 方法：修改后端URL
+const setBaseUrl = async (URL: string): Promise<boolean> => {
+  return await window.api.setBaseUrl(URL)
 }
 
 /// 注册的api
