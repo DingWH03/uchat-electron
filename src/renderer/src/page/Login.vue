@@ -23,8 +23,8 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import SettingsDialog from '../components/SettingsDialog.vue'
-import { register, login, sendMessage, logout } from '../ipcApi'
-import { LoginRequest } from 'src/types/HttpRequest'
+import { register, login, sendMessage, friend_add } from '../ipcApi'
+import { LoginRequest, FriendRequest, FriendRequestType } from '@/types/HttpRequest'
 import { ClientMessage } from 'src/types/WebsocketRequest'
 
 const username = ref('')
@@ -38,7 +38,7 @@ const openSettings = () => {
 const handleLogin = async () => {
   try {
     const loginData: LoginRequest = {
-      userid: Number(username.value),  // ⚠️ 确保转换为 number
+      userid: Number(username.value), // ⚠️ 确保转换为 number
       password: password.value
     }
     const success = await login(loginData)
@@ -50,6 +50,11 @@ const handleLogin = async () => {
         message: 'Hellooooooooo'
       }
       sendMessage(message)
+      // const request: FriendRequest = {
+      //   request_type: FriendRequestType.Add,
+      //   id: 1
+      // }
+      // friend_add(request)
     } else {
       alert('登录失败')
     }
@@ -57,7 +62,7 @@ const handleLogin = async () => {
     console.error('登录失败:', err)
     alert('登录失败')
   }
-  logout()
+  // logout()
 }
 
 const handleRegister = async () => {

@@ -21,8 +21,8 @@ export interface LoginRequest {
 
 // 好友请求类型枚举
 export enum FriendRequestType {
-  Add = 1,
-  Info = 2
+  Add = 'Add',
+  Info = 'Info'
 }
 
 // 好友请求结构体
@@ -33,10 +33,10 @@ export interface FriendRequest {
 
 // 群聊请求类型枚举
 export enum GroupRequestType {
-  Join = 1,
-  Info = 2,
-  Creat = 3,
-  Leave = 4
+  Join = 'Join',
+  Info = 'Info',
+  Creat = 'Creat',
+  Leave = 'Leave'
 }
 
 // 群聊请求结构体
