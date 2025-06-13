@@ -32,6 +32,18 @@ export function registerFriendApi(): void {
     })
     return res.json()
   })
+  // 获取好友列表的后端http apiv2
+  ipcMain.handle('api:friend/listv2', async (): Promise<ServerResponse> => {
+    const sessionId = getSessionId()
+    const baseUrl = getApiBaseUrl()
+    const res = await fetch(`${baseUrl}/friend/listv2`, {
+      method: 'GET',
+      headers: {
+        Cookie: `session_id=${sessionId}`
+      }
+    })
+    return res.json()
+  })
   // 获取好友详细信息的后端http api
   ipcMain.handle('api:friend/info', async (_, Data: FriendRequest): Promise<ServerResponse> => {
     const sessionId = getSessionId()

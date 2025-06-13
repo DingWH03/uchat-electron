@@ -48,6 +48,10 @@ const api = {
   friend_list: async () => {
     return await ipcRenderer.invoke('api:friend/list')
   },
+  // Http: 好友列表 v2
+  friend_list_v2: async () => {
+    return await ipcRenderer.invoke('api:friend/listv2')
+  },
   // Http: 好友信息
   friend_info: async (requestData: FriendRequest) => {
     return await ipcRenderer.invoke('api:friend/info', requestData)

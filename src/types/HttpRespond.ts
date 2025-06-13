@@ -12,6 +12,12 @@ export type UserSimpleInfo = {
   username: string
 }
 
+export type UserSimpleInfoWithStatus = {
+  user_id: number
+  username: string
+  online: boolean
+}
+
 export type GroupSimpleInfo = {
   title: number
   group_name: string
@@ -99,6 +105,12 @@ export type FriendListResponse = {
   friends: UserSimpleInfo[]
 }
 
+// 好友列表v2
+export type FriendListResponseV2 = {
+  action: 'friend_list_with_status'
+  friends: UserSimpleInfoWithStatus[]
+}
+
 // 群列表
 export type GroupListResponse = {
   action: 'group_list'
@@ -132,6 +144,7 @@ export type ServerResponse =
   | GroupInfoResponse
   | GroupMembersResponse
   | FriendListResponse
+  | FriendListResponseV2
   | GroupListResponse
   | MessagesResponse
   | GroupMessagesResponse

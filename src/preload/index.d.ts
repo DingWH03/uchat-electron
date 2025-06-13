@@ -27,6 +27,7 @@ declare global {
       // friend
       friend_add: (requestData: FriendRequest) => Promise<ServerResponse>
       friend_list: () => Promise<ServerResponse>
+      friend_list_v2: () => Promise<ServerResponse>
       friend_info: (requestData: FriendRequest) => Promise<ServerResponse>
       // group
       group_list: () => Promise<ServerResponse>

@@ -22,6 +22,7 @@ export {
   sendMessage,
   password,
   friend_list,
+  friend_list_v2,
   friend_info,
   group_list,
   group_info,
@@ -78,6 +79,11 @@ const friend_add = async (requestData: FriendRequest): Promise<ServerResponse> =
 /// 好友列表的api
 const friend_list = async (): Promise<ServerResponse> => {
   return window.api.friend_list()
+}
+
+/// 好友列表的api v2
+const friend_list_v2 = async (): Promise<ServerResponse> => {
+  return window.api.friend_list_v2()
 }
 
 /// 好友信息的api
