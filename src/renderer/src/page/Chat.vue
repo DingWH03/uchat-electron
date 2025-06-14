@@ -17,7 +17,12 @@
         </div>
       </div>
       <div id="grouplist">
-        <div v-for="(item, index) in groupList" :key="item.group_id" class="groupname" @click="groupChat(index)">
+        <div
+          v-for="(item, index) in groupList"
+          :key="item.group_id"
+          class="groupname"
+          @click="groupChat(index)"
+        >
           {{ item.title }}
         </div>
       </div>
@@ -124,15 +129,10 @@ const f5 = async () => {
     // console.log(groupList.value)
   }
 }
-const cg = async (): Promise<void> => {
-  const request: CreateGroupRequest = {
-    group_name: '12',
-    members: [6, 1, 2]
-  }
-  const result = await group_new(request)
-  if (result.action == 'generic_response') {
-    console.log(result.message)
-  }
+
+
+const cg=()=>{
+  router.push('/create')
 }
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 const friendChat = async (index) => {

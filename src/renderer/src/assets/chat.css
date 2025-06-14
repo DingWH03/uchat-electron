@@ -20,6 +20,7 @@
   height:50%;
   backdrop-filter: blur(10px) brightness(90%);
   background-color: rgba(255, 255, 255, 0.3);
+  overflow-y: scroll;
 }
 .friendname{
   border: 1px solid gray;
@@ -38,6 +39,7 @@
   backdrop-filter: blur(10px) brightness(90%);
   background-color: rgba(255, 255, 255, 0.3);
   border-top:1px solid blue ;
+  overflow-y: scroll;
 }
 .groupname{
   border: 1px solid gray;
