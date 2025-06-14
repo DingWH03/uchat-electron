@@ -12,6 +12,14 @@ export const ServerMessageSchema = z.discriminatedUnion('type', [
     sender: z.number(),
     group_id: z.number(),
     message: z.string()
+  }),
+  z.object({
+    type: z.literal('OnlineMessage'),
+    friend_id: z.number()
+  }),
+  z.object({
+    type: z.literal('OfflineMessage'),
+    friend_id: z.number()
   })
 ])
 
