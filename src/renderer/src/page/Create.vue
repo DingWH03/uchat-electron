@@ -8,23 +8,13 @@
     <!-- 好友列表 -->
     <div v-if="isExpanded" class="friend-list">
       <!-- 搜索框 -->
-      <input
-        v-model="searchQuery"
-        placeholder="搜索好友..."
-        class="search-input"
-      />
+      <input v-model="searchQuery" placeholder="搜索好友..." class="search-input" />
 
       <!-- 好友项 -->
-      <div
-        v-for="friend in filteredFriends"
-        :key="friend.base.user_id"
-        class="friend-item"
-        :class="{
-          selected: selectedFriendIds.includes(friend.base.user_id),
-          online: friend.online
-        }"
-        @click="toggleFriendSelection(friend.base.user_id)"
-      >
+      <div v-for="friend in filteredFriends" :key="friend.base.user_id" class="friend-item" :class="{
+        selected: selectedFriendIds.includes(friend.base.user_id),
+        online: friend.online
+      }" @click="toggleFriendSelection(friend.base.user_id)">
         <span class="username">{{ friend.base.username }}</span>
         <span class="status">
           {{ friend.online ? '在线' : '离线' }}
@@ -32,8 +22,10 @@
       </div>
     </div>
     <div><input v-model="groupName" type="text" placeholder="输入群名称" /></div>
-    <button @click="create">create</button>
-    <button @click="back">back</button>
+    <div class="bottom-buttons">
+      <button @click="create" class="create">创建</button>
+      <button @click="back" class="back">返回</button>
+    </div>
     <!-- 已选好友展示 -->
     <div v-if="selectedFriendIds.length > 0" class="selected-friends">
       <h4>已选好友ID：</h4>
@@ -68,7 +60,7 @@ const friendList = ref<UserSimpleInfoWithStatus[]>([])
 const isExpanded = ref(false)
 const selectedFriendIds = ref<number[]>([])
 const searchQuery = ref('')
-const groupName=ref('')
+const groupName = ref('')
 
 const create = async () => {
   const request = {
@@ -131,20 +123,27 @@ const clearSelection = () => {
 
 <style scoped>
 .friend-list-container {
-  max-width: 400px;
-  margin: 20px;
-  font-family: 'Arial', sans-serif;
+  max-width: 480px;
+  margin: 40px auto;
+  background: #ffffffcc;
+  padding: 25px 30px;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  font-family: 'Segoe UI', sans-serif;
 }
 
 .toggle-btn {
-  padding: 8px 16px;
+  width: 100%;
+  padding: 10px 16px;
+  margin-bottom: 15px;
   background-color: #3498db;
-  color: white;
+  color: #fff;
   border: none;
-  border-radius: 4px;
+  border-radius: 8px;
+  font-weight: 500;
+  font-size: 16px;
   cursor: pointer;
-  margin-bottom: 10px;
-  transition: background-color 0.2s;
+  transition: background-color 0.2s ease;
 }
 
 .toggle-btn:hover {
@@ -153,75 +152,165 @@ const clearSelection = () => {
 
 .search-input {
   width: 100%;
-  padding: 8px;
-  margin-bottom: 10px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
+  padding: 10px 12px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  margin-bottom: 12px;
+  font-size: 14px;
 }
 
 .friend-list {
-  border: 1px solid #eee;
-  border-radius: 4px;
-  max-height: 400px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  max-height: 350px;
   overflow-y: auto;
+  margin-bottom: 15px;
 }
 
 .friend-item {
-  padding: 12px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  cursor: pointer;
+  padding: 12px 14px;
   border-bottom: 1px solid #eee;
-  transition: all 0.2s;
+  cursor: pointer;
+  transition: background-color 0.2s;
 }
 
 .friend-item:hover {
-  background-color: #f5f5f5;
+  background-color: #f5faff;
 }
 
 .friend-item.selected {
   background-color: #e3f2fd;
-  font-weight: bold;
+  font-weight: 600;
 }
 
-.friend-item.online .status {
-  color: #2ecc71;
+.status {
+  display: flex;
+  align-items: center;
+  font-size: 13px;
 }
 
-.friend-item:not(.online) .status {
-  color: #95a5a6;
+.friend-item.online .status::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  background-color: #2ecc71;
+  border-radius: 50%;
+  margin-right: 6px;
+}
+
+.friend-item:not(.online) .status::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  background-color: #bdc3c7;
+  border-radius: 50%;
+  margin-right: 6px;
 }
 
 .username {
   flex-grow: 1;
+  font-size: 15px;
+}
+
+input[type="text"] {
+  width: 100%;
+  padding: 10px 12px;
+  margin: 10px 0;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+button {
+  padding: 10px 16px;
+  font-size: 14px;
+  margin: 5px 4px 0 0;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+button:hover {
+  opacity: 0.95;
+}
+
+button.create {
+  background-color: #27ae60;
+  color: white;
+}
+
+button.back {
+  background-color: #e67e22;
+  color: white;
 }
 
 .selected-friends {
   margin-top: 20px;
+  background-color: #f0f4f8;
   padding: 15px;
-  background-color: #f8f9fa;
-  border-radius: 4px;
+  border-radius: 8px;
+}
+
+.selected-friends h4 {
+  margin-bottom: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
 }
 
 .selected-ids {
-  margin: 10px 0;
-  padding: 8px;
-  background-color: white;
-  border-radius: 3px;
+  background-color: #fff;
+  padding: 8px 10px;
+  border-radius: 6px;
   font-family: monospace;
+  font-size: 14px;
+  color: #333;
+  border: 1px solid #ccc;
+  margin-bottom: 10px;
+  word-break: break-all;
 }
 
 .clear-btn {
-  padding: 6px 12px;
   background-color: #e74c3c;
   color: white;
   border: none;
-  border-radius: 3px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 14px;
   cursor: pointer;
 }
 
 .clear-btn:hover {
   background-color: #c0392b;
+}
+
+.friend-list-container {
+  position: relative;
+  padding-bottom: 70px;
+  /* 给底部按钮留空间 */
+}
+
+.bottom-buttons {
+  position: absolute;
+  bottom: 15px;
+  left: 0;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  padding: 0 20px;
+}
+
+.bottom-buttons .create {
+  background-color: #27ae60;
+  color: white;
+}
+
+.bottom-buttons .back {
+  background-color: #e67e22;
+  color: white;
 }
 </style>
