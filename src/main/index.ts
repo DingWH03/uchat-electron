@@ -1,23 +1,29 @@
-import { app, shell, BrowserWindow } from 'electron'
+import { app, shell, BrowserWindow, Tray, Menu, nativeImage, ipcMain, Notification } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.jpg?asset'
 import { Apis } from './api/index.js'
+import * as path from 'path'
+import * as fs from 'fs'
 
-const login_width=1000
-const login_height=700
-const register_height=490
+const login_width = 1000
+const login_height = 700
+const register_height = 490
+
+// 系统托盘相关变量
+let tray: Tray | null = null
+let mainWindow: BrowserWindow | null = null
+let blinkInterval: NodeJS.Timeout | null = null
+const soundPath = path.join(__dirname, '../../resources/notification.mp3') // 准备一个提示音文件
 
 function createLoginWindow(): BrowserWindow {
-  // Create the browser window.
-  const mainWindow = new BrowserWindow({
+  const window = new BrowserWindow({
     width: login_width,
     height: login_height,
     show: false,
     autoHideMenuBar: true,
-    // titleBarStyle:"hidden",
-    frame:true,
-    transparent:true,
+    frame: true,
+    transparent: true,
     ...(process.platform === 'linux' ? { icon } : {}),
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
@@ -25,58 +31,140 @@ function createLoginWindow(): BrowserWindow {
     }
   })
 
-  mainWindow.on('ready-to-show', () => {
-    mainWindow.show()
+  window.on('ready-to-show', () => {
+    window.show()
   })
 
-  mainWindow.webContents.setWindowOpenHandler((details) => {
+  window.webContents.setWindowOpenHandler((details) => {
     shell.openExternal(details.url)
     return { action: 'deny' }
   })
 
-  // HMR for renderer base on electron-vite cli.
-  // Load the remote URL for development or the local html file for production.
   if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
-    mainWindow.loadURL(process.env['ELECTRON_RENDERER_URL'])
+    window.loadURL(process.env['ELECTRON_RENDERER_URL'])
   } else {
-    mainWindow.loadFile(join(__dirname, '../renderer/index.html'))
+    window.loadFile(join(__dirname, '../renderer/index.html'))
   }
-  return mainWindow
+
+  // 窗口关闭时隐藏而不是退出（macOS除外）
+  window.on('close', (event) => {
+    if (process.platform !== 'darwin') {
+      event.preventDefault()
+      window.hide()
+    }
+  })
+
+  return window
 }
 
-// This method will be called when Electron has finished
-// initialization and is ready to create browser windows.
-// Some APIs can only be used after this event occurs.
+// 创建系统托盘
+function createTray(win: BrowserWindow) {
+  const trayIcon = nativeImage.createFromPath(icon)
+  tray = new Tray(trayIcon.resize({ width: 16, height: 16 }))
+  tray.setToolTip('我的应用')
+
+  // 创建上下文菜单
+  const contextMenu = Menu.buildFromTemplate([
+    {
+      label: '打开主窗口',
+      click: () => win.show()
+    },
+    {
+      label: '退出',
+      click: () => {
+        tray?.destroy()
+        app.quit()
+      }
+    }
+  ])
+
+  tray.setContextMenu(contextMenu)
+
+  // 点击事件处理
+  tray.on('click', () => {
+    win.isVisible() ? win.hide() : win.show()
+  })
+}
+
+// 闪烁托盘图标
+function startBlinking() {
+  if (!tray) return
+  
+  const trayIcon = nativeImage.createFromPath(icon)
+  const blankIcon = nativeImage.createEmpty()
+  let showIcon = true
+
+  stopBlinking() // 先停止之前的闪烁
+  
+  blinkInterval = setInterval(() => {
+    tray?.setImage(showIcon ? trayIcon : blankIcon)
+    showIcon = !showIcon
+  }, 500)
+}
+
+// 停止闪烁
+function stopBlinking() {
+  if (blinkInterval) {
+    clearInterval(blinkInterval)
+    blinkInterval = null
+  }
+  if (tray) {
+    tray.setImage(nativeImage.createFromPath(icon))
+  }
+}
+
+// 播放提示音
+function playNotificationSound() {
+  if (fs.existsSync(soundPath)) {
+    const audio = new Audio(soundPath)
+    audio.play().catch(e => console.error('播放提示音失败:', e))
+  } else {
+    console.warn('提示音文件不存在:', soundPath)
+  }
+}
+
+// 显示通知
+function showNotification(title: string, body: string) {
+  if (Notification.isSupported()) {
+    new Notification({
+      title,
+      body,
+      silent: true // 我们用自己的声音提示
+    }).show()
+  }
+}
+
 app.whenReady().then(() => {
-  // Set app user model id for windows
   electronApp.setAppUserModelId('com.electron')
 
-  // Default open or close DevTools by F12 in development
-  // and ignore CommandOrControl + R in production.
-  // see https://github.com/alex8088/electron-toolkit/tree/master/packages/utils
   app.on('browser-window-created', (_, window) => {
     optimizer.watchWindowShortcuts(window)
   })
 
-  const win = createLoginWindow()
+  mainWindow = createLoginWindow()
+  createTray(mainWindow)
 
-  Apis(win)
+  // 初始化API
+  Apis(mainWindow)
 
-  app.on('activate', function () {
-    // On macOS it's common to re-create a window in the app when the
-    // dock icon is clicked and there are no other windows open.
-    if (BrowserWindow.getAllWindows().length === 0) createLoginWindow()
+  // 监听来自渲染进程的消息通知
+  ipcMain.on('new-message', (_, message) => {
+    console.log('收到新消息:', message)
+    startBlinking()
+    playNotificationSound()
+    showNotification('新消息', message.content || '您收到一条新消息')
+  })
+
+  app.on('activate', () => {
+    if (BrowserWindow.getAllWindows().length === 0) {
+      mainWindow = createLoginWindow()
+      if (tray) createTray(mainWindow)
+    }
   })
 })
 
-// Quit when all windows are closed, except on macOS. There, it's common
-// for applications and their menu bar to stay active until the user quits
-// explicitly with Cmd + Q.
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
-    app.quit()
+    // 不再直接退出，由托盘管理
   }
 })
-
-// In this file you can include the rest of your app's specific main process
-// code. You can also put them in separate files and require them here.
