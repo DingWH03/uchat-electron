@@ -10,14 +10,14 @@
         <div
           v-for="(item, index) in friendList"
           :key="item.base.user_id"
-          :class="['friendname', item.online==true ? 'online' : 'notonline']"
+          :class="['friendname', item.online == true ? 'online' : 'notonline']"
           @click="friendChat(index)"
         >
           {{ item.base.username }}
         </div>
       </div>
       <div id="grouplist">
-        <div v-for="(item, index) in groupList" :key="item.group_id" class="groupname">
+        <div v-for="(item, index) in groupList" :key="item.group_id" class="groupname" @click="groupChat(index)">
           {{ item.title }}
         </div>
       </div>
@@ -51,7 +51,8 @@ import {
   sendMessage,
   myid,
   group_list,
-  group_new
+  group_new,
+  group_messages
 } from '../ipcApi'
 // import { LoginRequest } from 'src/types/HttpRequest'
 // import { ClientMessage } from 'src/types/WebsocketRequest'
@@ -104,8 +105,10 @@ const router = useRouter()
 const friendList = ref<UserSimpleInfoWithStatus[]>([])
 const groupList = ref<GroupSimpleInfo[]>([])
 let friend_id: number = myid()
+let group_id: number = 0
 let friend_msg = ref<MessagesResponse['messages']>([])
 const newMessage = ref('')
+let isgroup: boolean = false
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 const f5 = async () => {
@@ -146,6 +149,25 @@ const friendChat = async (index) => {
     friend_msg.value = result.messages
     console.log(friend_msg)
   }
+  isgroup = false
+}
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+const groupChat = async (index) => {
+  console.log('点击了第', index, '个群聊')
+  // eslint-disable-next-line @typescript-eslint/no-unused-expressions
+  ;(group_id = groupList.value[index].group_id), console.log('群组id为', group_id)
+  const request: MessageRequest = {
+    id: groupList.value[index].group_id, // 用户ID或群组ID
+    offset: 0
+  }
+  console.log(request)
+  const result = await group_messages(request)
+  console.log(result)
+  if (result.action == 'messages') {
+    friend_msg.value = result.messages
+    console.log(friend_msg)
+  }
+  isgroup = true
 }
 const back = (): void => {
   router.push('/login')
@@ -156,12 +178,22 @@ const gosearch = (): void => {
 }
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 const send_message = () => {
-  const message: ClientMessage = {
-    type: 'SendMessage',
-    receiver: friend_id,
-    message: newMessage.value
+  if (isgroup == false) {
+    const message: ClientMessage = {
+      type: 'SendMessage',
+      receiver: friend_id,
+      message: newMessage.value
+    }
+    sendMessage(message)
   }
-  sendMessage(message)
+  if (isgroup == true) {
+    const message: ClientMessage = {
+      type: 'SendGroupMessage',
+      group_id: group_id,
+      message: newMessage.value
+    }
+    sendMessage(message)
+  }
   friend_msg.value.push({
     sender_id: myid(),
     message: newMessage.value,
