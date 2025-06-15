@@ -72,6 +72,7 @@ const create = async () => {
   const result = await group_new(request)
   if (result.action == 'generic_response') {
     console.log(result.message)
+    back()
   }
 }
 const back = (): void => {
