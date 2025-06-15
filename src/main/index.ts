@@ -5,6 +5,8 @@ import icon from '../../resources/icon.jpg?asset'
 import { Apis } from './api/index.js'
 import * as path from 'path'
 import * as fs from 'fs'
+import { getSessionId } from './session'
+import { performLogout } from './api/anthentication'
 
 const login_width = 1000
 const login_height = 700
@@ -71,7 +73,13 @@ function createTray(win: BrowserWindow) {
     },
     {
       label: '退出',
-      click: () => {
+      click: async () => {
+        if (getSessionId() != null) {
+          await performLogout()
+        }
+        if (mainWindow) {
+          mainWindow.destroy() // 强制销毁
+        }
         tray?.destroy()
         app.quit()
       }
@@ -89,13 +97,13 @@ function createTray(win: BrowserWindow) {
 // 闪烁托盘图标
 function startBlinking() {
   if (!tray) return
-  
+
   const trayIcon = nativeImage.createFromPath(icon)
   const blankIcon = nativeImage.createEmpty()
   let showIcon = true
 
   stopBlinking() // 先停止之前的闪烁
-  
+
   blinkInterval = setInterval(() => {
     tray?.setImage(showIcon ? trayIcon : blankIcon)
     showIcon = !showIcon
@@ -117,7 +125,7 @@ function stopBlinking() {
 function playNotificationSound() {
   if (fs.existsSync(soundPath)) {
     const audio = new Audio(soundPath)
-    audio.play().catch(e => console.error('播放提示音失败:', e))
+    audio.play().catch((e) => console.error('播放提示音失败:', e))
   } else {
     console.warn('提示音文件不存在:', soundPath)
   }

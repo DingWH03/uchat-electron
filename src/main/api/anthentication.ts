@@ -8,6 +8,21 @@ import { ServerResponse } from '../../types/HttpRespond'
 
 let loginUser: number = 0
 
+export async function performLogout(): Promise<ServerResponse> {
+  closeWebSocket()
+  const baseUrl = getApiBaseUrl()
+  const sessionId = getSessionId()
+  const res = await fetch(`${baseUrl}/auth/logout`, {
+    method: 'POST',
+    headers: {
+      Cookie: `session_id=${sessionId}`
+    }
+  })
+  setSessionId(null)
+  loginUser = 0
+  return res.json()
+}
+
 export function registerAnthenticationApi(win: BrowserWindow): void {
   // 注册账号的后端接口调用
   ipcMain.handle(
@@ -42,19 +57,7 @@ export function registerAnthenticationApi(win: BrowserWindow): void {
   })
   // 注销的后端接口调用
   ipcMain.handle('api:auth/logout', async (): Promise<ServerResponse> => {
-    closeWebSocket() // 彻底关闭websocket连接
-    const baseUrl = getApiBaseUrl()
-    const sessionId = getSessionId()
-    // console.log('注销时sessionid为', sessionId)
-    const res = await fetch(`${baseUrl}/auth/logout`, {
-      method: 'POST',
-      headers: {
-        Cookie: `session_id=${sessionId}`
-      }
-    })
-    setSessionId(null)
-    loginUser = 0
-    return res.json()
+    return performLogout()
   })
   // 修改密码的后端接口调用
   ipcMain.handle(
