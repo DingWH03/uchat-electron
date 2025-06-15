@@ -25,7 +25,7 @@ function createLoginWindow(): BrowserWindow {
     show: false,
     autoHideMenuBar: true,
     frame: true,
-    transparent: true,
+    // transparent: true,
     ...(process.platform === 'linux' ? { icon } : {}),
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
