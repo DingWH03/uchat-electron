@@ -95,13 +95,30 @@ onMounted(() => {
 
   window.api.onWSMessage((msg) => {
     if (msg.type == 'SendMessage') {
-      if (msg.sender == friend_id) {
+      if (msg.sender == friend_id&&isgroup==false) {
         friend_msg.value.push({
           sender_id: friend_id,
           message: msg.message,
           timestamp: new Date().toISOString()
         })
       }
+    }
+    else if (msg.type == 'SendGroupMessage'&&isgroup==true) {
+      if (msg.sender == group_id) {
+        friend_msg.value.push({
+          sender_id: friend_id,
+          message: msg.message,
+          timestamp: new Date().toISOString()
+        })
+      }
+    }
+    else if (msg.type == 'OnlineMessage') {
+      console.log(msg.friend_id,'上线了')
+      f5()
+    }
+    else if (msg.type == 'OfflineMessage') {
+      console.log(msg.friend_id,'下线了')
+      f5()
     }
   })
 })
