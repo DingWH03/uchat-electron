@@ -10,7 +10,6 @@ import { performLogout } from './api/anthentication'
 
 const login_width = 1000
 const login_height = 700
-const register_height = 490
 
 // 系统托盘相关变量
 let tray: Tray | null = null

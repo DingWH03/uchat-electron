@@ -38,7 +38,6 @@
 </template>
 
 <script setup lang="ts">
-import { CreateGroupRequest } from '@/types/HttpRequest'
 import { ServerResponse } from '@/types/HttpRespond'
 import { friend_list_v2, group_new } from '@renderer/ipcApi'
 import router from '@renderer/router'

@@ -10,9 +10,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watchEffect } from 'vue'
+import { ref } from 'vue'
 
-const props = defineProps<{ }>()
+// const props = defineProps<{ }>()
 const emit = defineEmits(['close'])
 
 const url = ref(localStorage.getItem('server_url') || '')

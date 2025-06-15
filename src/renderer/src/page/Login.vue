@@ -3,10 +3,10 @@
     <div class="title drag">Uchat</div>
     <div class="login-form">
       <div class="error_msg"></div>
-      <el-form :model="formData" :rules="rules" ref="formDataRef" label-width="0px" @submit.prevent>
+      <el-form ref="formDataRef" label-width="0px" @submit.prevent>
         <!--input输入-->
         <el-form-item prop="username">
-          <el-input size="large" clearable placeholder="请输入用户名" v-model="username" required>
+          <el-input size="large" clearable v-model="username" placeholder="请输入用户名" required>
             《<template #prefix>
               <span class="iconfont icon-email"></span>
             </template>
@@ -17,8 +17,8 @@
             size="large"
             show-password
             clearable
-            placeholder="请输入密码"
             v-model="password"
+            placeholder="请输入密码"
             required
           >
             《<template #prefix>
@@ -40,10 +40,8 @@
 </template>
 <script setup lang="ts">
 import { ref } from 'vue'
-import SettingsDialog from '../components/SettingsDialog.vue'
-import { register, login, sendMessage, logout, electronAlert } from '../ipcApi'
+import { register, login } from '../ipcApi'
 import { LoginRequest, RegisterRequest } from '@apiType/HttpRequest'
-import { ClientMessage } from '@apiType/WebsocketRequest'
 import { ElMessage } from 'element-plus'
 import '../assets/iconfont/iconfont.css'
 import '../assets/base.scss'
@@ -64,7 +62,7 @@ const testr = async () => {
       }
       const success = await login(loginData)
       if (success) {
-        ElMessage('登录成功');
+        ElMessage('登录成功')
         router.push('/chat')
       } else {
         ElMessage('登录失败')

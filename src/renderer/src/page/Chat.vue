@@ -60,7 +60,6 @@ import {
   sendMessage,
   myid,
   group_list,
-  group_new,
   group_messages
 } from '../ipcApi'
 // import { LoginRequest } from 'src/types/HttpRequest'
@@ -68,7 +67,7 @@ import {
 import { useRouter } from 'vue-router'
 import { GroupSimpleInfo, ServerResponse } from '@apiType/HttpRespond'
 import { UserSimpleInfoWithStatus, MessagesResponse } from '@apiType/HttpRespond'
-import { CreateGroupRequest, MessageRequest } from '@apiType/HttpRequest'
+import { MessageRequest } from '@apiType/HttpRequest'
 import { ClientMessage } from '@apiType/WebsocketRequest'
 import { onMounted } from 'vue'
 
