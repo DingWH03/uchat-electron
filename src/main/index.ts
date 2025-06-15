@@ -5,6 +5,8 @@ import icon from '../../resources/icon.jpg?asset'
 import { Apis } from './api/index.js'
 import * as path from 'path'
 import * as fs from 'fs'
+import { getSessionId } from './session'
+import { performLogout } from './api/anthentication'
 
 const login_width = 1000
 const login_height = 700
@@ -71,7 +73,10 @@ function createTray(win: BrowserWindow) {
     },
     {
       label: '退出',
-      click: () => {
+      click: async () => {
+        if (getSessionId() != null) {
+          await performLogout()
+        }
         if (mainWindow) {
           mainWindow.destroy() // 强制销毁
         }
