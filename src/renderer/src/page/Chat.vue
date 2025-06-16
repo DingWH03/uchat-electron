@@ -110,10 +110,11 @@ onMounted(() => {
       } else {
         showNotification(`来自 ${msg.sender} 的新消息`, ` ${msg.message} `, '')
       }
-    } else if (msg.type == 'SendGroupMessage' && isgroup == true) {
+    } 
+    else if (msg.type == 'SendGroupMessage' && isgroup == true) {
       if (msg.sender == group_id) {
         friend_msg.value.push({
-          sender_id: friend_id,
+          sender_id: msg.sender,
           message: msg.message,
           timestamp: new Date().toISOString()
         })
