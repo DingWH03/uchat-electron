@@ -34,7 +34,7 @@
         <div
           v-for="msg in friend_msg"
           :key="msg.timestamp"
-          :class="['message', msg.sender_id == friend_id ? 'theirs' : 'mine']"
+          :class="['message', msg.sender_id == my_id ? 'mine' : 'theirs']"
         >
           <div class="msgid">{{ msg.sender_id }}</div>
           <div class="content">{{ msg.message }}</div>
@@ -143,7 +143,7 @@ let group_id: number = 0
 let friend_msg = ref<MessagesResponse['messages']>([])
 const newMessage = ref('')
 let isgroup: boolean = false
-
+let my_id: number = myid()
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 const f5 = async () => {
   const flist: ServerResponse = await friend_list_v2()
@@ -228,6 +228,7 @@ const send_message = () => {
     timestamp: new Date().toISOString()
   })
   newMessage.value = ''
+  console.log('我的id', my_id)
 }
 </script>
 <style>
