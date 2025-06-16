@@ -110,9 +110,8 @@ onMounted(() => {
       } else {
         showNotification(`来自 ${msg.sender} 的新消息`, ` ${msg.message} `, '')
       }
-    } 
-    else if (msg.type == 'SendGroupMessage' && isgroup == true) {
-      if (msg.sender == group_id) {
+    } else if (msg.type == 'SendGroupMessage' && isgroup == true) {
+      if (msg.group_id == group_id) {
         friend_msg.value.push({
           sender_id: msg.sender,
           message: msg.message,
@@ -213,21 +212,21 @@ const send_message = () => {
       message: newMessage.value
     }
     sendMessage(message)
-  }
-  else if (isgroup == true) {
+    friend_msg.value.push({
+      sender_id: myidConst,
+      message: newMessage.value,
+      timestamp: new Date().toISOString()
+    })
+    newMessage.value = ''
+  } else if (isgroup == true) {
     const message: ClientMessage = {
       type: 'SendGroupMessage',
       group_id: group_id,
       message: newMessage.value
     }
     sendMessage(message)
+    newMessage.value = ''
   }
-  friend_msg.value.push({
-    sender_id: myidConst,
-    message: newMessage.value,
-    timestamp: new Date().toISOString()
-  })
-  newMessage.value = ''
 }
 </script>
 <style>
@@ -348,8 +347,6 @@ const send_message = () => {
   scroll-behavior: smooth;
 }
 
-
-
 .msgid {
   position: absolute;
   top: -18px;
@@ -366,7 +363,7 @@ const send_message = () => {
   left: 0;
   text-align: left;
 }
-.content{
+.content {
   background-color: #1890ff;
   max-width: 100%;
   padding: 10px 14px;
