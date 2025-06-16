@@ -47,8 +47,8 @@
   </div>
 
   <div id="back-container">
-  <button class="square-btn" @click="back">返回登录</button>
-</div>
+    <button class="square-btn" @click="back">返回登录</button>
+  </div>
 </template>
 <script setup lang="ts">
 import { ref } from 'vue'
@@ -70,8 +70,10 @@ import { UserSimpleInfoWithStatus, MessagesResponse } from '@apiType/HttpRespond
 import { MessageRequest } from '@apiType/HttpRequest'
 import { ClientMessage } from '@apiType/WebsocketRequest'
 import { onMounted } from 'vue'
+import { showNotification } from '@renderer/utils/notification'
 
 onMounted(async () => {
+  showNotification('登录成功', '欢迎回来！', '')
   try {
     const list: ServerResponse = await friend_list_v2()
     if (list.action === 'friend_list_with_status') {
@@ -95,29 +97,32 @@ onMounted(() => {
 
   window.api.onWSMessage((msg) => {
     if (msg.type == 'SendMessage') {
-      if (msg.sender == friend_id&&isgroup==false) {
+      if (msg.sender == friend_id && isgroup == false) {
         friend_msg.value.push({
           sender_id: friend_id,
           message: msg.message,
           timestamp: new Date().toISOString()
         })
+      } else {
+        showNotification(`来自 ${msg.sender} 的新消息`, ` ${msg.message} `, '')
       }
-    }
-    else if (msg.type == 'SendGroupMessage'&&isgroup==true) {
+    } else if (msg.type == 'SendGroupMessage' && isgroup == true) {
       if (msg.sender == group_id) {
         friend_msg.value.push({
           sender_id: friend_id,
           message: msg.message,
           timestamp: new Date().toISOString()
         })
+      } else {
+        showNotification(`来自群 ${msg.group_id} 的新消息`, ` ${msg.group_id}：${msg.message} `, '')
       }
-    }
-    else if (msg.type == 'OnlineMessage') {
-      console.log(msg.friend_id,'上线了')
+    } else if (msg.type == 'OnlineMessage') {
+      showNotification('你的好友上线了', `你的好友 ${msg.friend_id} 上线了，快去和他聊两句吧`, '')
+      console.log(msg.friend_id, '上线了')
       f5()
-    }
-    else if (msg.type == 'OfflineMessage') {
-      console.log(msg.friend_id,'下线了')
+    } else if (msg.type == 'OfflineMessage') {
+      showNotification('你的好友下线了', `你的好友 ${msg.friend_id} 已暂时下线`, '')
+      console.log(msg.friend_id, '下线了')
       f5()
     }
   })
@@ -150,8 +155,7 @@ const f5 = async () => {
   }
 }
 
-
-const cg=()=>{
+const cg = (): void => {
   router.push('/create')
 }
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
@@ -249,7 +253,6 @@ const send_message = () => {
   border-bottom: 1px solid #ccc;
 }
 
-
 #lefttop button {
   padding: 6px 12px;
   border: none;
@@ -300,7 +303,7 @@ const send_message = () => {
   border-radius: 10px;
   cursor: pointer;
   transition: background 0.2s;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 .friendname:hover,
@@ -348,7 +351,7 @@ const send_message = () => {
   font-size: 14px;
   line-height: 1.4;
   word-break: break-word;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
 }
 
 .theirs {
@@ -446,10 +449,6 @@ const send_message = () => {
   background-color: #d9363e;
 }
 
-
-
-
-
 #rightbottom input {
   flex: 1;
   padding: 10px;
@@ -499,7 +498,6 @@ const send_message = () => {
   transition: background 0.3s ease;
 }
 
-
 .button-row {
   display: flex;
   width: 100%;
@@ -529,7 +527,7 @@ const send_message = () => {
 
 /* 添加按钮之间的分隔线 */
 .top-action-btn:not(:last-child)::after {
-  content: "";
+  content: '';
   position: absolute;
   right: 0;
   top: 20%;
