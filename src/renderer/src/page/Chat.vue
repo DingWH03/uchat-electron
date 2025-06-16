@@ -211,7 +211,7 @@ const send_message = () => {
     }
     sendMessage(message)
   }
-  if (isgroup == true) {
+  else if (isgroup == true) {
     const message: ClientMessage = {
       type: 'SendGroupMessage',
       group_id: group_id,
