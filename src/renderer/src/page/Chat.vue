@@ -347,12 +347,21 @@ const send_message = () => {
 
 
 
-.msgid{
+.msgid {
+  position: absolute;
+  top: -18px;
+  font-size: 12px;
   color: gray;
-  width: 100%;
 }
+
 .mine .msgid {
-  align-self: flex-end;
+  right: 0;
+  text-align: right;
+}
+
+.theirs .msgid {
+  left: 0;
+  text-align: left;
 }
 .content{
   background-color: #1890ff;
@@ -462,6 +471,7 @@ const send_message = () => {
   max-width: 70%;
   padding: 10px 14px;
   border-radius: 0; /* 去除圆角 */
+  position: relative;
 }
 
 .theirs {
