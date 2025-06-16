@@ -73,8 +73,11 @@ import { ClientMessage } from '@apiType/WebsocketRequest'
 import { onMounted } from 'vue'
 import { showNotification } from '@renderer/utils/notification'
 
+let myidConst: number = 0
+
 onMounted(async () => {
   showNotification('登录成功', '欢迎回来！', '')
+  myidConst = await myid()
   try {
     const list: ServerResponse = await friend_list_v2()
     if (list.action === 'friend_list_with_status') {
@@ -135,7 +138,7 @@ const router = useRouter()
 
 const friendList = ref<UserSimpleInfoWithStatus[]>([])
 const groupList = ref<GroupSimpleInfo[]>([])
-let friend_id: number = myid()
+let friend_id: number = myidConst
 let group_id: number = 0
 let friend_msg = ref<MessagesResponse['messages']>([])
 const newMessage = ref('')
@@ -220,7 +223,7 @@ const send_message = () => {
     sendMessage(message)
   }
   friend_msg.value.push({
-    sender_id: myid(),
+    sender_id: myidConst,
     message: newMessage.value,
     timestamp: new Date().toISOString()
   })
