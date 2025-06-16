@@ -36,6 +36,7 @@
           :key="msg.timestamp"
           :class="['message', msg.sender_id == friend_id ? 'theirs' : 'mine']"
         >
+          <div class="msgid">{{ msg.sender_id }}</div>
           <div class="content">{{ msg.message }}</div>
         </div>
       </div>
@@ -344,8 +345,18 @@ const send_message = () => {
   scroll-behavior: smooth;
 }
 
-.message {
-  max-width: 60%;
+
+
+.msgid{
+  color: gray;
+  width: 100%;
+}
+.mine .msgid {
+  align-self: flex-end;
+}
+.content{
+  background-color: #1890ff;
+  max-width: 100%;
   padding: 10px 14px;
   border-radius: 18px;
   font-size: 14px;
@@ -353,19 +364,6 @@ const send_message = () => {
   word-break: break-word;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
 }
-
-.theirs {
-  align-self: flex-start;
-  background-color: #ffffff;
-  color: #333;
-}
-
-.mine {
-  align-self: flex-end;
-  background-color: #007aff;
-  color: #fff;
-}
-
 #rightbottom {
   display: flex;
   align-items: center;
@@ -453,7 +451,7 @@ const send_message = () => {
   flex: 1;
   padding: 10px;
   border: 1px solid #ccc;
-  border-radius: 0; /* 去除圆角 */
+  border-radius: 1; /* 去除圆角 */
   background: #ffffff;
   margin-right: 10px;
   outline: none;
@@ -464,18 +462,15 @@ const send_message = () => {
   max-width: 70%;
   padding: 10px 14px;
   border-radius: 0; /* 去除圆角 */
-  border: 1px solid #1890ff;
 }
 
 .theirs {
   align-self: flex-start;
-  background-color: #1890ff;
   color: white;
 }
 
 .mine {
   align-self: flex-end;
-  background-color: #1890ff;
   color: white;
 }
 
