@@ -9,20 +9,33 @@ import initSqlJs, { SqlJsStatic, Database } from 'sql.js'
 let db: Database
 let SQL: SqlJsStatic
 
+const CURRENT_SCHEMA_VERSION = 1 // 每次结构变更时+1
+
 const dbFilePath = join(app.getPath('userData'), 'chat.db') // 存储在用户目录，支持打包后运行
 
 export async function initDB(): Promise<void> {
   const wasmPath = join(app.getAppPath(), `./resources/sql-wasm.wasm`)
   const wasmURL = pathToFileURL(wasmPath).href
 
-  SQL = await initSqlJs({
-    locateFile: () => wasmURL
-  })
+  SQL = await initSqlJs({ locateFile: () => wasmURL })
 
   try {
     const fileBuffer = await readFile(dbFilePath)
     db = new SQL.Database(fileBuffer)
     console.log('数据库加载成功')
+
+    const versionStmt = db.prepare('PRAGMA user_version')
+    versionStmt.step()
+    const currentVersion = versionStmt.get()[0] as number
+    versionStmt.free()
+
+    if (currentVersion !== CURRENT_SCHEMA_VERSION) {
+      console.warn(
+        `数据库版本不一致，预期: ${CURRENT_SCHEMA_VERSION}，实际: ${currentVersion}，将重建数据库`
+      )
+      db.close()
+      await resetDatabase()
+    }
   } catch {
     db = new SQL.Database()
     console.log('创建新数据库')
@@ -31,15 +44,22 @@ export async function initDB(): Promise<void> {
   }
 }
 
+async function resetDatabase(): Promise<void> {
+  db = new SQL.Database()
+  createTables()
+  await persistDB()
+}
+
 function createTables(): void {
   db.run(`
-    CREATE TABLE IF NOT EXISTS accounts (
-    id INTEGER PRIMARY KEY,
-    username TEXT,
-    password TEXT NOT NULL,
-    updated_at INTEGER NOT NULL
-  );
+    PRAGMA user_version = ${CURRENT_SCHEMA_VERSION};
 
+    CREATE TABLE IF NOT EXISTS accounts (
+      id INTEGER PRIMARY KEY,
+      username TEXT,
+      password TEXT NOT NULL,
+      updated_at INTEGER NOT NULL
+    );
 
     CREATE TABLE IF NOT EXISTS friends (
       id INTEGER PRIMARY KEY,
