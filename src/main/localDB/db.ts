@@ -34,10 +34,12 @@ export async function initDB(): Promise<void> {
 function createTables(): void {
   db.run(`
     CREATE TABLE IF NOT EXISTS accounts (
-      id INTEGER PRIMARY KEY,
-      username TEXT,
-      password TEXT NOT NULL
-    );
+    id INTEGER PRIMARY KEY,
+    username TEXT,
+    password TEXT NOT NULL,
+    updated_at INTEGER NOT NULL
+  );
+
 
     CREATE TABLE IF NOT EXISTS friends (
       id INTEGER PRIMARY KEY,
