@@ -103,6 +103,7 @@ const testr = async () => {
 }
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 const catchaccount = async () => {
+  if (!rememberMe.value) return
   try {
     const result = await getAccounts()
     if (result.success) {
