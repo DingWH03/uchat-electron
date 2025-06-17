@@ -11,6 +11,7 @@ import {
 import { ClientMessage } from 'src/types/WebsocketRequest'
 import { ServerMessage } from 'src/types/WebsocketRespond'
 import { ServerResponse } from 'src/types/HttpRespond'
+import { Account, DBResult } from '@/types/localDBModel'
 
 declare global {
   interface Window {
@@ -43,6 +44,10 @@ declare global {
       sendMessage: (msg: ClientMessage) => Promise<boolean> // ws发送消息
       onWSStatus: (callback: (status: string) => void) => void // ws状态提示
       onWSMessage: (callback: (msg: ServerMessage) => void) => void // ws接受消息
+    }
+    localDB: {
+      addOrUpdateAccount: (Data: Account) => Promise<DBResult<void>>
+      getAccounts: () => Promise<DBResult<Account[]>>
     }
   }
 }

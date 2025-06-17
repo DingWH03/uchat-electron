@@ -3,10 +3,9 @@ import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.jpg?asset'
 import { Apis } from './api/index.js'
-import * as path from 'path'
-import * as fs from 'fs'
 import { getSessionId } from './session'
 import { performLogout } from './api/anthentication'
+import { initDB, registerLocalDBIpcHandlers } from './localDB'
 
 const login_width = 1000
 const login_height = 700
@@ -15,7 +14,6 @@ const login_height = 700
 let tray: Tray | null = null
 let mainWindow: BrowserWindow | null = null
 let blinkInterval: NodeJS.Timeout | null = null
-const soundPath = path.join(__dirname, '../../resources/notification.mp3') // 准备一个提示音文件
 
 function createLoginWindow(): BrowserWindow {
   const window = new BrowserWindow({
@@ -59,7 +57,7 @@ function createLoginWindow(): BrowserWindow {
 }
 
 // 创建系统托盘
-function createTray(win: BrowserWindow) {
+function createTray(win: BrowserWindow): void {
   const trayIcon = nativeImage.createFromPath(icon)
   tray = new Tray(trayIcon.resize({ width: 16, height: 16 }))
   tray.setToolTip('我的应用')
@@ -94,7 +92,7 @@ function createTray(win: BrowserWindow) {
 }
 
 // 闪烁托盘图标
-function startBlinking() {
+function startBlinking(): void {
   if (!tray) return
 
   const trayIcon = nativeImage.createFromPath(icon)
@@ -110,7 +108,7 @@ function startBlinking() {
 }
 
 // 停止闪烁
-function stopBlinking() {
+function stopBlinking(): void {
   if (blinkInterval) {
     clearInterval(blinkInterval)
     blinkInterval = null
@@ -120,18 +118,8 @@ function stopBlinking() {
   }
 }
 
-// 播放提示音
-function playNotificationSound() {
-  if (fs.existsSync(soundPath)) {
-    const audio = new Audio(soundPath)
-    audio.play().catch((e) => console.error('播放提示音失败:', e))
-  } else {
-    console.warn('提示音文件不存在:', soundPath)
-  }
-}
-
 // 显示通知
-function showNotification(title: string, body: string) {
+function showNotification(title: string, body: string): void {
   if (Notification.isSupported()) {
     new Notification({
       title,
@@ -151,6 +139,12 @@ app.whenReady().then(() => {
   mainWindow = createLoginWindow()
   createTray(mainWindow)
 
+  // 初始化sqlite
+  initDB()
+
+  // 注册localDB ipcHandle
+  registerLocalDBIpcHandlers()
+
   // 初始化API
   Apis(mainWindow)
 
@@ -158,7 +152,6 @@ app.whenReady().then(() => {
   ipcMain.on('new-message', (_, message) => {
     console.log('收到新消息:', message)
     startBlinking()
-    playNotificationSound()
     showNotification('新消息', message.content || '您收到一条新消息')
   })
 
