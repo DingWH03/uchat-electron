@@ -3,7 +3,7 @@
     <div class="title drag">Uchat</div>
     <div class="login-form">
       <div class="error_msg"></div>
-      <el-form ref="formDataRef" label-width="0px" @submit.prevent>
+      <el-form ref="formDataRef" label-width="0px" @submit.prevent  @keydown.enter="testr">
         <!--input输入-->
         <el-form-item prop="username">
           <el-input size="large" clearable v-model="username" placeholder="请输入用户名" required>
@@ -13,20 +13,15 @@
           </el-input>
         </el-form-item>
         <el-form-item prop="password">
-          <el-input
-            size="large"
-            show-password
-            clearable
-            v-model="password"
-            placeholder="请输入密码"
-            required
-          >
+          <el-input size="large" show-password clearable v-model="password" placeholder="请输入密码" required>
             《<template #prefix>
               <span class="iconfont icon-password"></span>
             </template>
           </el-input>
         </el-form-item>
-        <button @click="catchaccount">ca</button>
+        <el-form-item v-if="isLogin">
+           <el-checkbox v-model="rememberMe" @change="catchaccount">记住账号密码</el-checkbox>
+        </el-form-item>
         <el-form-item prop="password">
           <el-button type="primary" class="login-btn" @click="testr">{{
             isLogin ? '登录' : '注册'
@@ -53,6 +48,10 @@ import { addOrUpdateAccount, getAccounts } from '@renderer/ipcDB'
 const username = ref('')
 const password = ref('')
 const isLogin = ref(true)
+
+const rememberMe = ref(false)
+
+
 const changeOpType = () => {
   isLogin.value = !isLogin.value
 }
@@ -71,12 +70,14 @@ const testr = async () => {
       }
       if (success) {
         ElMessage('登录成功')
+        if (rememberMe.value) {
         const result = addOrUpdateAccount(inputAccount)
         if ((await result).success == true) {
           console.log('成功插入登陆账号至本地数据库')
         } else if ((await result).success == false) {
           console.log('未成功插入登陆账号至本地数据库')
         }
+      }
         router.push('/chat')
       } else {
         ElMessage('登录失败')
@@ -126,20 +127,24 @@ const catchaccount = async () => {
 .email-select {
   width: 250px;
 }
+
 .loading-panel {
   height: calc(100vh - 32px);
   display: flex;
   justify-content: center;
   align-items: center;
   overflow: hidden;
+
   img {
     white-space: 300px;
   }
 }
+
 .login-panel {
   background-color: #fff;
   border-radius: 3px;
   border: 1px solid #ddd;
+
   .title {
     height: 30px;
     padding: 5px 0px 0px 10px;
@@ -147,10 +152,12 @@ const catchaccount = async () => {
 
   .login-form {
     padding: 0px 15px 29px 15px;
+
     :deep(.el-input__wrapper) {
       box-shadow: none;
       border-radius: none;
     }
+
     .el-form-item {
       border-bottom: 1px solid #ddd;
     }
@@ -159,9 +166,11 @@ const catchaccount = async () => {
       align-items: center;
       width: 100%;
       display: flex;
+
       .input {
         flex: 1;
       }
+
       .icon-down {
         margin-left: 3px;
         width: 16px;
@@ -169,19 +178,23 @@ const catchaccount = async () => {
         border: none;
       }
     }
+
     .error-msg {
       line-height: 30px;
       height: 30px;
       color: #fb7373;
     }
+
     .check-code-panel {
       display: flex;
+
       .check-code {
         cursor: pointer;
         width: 120px;
         margin-left: 5px;
       }
     }
+
     .login-btn {
       margin-top: 20px;
       width: 100%;
@@ -189,6 +202,7 @@ const catchaccount = async () => {
       height: 36px;
       font-size: 16px;
     }
+
     .botton-link {
       text-align: right;
     }

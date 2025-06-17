@@ -30,7 +30,7 @@
       </div>
     </div>
     <div id="right">
-      <div id="righttop">
+      <div id="righttop" ref="messageContainer">
         <div
           v-for="msg in friend_msg"
           :key="msg.timestamp"
@@ -52,7 +52,7 @@
   </div>
 </template>
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, nextTick } from 'vue'
 // import SettingsDialog from '../components/SettingsDialog.vue'
 import {
   logout,
@@ -73,6 +73,7 @@ import { ClientMessage } from '@apiType/WebsocketRequest'
 import { onMounted } from 'vue'
 import { showNotification } from '@renderer/utils/notification'
 
+const messageContainer = ref<HTMLElement | null>(null)
 let myidConst: number = 0
 
 onMounted(async () => {
@@ -107,6 +108,7 @@ onMounted(() => {
           message: msg.message,
           timestamp: new Date().toISOString()
         })
+        scrollToBottom()
       } else {
         showNotification(`来自 ${msg.sender} 的新消息`, ` ${msg.message} `, '')
       }
@@ -117,6 +119,7 @@ onMounted(() => {
           message: msg.message,
           timestamp: new Date().toISOString()
         })
+        scrollToBottom()
       } else {
         showNotification(`来自群 ${msg.group_id} 的新消息`, ` ${msg.group_id}：${msg.message} `, '')
       }
@@ -174,6 +177,7 @@ const friendChat = async (index) => {
   const result = await friend_messages(request)
   if (result.action == 'messages') {
     friend_msg.value = result.messages
+    scrollToBottom()
     console.log(friend_msg)
   }
   isgroup = false
@@ -192,6 +196,7 @@ const groupChat = async (index) => {
   console.log(result)
   if (result.action == 'messages') {
     friend_msg.value = result.messages
+    scrollToBottom()
     console.log(friend_msg)
   }
   isgroup = true
@@ -217,6 +222,7 @@ const send_message = () => {
       message: newMessage.value,
       timestamp: new Date().toISOString()
     })
+    scrollToBottom()
     newMessage.value = ''
   } else if (isgroup == true) {
     const message: ClientMessage = {
@@ -228,6 +234,14 @@ const send_message = () => {
     newMessage.value = ''
   }
 }
+const scrollToBottom = () => {
+  nextTick(() => {
+    if (messageContainer.value) {
+      messageContainer.value.scrollTop = messageContainer.value.scrollHeight
+    }
+  })
+}
+
 </script>
 <style>
 #container {
