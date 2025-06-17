@@ -26,6 +26,7 @@
             </template>
           </el-input>
         </el-form-item>
+        <button @click="catchaccount">ca</button>
         <el-form-item prop="password">
           <el-button type="primary" class="login-btn" @click="testr">{{
             isLogin ? '登录' : '注册'
@@ -46,6 +47,8 @@ import { ElMessage } from 'element-plus'
 import '../assets/iconfont/iconfont.css'
 import '../assets/base.scss'
 import router from '@renderer/router'
+import { Account } from '@/types/localDBModel'
+import { addOrUpdateAccount, getAccounts } from '@renderer/ipcDB'
 
 const username = ref('')
 const password = ref('')
@@ -61,8 +64,19 @@ const testr = async () => {
         password: password.value
       }
       const success = await login(loginData)
+      const inputAccount: Account = {
+        id: Number(username.value),
+        username: '',
+        password: password.value
+      }
       if (success) {
         ElMessage('登录成功')
+        const result = addOrUpdateAccount(inputAccount)
+        if ((await result).success == true) {
+          console.log('成功插入登陆账号至本地数据库')
+        } else if ((await result).success == false) {
+          console.log('未成功插入登陆账号至本地数据库')
+        }
         router.push('/chat')
       } else {
         ElMessage('登录失败')
@@ -84,6 +98,26 @@ const testr = async () => {
       console.error('注册失败:', err)
       ElMessage('注册失败')
     }
+  }
+}
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+const catchaccount = async () => {
+  try {
+    const result = await getAccounts()
+    if (result.success) {
+      // 成功的情况，result 被推断为 SuccessResult<Account[]>
+      const accounts = result.data // 可以安全地访问 data
+      console.log('获取到的账户:', accounts[0])
+      if (isLogin.value) {
+        username.value = accounts[0].id.toString()
+        password.value = accounts[0].password
+      }
+    } else {
+      // 失败的情况，result 被推断为 ErrorResult
+      console.error('获取账户失败:', result.error)
+    }
+  } catch (error) {
+    console.error('发生未预期的错误:', error)
   }
 }
 </script>

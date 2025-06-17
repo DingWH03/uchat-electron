@@ -8,7 +8,7 @@ export function registerLocalDBIpcHandlers(): void {
     async (_event: IpcMainInvokeEvent, data: Account): Promise<DBResult<void>> => {
       try {
         // 这里调用本地db的异步方法
-        const result = await localDB.addOrUpdateAccount(data.id, data.username, data.password)
+        const result = await localDB.addOrUpdateAccount(data)
         return result
       } catch (error) {
         return {
