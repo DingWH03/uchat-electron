@@ -11,10 +11,16 @@
       <input v-model="searchQuery" placeholder="搜索好友..." class="search-input" />
 
       <!-- 好友项 -->
-      <div v-for="friend in filteredFriends" :key="friend.base.user_id" class="friend-item" :class="{
-        selected: selectedFriendIds.includes(friend.base.user_id),
-        online: friend.online
-      }" @click="toggleFriendSelection(friend.base.user_id)">
+      <div
+        v-for="friend in filteredFriends"
+        :key="friend.base.user_id"
+        class="friend-item"
+        :class="{
+          selected: selectedFriendIds.includes(friend.base.user_id),
+          online: friend.online
+        }"
+        @click="toggleFriendSelection(friend.base.user_id)"
+      >
         <span class="username">{{ friend.base.username }}</span>
         <span class="status">
           {{ friend.online ? '在线' : '离线' }}
@@ -23,8 +29,8 @@
     </div>
     <div><input v-model="groupName" type="text" placeholder="输入群名称" /></div>
     <div class="bottom-buttons">
-      <button @click="create" class="create">创建</button>
-      <button @click="back" class="back">返回</button>
+      <button class="create" @click="create">创建</button>
+      <button class="back" @click="back">返回</button>
     </div>
     <!-- 已选好友展示 -->
     <div v-if="selectedFriendIds.length > 0" class="selected-friends">
@@ -32,16 +38,16 @@
       <div class="selected-ids">
         {{ selectedFriendIds.join(', ') }}
       </div>
-      <button @click="clearSelection" class="clear-btn">清空选择</button>
+      <button class="clear-btn" @click="clearSelection">清空选择</button>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ServerResponse } from '@/types/HttpRespond'
+import { RequestResponse } from '@/types/HttpRespond'
 import { friend_list_v2, group_new } from '@renderer/ipcApi'
 import router from '@renderer/router'
-import { ref, computed, onMounted } from 'vue'// 替换为您的实际API路径
+import { ref, computed, onMounted } from 'vue' // 替换为您的实际API路径
 
 interface UserSimpleInfo {
   user_id: number
@@ -53,7 +59,6 @@ interface UserSimpleInfoWithStatus {
   online: boolean
 }
 
-
 // 响应式数据
 const friendList = ref<UserSimpleInfoWithStatus[]>([])
 const isExpanded = ref(false)
@@ -61,7 +66,7 @@ const selectedFriendIds = ref<number[]>([])
 const searchQuery = ref('')
 const groupName = ref('')
 
-const create = async () => {
+const create = async (): Promise<void> => {
   const request = {
     group_name: groupName.value,
     members: [...selectedFriendIds.value] // 解构Proxy得到纯数组
@@ -69,7 +74,7 @@ const create = async () => {
 
   console.log('处理后数据:', JSON.parse(JSON.stringify(request))) // 验证可序列化
   const result = await group_new(request)
-  if (result.action == 'generic_response') {
+  if (result.status == true) {
     console.log(result.message)
     back()
   }
@@ -78,10 +83,10 @@ const back = (): void => {
   router.push('/chat')
 }
 // 获取好友列表
-const f5 = async () => {
-  const flist: ServerResponse = await friend_list_v2()
-  if (flist.action === 'friend_list_with_status' && flist.friends) {
-    friendList.value = flist.friends
+const f5 = async (): Promise<void> => {
+  const flist: RequestResponse<UserSimpleInfoWithStatus[]> = await friend_list_v2()
+  if (flist.status === true && flist.data) {
+    friendList.value = flist.data ?? []
     console.log('好友列表加载完成:', friendList.value)
   }
 }
@@ -93,18 +98,18 @@ onMounted(() => {
 
 // 过滤后的好友列表
 const filteredFriends = computed(() => {
-  return friendList.value.filter(friend =>
+  return friendList.value.filter((friend) =>
     friend.base.username.toLowerCase().includes(searchQuery.value.toLowerCase())
   )
 })
 
 // 展开/收起切换
-const toggleExpand = () => {
+const toggleExpand = (): void => {
   isExpanded.value = !isExpanded.value
 }
 
 // 切换好友选择状态
-const toggleFriendSelection = (friendId: number) => {
+const toggleFriendSelection = (friendId: number): void => {
   const index = selectedFriendIds.value.indexOf(friendId)
   if (index === -1) {
     // 添加选中
@@ -116,7 +121,7 @@ const toggleFriendSelection = (friendId: number) => {
 }
 
 // 清空选择
-const clearSelection = () => {
+const clearSelection = (): void => {
   selectedFriendIds.value = []
 }
 </script>
@@ -215,7 +220,7 @@ const clearSelection = () => {
   font-size: 15px;
 }
 
-input[type="text"] {
+input[type='text'] {
   width: 100%;
   padding: 10px 12px;
   margin: 10px 0;

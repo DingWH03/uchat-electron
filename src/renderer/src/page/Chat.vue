@@ -66,8 +66,8 @@ import {
 // import { LoginRequest } from 'src/types/HttpRequest'
 // import { ClientMessage } from 'src/types/WebsocketRequest'
 import { useRouter } from 'vue-router'
-import { GroupSimpleInfo, ServerResponse } from '@apiType/HttpRespond'
-import { UserSimpleInfoWithStatus, MessagesResponse } from '@apiType/HttpRespond'
+import { GroupSimpleInfo, RequestResponse, SessionMessage } from '@apiType/HttpRespond'
+import { UserSimpleInfoWithStatus } from '@apiType/HttpRespond'
 import { MessageRequest } from '@apiType/HttpRequest'
 import { ClientMessage } from '@apiType/WebsocketRequest'
 import { onMounted } from 'vue'
@@ -80,13 +80,13 @@ onMounted(async () => {
   showNotification('登录成功', '欢迎回来！', '')
   myidConst = await myid()
   try {
-    const list: ServerResponse = await friend_list_v2()
-    if (list.action === 'friend_list_with_status') {
-      friendList.value = list.friends
+    const list: RequestResponse<UserSimpleInfoWithStatus[]> = await friend_list_v2()
+    if (list.status === true) {
+      friendList.value = list.data ?? []
     }
-    const glist: ServerResponse = await group_list()
-    if (glist.action === 'group_list') {
-      groupList.value = glist.groups
+    const glist: RequestResponse<GroupSimpleInfo[]> = await group_list()
+    if (glist.status === true) {
+      groupList.value = glist.data ?? []
     }
   } catch (error) {
     console.error('加载好友列表失败:', error)
@@ -143,20 +143,20 @@ const friendList = ref<UserSimpleInfoWithStatus[]>([])
 const groupList = ref<GroupSimpleInfo[]>([])
 let friend_id: number = myidConst
 let group_id: number = 0
-let friend_msg = ref<MessagesResponse['messages']>([])
+let friend_msg = ref<SessionMessage[]>([])
 const newMessage = ref('')
 let isgroup: boolean = false
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 const f5 = async () => {
-  const flist: ServerResponse = await friend_list_v2()
-  if (flist.action === 'friend_list_with_status') {
-    friendList.value = flist.friends
+  const flist: RequestResponse<UserSimpleInfoWithStatus[]> = await friend_list_v2()
+  if (flist.status === true) {
+    friendList.value = flist.data ?? []
     console.log(friendList.value)
     // console.log(friendList)
   }
-  const glist: ServerResponse = await group_list()
-  if (glist.action === 'group_list') {
-    groupList.value = glist.groups
+  const glist: RequestResponse<GroupSimpleInfo[]> = await group_list()
+  if (glist.status === true) {
+    groupList.value = glist.data ?? []
     // console.log(groupList.value)
   }
 }
@@ -175,8 +175,8 @@ const friendChat = async (index) => {
     offset: 0
   }
   const result = await friend_messages(request)
-  if (result.action == 'messages') {
-    friend_msg.value = result.messages
+  if (result.status == true) {
+    friend_msg.value = result.data ?? []
     scrollToBottom()
     console.log(friend_msg)
   }
@@ -194,8 +194,8 @@ const groupChat = async (index) => {
   console.log(request)
   const result = await group_messages(request)
   console.log(result)
-  if (result.action == 'messages') {
-    friend_msg.value = result.messages
+  if (result.status == true) {
+    friend_msg.value = result.data ?? []
     scrollToBottom()
     console.log(friend_msg)
   }
@@ -234,14 +234,13 @@ const send_message = () => {
     newMessage.value = ''
   }
 }
-const scrollToBottom = () => {
+const scrollToBottom = (): void => {
   nextTick(() => {
     if (messageContainer.value) {
       messageContainer.value.scrollTop = messageContainer.value.scrollHeight
     }
   })
 }
-
 </script>
 <style>
 #container {

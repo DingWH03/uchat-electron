@@ -19,29 +19,13 @@ export interface LoginRequest {
   password: string
 }
 
-// 好友请求类型枚举
-export enum FriendRequestType {
-  Add = 'Add',
-  Info = 'Info'
-}
-
 // 好友请求结构体
 export interface FriendRequest {
-  request_type: FriendRequestType
   id: number
-}
-
-// 群聊请求类型枚举
-export enum GroupRequestType {
-  Join = 'Join',
-  Info = 'Info',
-  Creat = 'Creat',
-  Leave = 'Leave'
 }
 
 // 群聊请求结构体
 export interface GroupRequest {
-  request_type: GroupRequestType
   id: number
 }
 

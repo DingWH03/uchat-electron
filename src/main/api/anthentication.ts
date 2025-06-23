@@ -4,11 +4,11 @@ import { getApiBaseUrl } from './config'
 import { getSessionId, setSessionId } from '../session'
 import { RegisterRequest, LoginRequest, PasswordRequest } from '../../types/HttpRequest'
 import { closeWebSocket, setupWebSocket } from '../WebSocket/wsClient'
-import { ServerResponse } from '../../types/HttpRespond'
+import { RequestResponse } from '../../types/HttpRespond'
 
 let loginUser: number = 0
 
-export async function performLogout(): Promise<ServerResponse> {
+export async function performLogout(): Promise<RequestResponse<void>> {
   closeWebSocket()
   const baseUrl = getApiBaseUrl()
   const sessionId = getSessionId()
@@ -27,7 +27,7 @@ export function registerAnthenticationApi(win: BrowserWindow): void {
   // 注册账号的后端接口调用
   ipcMain.handle(
     'api:auth/register',
-    async (_, registerData: RegisterRequest): Promise<ServerResponse> => {
+    async (_, registerData: RegisterRequest): Promise<RequestResponse<number>> => {
       const baseUrl = getApiBaseUrl()
       const res = await fetch(`${baseUrl}/auth/register`, {
         method: 'POST',
@@ -47,7 +47,7 @@ export function registerAnthenticationApi(win: BrowserWindow): void {
     })
     const data = await res.json()
     if (data.status) {
-      setSessionId(data.message)
+      setSessionId(data.data)
       setupWebSocket(win)
       loginUser = loginData.userid // 保存登陆用户的id
       win.setResizable(true)
@@ -56,13 +56,13 @@ export function registerAnthenticationApi(win: BrowserWindow): void {
     return data.status
   })
   // 注销的后端接口调用
-  ipcMain.handle('api:auth/logout', async (): Promise<ServerResponse> => {
+  ipcMain.handle('api:auth/logout', async (): Promise<RequestResponse<void>> => {
     return performLogout()
   })
   // 修改密码的后端接口调用
   ipcMain.handle(
     'api:auth/password',
-    async (_, requestData: PasswordRequest): Promise<ServerResponse> => {
+    async (_, requestData: PasswordRequest): Promise<RequestResponse<void>> => {
       const baseUrl = getApiBaseUrl()
       const res = await fetch(`${baseUrl}/auth/password`, {
         method: 'POST',

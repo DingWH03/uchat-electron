@@ -11,9 +11,8 @@
   </div>
 </template>
 
-
 <script setup lang="ts">
-import { FriendRequest, FriendRequestType } from '@apiType/HttpRequest'
+import { FriendRequest } from '@apiType/HttpRequest'
 import { friend_add } from '@renderer/ipcApi'
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
@@ -26,16 +25,13 @@ const back = (): void => {
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 const search = async () => {
   const request: FriendRequest = {
-    request_type: FriendRequestType.Add,
     id: Number(message.value)
   }
   const result = await friend_add(request)
-  if (result.action == 'generic_response') {
-    if (result.status == 'Ok') {
-      ElMessage('添加成功')
-      console.log('添加成功')
-      router.push('/chat')
-    }
+  if (result.status == true) {
+    ElMessage('添加成功')
+    console.log('添加成功')
+    router.push('/chat')
   }
 }
 </script>
@@ -65,7 +61,7 @@ const search = async () => {
   color: #333;
 }
 
-input[type="text"] {
+input[type='text'] {
   width: 100%;
   padding: 12px 15px;
   margin-bottom: 20px;
@@ -75,7 +71,7 @@ input[type="text"] {
   transition: border 0.2s ease;
 }
 
-input[type="text"]:focus {
+input[type='text']:focus {
   border-color: #4a90e2;
   outline: none;
 }

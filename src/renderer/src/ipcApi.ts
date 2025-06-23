@@ -8,7 +8,15 @@ import {
   CreateGroupRequest,
   MessageRequest
 } from '../../types/HttpRequest'
-import { ServerResponse } from 'src/types/HttpRespond'
+import {
+  GroupDetailedInfo,
+  GroupSimpleInfo,
+  RequestResponse,
+  SessionMessage,
+  UserDetailedInfo,
+  UserSimpleInfo,
+  UserSimpleInfoWithStatus
+} from 'src/types/HttpRespond'
 
 export {
   ipcHandle,
@@ -47,7 +55,7 @@ const setBaseUrl = async (URL: string): Promise<boolean> => {
 }
 
 /// 注册的api
-const register = async (RegisterData: RegisterRequest): Promise<ServerResponse> => {
+const register = async (RegisterData: RegisterRequest): Promise<RequestResponse<number>> => {
   return await window.api.register(RegisterData)
 }
 
@@ -57,12 +65,12 @@ const login = async (LoginData: LoginRequest): Promise<boolean> => {
 }
 
 /// 注销登陆的api
-const logout = async (): Promise<ServerResponse> => {
+const logout = async (): Promise<RequestResponse<void>> => {
   return window.api.logout()
 }
 
 /// 修改密码的api
-const password = async (requestData: PasswordRequest): Promise<ServerResponse> => {
+const password = async (requestData: PasswordRequest): Promise<RequestResponse<void>> => {
   return window.api.password(requestData)
 }
 
@@ -72,62 +80,72 @@ const myid = (): number => {
 }
 
 /// 添加好友的api
-const friend_add = async (requestData: FriendRequest): Promise<ServerResponse> => {
+const friend_add = async (requestData: FriendRequest): Promise<RequestResponse<void>> => {
   return window.api.friend_add(requestData)
 }
 
 /// 好友列表的api
-const friend_list = async (): Promise<ServerResponse> => {
+const friend_list = async (): Promise<RequestResponse<UserSimpleInfo[]>> => {
   return window.api.friend_list()
 }
 
 /// 好友列表的api v2
-const friend_list_v2 = async (): Promise<ServerResponse> => {
+const friend_list_v2 = async (): Promise<RequestResponse<UserSimpleInfoWithStatus[]>> => {
   return window.api.friend_list_v2()
 }
 
 /// 好友信息的api
-const friend_info = async (requestData: FriendRequest): Promise<ServerResponse> => {
+const friend_info = async (
+  requestData: FriendRequest
+): Promise<RequestResponse<UserDetailedInfo>> => {
   return window.api.friend_info(requestData)
 }
 
 /// 群组列表的api
-const group_list = async (): Promise<ServerResponse> => {
+const group_list = async (): Promise<RequestResponse<GroupSimpleInfo[]>> => {
   return window.api.group_list()
 }
 
 /// 群组信息的api
-const group_info = async (requestData: GroupRequest): Promise<ServerResponse> => {
+const group_info = async (
+  requestData: GroupRequest
+): Promise<RequestResponse<GroupDetailedInfo>> => {
   return window.api.group_info(requestData)
 }
 
 /// 群组成员的api
-const group_members = async (requestData: GroupRequest): Promise<ServerResponse> => {
+const group_members = async (
+  requestData: GroupRequest
+): Promise<RequestResponse<UserSimpleInfo[]>> => {
   return window.api.group_members(requestData)
 }
 
 /// 创建群组的api
-const group_new = async (requestData: CreateGroupRequest): Promise<ServerResponse> => {
+const group_new = async (requestData: CreateGroupRequest): Promise<RequestResponse<number>> => {
   return window.api.group_new(requestData)
 }
 
 /// 加入群组的api
-const group_join = async (requestData: GroupRequest): Promise<ServerResponse> => {
+const group_join = async (requestData: GroupRequest): Promise<RequestResponse<void>> => {
   return window.api.group_join(requestData)
 }
 
 /// 退出群组的api
-const group_leave = async (requestData: GroupRequest): Promise<ServerResponse> => {
+const group_leave = async (requestData: GroupRequest): Promise<RequestResponse<void>> => {
   return window.api.group_leave(requestData)
 }
 
 /// 群组聊天记录的api
-const group_messages = async (requestData: MessageRequest): Promise<ServerResponse> => {
+const group_messages = async (
+  requestData: MessageRequest
+): Promise<RequestResponse<SessionMessage[]>> => {
   return window.api.group_messages(requestData)
 }
 
 /// 好友聊天记录的api
-const friend_messages = async (requestData: MessageRequest): Promise<ServerResponse> => {
+const friend_messages = async (
+  requestData: MessageRequest
+): Promise<RequestResponse<SessionMessage[]>> => {
   return window.api.friend_messages(requestData)
 }
 
