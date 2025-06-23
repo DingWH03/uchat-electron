@@ -1,5 +1,7 @@
 // HttpRespond.ts
 
+import { RoleType } from './Model'
+
 export interface RequestResponse<T> {
   status: boolean // 请求是否成功
   code: number // HTTP 状态码
@@ -32,6 +34,7 @@ export type GroupSimpleInfo = {
 export type UserDetailedInfo = {
   user_id: number
   username: string
+  role: RoleType
 }
 
 export type GroupDetailedInfo = {
