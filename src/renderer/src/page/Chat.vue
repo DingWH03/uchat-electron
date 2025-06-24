@@ -1,61 +1,88 @@
 <template>
-  <div id="container">
-    <div id="left">
-      <div id="lefttop" class="button-row">
-        <button class="top-action-btn" @click="gosearch">添加好友</button>
-        <button class="top-action-btn" @click="f5">刷新</button>
-        <button class="top-action-btn" @click="cg">创建群组</button>
-      </div>
-      <div id="friendlist">
-        <div class="list-title">好友列表</div>
-        <div
-          v-for="(item, index) in friendList"
-          :key="item.base.user_id"
-          :class="['friendname', item.online == true ? 'online' : 'notonline']"
-          @click="friendChat(index)"
-        >
-          <span class="icon">👤</span> {{ item.base.username }}
-        </div>
-      </div>
-      <div id="grouplist">
-        <div class="list-title">群组列表</div>
-        <div
-          v-for="(item, index) in groupList"
-          :key="item.group_id"
-          class="groupname"
-          @click="groupChat(index)"
-        >
-          <span class="icon">👥</span>{{ item.title }}
-        </div>
+  <div class="chat-layout">
+    <div class="chat-sidebar">
+      <div class="sidebar-section">
+        <h2>联系人</h2>
+        <ul>
+          <li
+            v-for="friend in friendList"
+            :key="friend.base.user_id"
+            class="sidebar-item"
+            :class="{ active: isActiveFriend(friend) }"
+            @click="goToFriend(friend)"
+          >
+            <span class="icon">👤</span>
+            <span class="name">{{ friend.base.username }}</span>
+            <span class="status" :class="friend.online ? 'online' : 'offline'">{{
+              friend.online ? '在线' : '离线'
+            }}</span>
+          </li>
+        </ul>
+        <h2>群聊</h2>
+        <ul>
+          <li
+            v-for="group in groupList"
+            :key="group.group_id"
+            class="sidebar-item"
+            :class="{ active: isActiveGroup(group) }"
+            @click="goToGroup(group)"
+          >
+            <span class="icon">👥</span>
+            <span class="name">{{ group.title }}</span>
+          </li>
+        </ul>
       </div>
     </div>
-    <div id="right">
-      <div id="righttop" ref="messageContainer">
-        <div
-          v-for="msg in friend_msg"
-          :key="msg.timestamp"
-          :class="['message', msg.sender_id == myidConst ? 'mine' : 'theirs']"
+    <div class="chat-main">
+      <div
+        v-if="
+          chatType &&
+          ((chatType === 'friend' && currentFriend) || (chatType === 'group' && currentGroup))
+        "
+        class="chat-header"
+      >
+        <span v-if="chatType === 'friend' && currentFriend"
+          >与 {{ currentFriend.base.username }} 聊天</span
         >
-          <div class="msgid">{{ msg.sender_id }}</div>
-          <div class="content">{{ msg.message }}</div>
+        <span v-else-if="chatType === 'group' && currentGroup">群聊：{{ currentGroup.title }}</span>
+      </div>
+      <div
+        v-if="
+          chatType &&
+          ((chatType === 'friend' && currentFriend) || (chatType === 'group' && currentGroup))
+        "
+        ref="messageContainer"
+        class="chat-content"
+      >
+        <div v-for="msg in friend_msg" :key="msg.timestamp">
+          <MessageBubble
+            :msg="msg"
+            :is-mine="msg.sender_id == myidConst"
+            :is-group="chatType === 'group'"
+          />
         </div>
       </div>
-      <div id="rightbottom">
+      <div v-else class="chat-content chat-empty">
+        <div class="empty-icon">💬</div>
+        <div class="empty-tip">请选择联系人或群聊开始会话</div>
+      </div>
+      <div
+        v-if="
+          chatType &&
+          ((chatType === 'friend' && currentFriend) || (chatType === 'group' && currentGroup))
+        "
+        class="chat-input"
+      >
         <input v-model="newMessage" placeholder="请输入你的消息…" @keyup.enter="send_message" />
         <button @click="send_message">发送</button>
       </div>
     </div>
   </div>
-
-  <div id="back-container">
-    <button class="square-btn" @click="back">返回登录</button>
-  </div>
 </template>
 <script setup lang="ts">
-import { ref, nextTick } from 'vue'
-// import SettingsDialog from '../components/SettingsDialog.vue'
+import { ref, nextTick, onMounted, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import {
-  logout,
   friend_list_v2,
   friend_messages,
   sendMessage,
@@ -63,397 +90,317 @@ import {
   group_list,
   group_messages
 } from '../ipcApi'
-// import { LoginRequest } from 'src/types/HttpRequest'
-// import { ClientMessage } from 'src/types/WebsocketRequest'
-import { useRouter } from 'vue-router'
 import { GroupSimpleInfo, RequestResponse, SessionMessage } from '@apiType/HttpRespond'
 import { UserSimpleInfoWithStatus } from '@apiType/HttpRespond'
 import { MessageRequest } from '@apiType/HttpRequest'
-import { ClientMessage } from '@apiType/WebsocketRequest'
-import { onMounted } from 'vue'
 import { showNotification } from '@renderer/utils/notification'
+import MessageBubble from '../components/MessageBubble.vue'
 
+const route = useRoute()
+const router = useRouter()
 const messageContainer = ref<HTMLElement | null>(null)
-let myidConst: number = 0
+const myidConst = ref<number>(0)
+const friendList = ref<UserSimpleInfoWithStatus[]>([])
+const groupList = ref<GroupSimpleInfo[]>([])
+const friend_msg = ref<SessionMessage[]>([])
+const newMessage = ref('')
+const chatType = ref('')
+const chatId = ref<number | null>(null)
+const currentFriend = ref<UserSimpleInfoWithStatus | null>(null)
+const currentGroup = ref<GroupSimpleInfo | null>(null)
+
+function isActiveFriend(friend: UserSimpleInfoWithStatus): boolean {
+  return chatType.value === 'friend' && chatId.value === friend.base.user_id
+}
+function isActiveGroup(group: GroupSimpleInfo): boolean {
+  return chatType.value === 'group' && chatId.value === group.group_id
+}
+function goToFriend(friend: UserSimpleInfoWithStatus): void {
+  router.push(`/chat/friend/${friend.base.user_id}`)
+}
+function goToGroup(group: GroupSimpleInfo): void {
+  router.push(`/chat/group/${group.group_id}`)
+}
+
+async function loadSession(): Promise<void> {
+  chatType.value = ''
+  chatId.value = null
+  currentFriend.value = null
+  currentGroup.value = null
+  friend_msg.value = []
+  let type = ''
+  let id = route.params.id
+  if (route.name === 'ChatFriend') {
+    type = 'friend'
+  } else if (route.name === 'ChatGroup') {
+    type = 'group'
+  }
+  console.log('route.params:', route.params, 'type:', type, 'id:', id, 'route.name:', route.name)
+  if (type === 'friend' && id) {
+    chatType.value = 'friend'
+    chatId.value = Number(id)
+    currentFriend.value = friendList.value.find((f) => f.base.user_id === Number(id)) || null
+    if (currentFriend.value) {
+      const request: MessageRequest = { id: Number(id), offset: 0 }
+      const result = await friend_messages(request)
+      if (result.status === true) friend_msg.value = result.data ?? []
+    }
+  } else if (type === 'group' && id) {
+    chatType.value = 'group'
+    chatId.value = Number(id)
+    currentGroup.value = groupList.value.find((g) => g.group_id === Number(id)) || null
+    if (currentGroup.value) {
+      const request: MessageRequest = { id: Number(id), offset: 0 }
+      const result = await group_messages(request)
+      if (result.status === true) friend_msg.value = result.data ?? []
+    }
+  }
+  nextTick(() => {
+    if (messageContainer.value)
+      messageContainer.value.scrollTop = messageContainer.value.scrollHeight
+  })
+}
 
 onMounted(async () => {
   showNotification('登录成功', '欢迎回来！', '')
-  myidConst = await myid()
-  try {
-    const list: RequestResponse<UserSimpleInfoWithStatus[]> = await friend_list_v2()
-    if (list.status === true) {
-      friendList.value = list.data ?? []
-    }
-    const glist: RequestResponse<GroupSimpleInfo[]> = await group_list()
-    if (glist.status === true) {
-      groupList.value = glist.data ?? []
-    }
-  } catch (error) {
-    console.error('加载好友列表失败:', error)
-  }
-})
-
-onMounted(() => {
-  console.log('[App.vue] 注册 WebSocket 监听')
-
-  window.api.onWSStatus((status) => {
-    console.log('[UI] WebSocket 状态变化:', status)
-  })
-
-  window.api.onWSMessage((msg) => {
-    if (msg.type == 'SendMessage') {
-      if (msg.sender == friend_id && isgroup == false) {
-        friend_msg.value.push({
-          sender_id: friend_id,
-          message: msg.message,
-          timestamp: new Date().toISOString()
-        })
-        scrollToBottom()
-      } else {
-        showNotification(`来自 ${msg.sender} 的新消息`, ` ${msg.message} `, '')
-      }
-    } else if (msg.type == 'SendGroupMessage' && isgroup == true) {
-      if (msg.group_id == group_id) {
-        friend_msg.value.push({
-          sender_id: msg.sender,
-          message: msg.message,
-          timestamp: new Date().toISOString()
-        })
-        scrollToBottom()
-      } else {
-        showNotification(`来自群 ${msg.group_id} 的新消息`, ` ${msg.group_id}：${msg.message} `, '')
-      }
-    } else if (msg.type == 'OnlineMessage') {
-      showNotification('你的好友上线了', `你的好友 ${msg.friend_id} 上线了，快去和他聊两句吧`, '')
-      console.log(msg.friend_id, '上线了')
-      f5()
-    } else if (msg.type == 'OfflineMessage') {
-      showNotification('你的好友下线了', `你的好友 ${msg.friend_id} 已暂时下线`, '')
-      console.log(msg.friend_id, '下线了')
-      f5()
-    }
-  })
-})
-const router = useRouter()
-// const username = ref('')
-// const password = ref('')
-// const showSettings = ref(false)
-
-const friendList = ref<UserSimpleInfoWithStatus[]>([])
-const groupList = ref<GroupSimpleInfo[]>([])
-let friend_id: number = myidConst
-let group_id: number = 0
-let friend_msg = ref<SessionMessage[]>([])
-const newMessage = ref('')
-let isgroup: boolean = false
-// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-const f5 = async () => {
+  myidConst.value = await myid()
   const flist: RequestResponse<UserSimpleInfoWithStatus[]> = await friend_list_v2()
-  if (flist.status === true) {
-    friendList.value = flist.data ?? []
-    console.log(friendList.value)
-    // console.log(friendList)
-  }
+  if (flist.status === true) friendList.value = flist.data ?? []
   const glist: RequestResponse<GroupSimpleInfo[]> = await group_list()
-  if (glist.status === true) {
-    groupList.value = glist.data ?? []
-    // console.log(groupList.value)
-  }
-}
+  if (glist.status === true) groupList.value = glist.data ?? []
+  await loadSession()
+})
 
-const cg = (): void => {
-  router.push('/create')
-}
-// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-const friendChat = async (index) => {
-  console.log('你点击了第', index, '个好友')
-  // 你可以这样获取到对应的数据：
-  friend_id = friendList.value[index].base.user_id
-  console.log('具体好友信息为', friend_id)
-  const request: MessageRequest = {
-    id: friendList.value[index].base.user_id, // 用户ID或群组ID
-    offset: 0
-  }
-  const result = await friend_messages(request)
-  if (result.status == true) {
-    friend_msg.value = result.data ?? []
-    scrollToBottom()
-    console.log(friend_msg)
-  }
-  isgroup = false
-}
-// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-const groupChat = async (index) => {
-  console.log('点击了第', index, '个群聊')
-  // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-  ;(group_id = groupList.value[index].group_id), console.log('群组id为', group_id)
-  const request: MessageRequest = {
-    id: groupList.value[index].group_id, // 用户ID或群组ID
-    offset: 0
-  }
-  console.log(request)
-  const result = await group_messages(request)
-  console.log(result)
-  if (result.status == true) {
-    friend_msg.value = result.data ?? []
-    scrollToBottom()
-    console.log(friend_msg)
-  }
-  isgroup = true
-}
-const back = (): void => {
-  router.push('/login')
-  logout()
-}
-const gosearch = (): void => {
-  router.push('/search')
-}
-// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-const send_message = () => {
-  if (isgroup == false) {
-    const message: ClientMessage = {
-      type: 'SendMessage',
-      receiver: friend_id,
+watch(() => route.fullPath, loadSession)
+
+function send_message(): void {
+  if (!newMessage.value.trim() || !chatType.value || !chatId.value) return
+  if (chatType.value === 'friend' && currentFriend.value) {
+    const message = {
+      type: 'SendMessage' as const,
+      receiver: chatId.value,
       message: newMessage.value
     }
     sendMessage(message)
     friend_msg.value.push({
-      sender_id: myidConst,
+      sender_id: myidConst.value,
       message: newMessage.value,
       timestamp: new Date().toISOString()
     })
-    scrollToBottom()
     newMessage.value = ''
-  } else if (isgroup == true) {
-    const message: ClientMessage = {
-      type: 'SendGroupMessage',
-      group_id: group_id,
+  } else if (chatType.value === 'group' && currentGroup.value) {
+    const message = {
+      type: 'SendGroupMessage' as const,
+      group_id: chatId.value,
       message: newMessage.value
     }
     sendMessage(message)
+    friend_msg.value.push({
+      sender_id: myidConst.value,
+      message: newMessage.value,
+      timestamp: new Date().toISOString()
+    })
     newMessage.value = ''
   }
-}
-const scrollToBottom = (): void => {
   nextTick(() => {
-    if (messageContainer.value) {
+    if (messageContainer.value)
       messageContainer.value.scrollTop = messageContainer.value.scrollHeight
-    }
   })
 }
 </script>
 <style>
-#container {
-  width: 100vw;
-  height: 90vh;
+.chat-layout {
   display: flex;
-  background: linear-gradient(135deg, #a1c4fd, #c2e9fb);
-  font-family: 'Segoe UI', sans-serif;
-  position: relative;
-}
-
-#left {
-  width: 30vw;
   height: 100%;
+  background: #f7faff;
+}
+.chat-sidebar {
+  width: 280px;
+  min-width: 180px;
+  background: #fff;
+  border-right: 1px solid #e6e6e6;
+  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.03);
   display: flex;
   flex-direction: column;
-  background-color: rgba(255, 255, 255, 0.4);
-  backdrop-filter: blur(10px);
-  border-right: 1px solid rgba(0, 0, 0, 0.1);
+  padding: 0 0 0 0;
 }
-
-#lefttop {
-  display: flex;
-  height: 10%;
-  background-color: rgba(240, 240, 240, 0.3);
-  border-bottom: 1px solid #ccc;
+.sidebar-section {
+  padding: 24px 18px;
 }
-
-#lefttop button {
-  padding: 6px 12px;
-  border: none;
-  background-color: #007aff;
-  color: white;
-  border-radius: 16px;
-  cursor: pointer;
-  font-size: 14px;
-  transition: background 0.3s;
-}
-
-#lefttop button:hover {
-  background-color: #005bb5;
-}
-
-#friendlist,
-#grouplist {
-  height: 45%;
-  overflow-y: auto;
-  padding: 0 10px;
-  background-color: rgba(255, 255, 255, 0.95); /* ✅ 更加不透明 */
-  border-bottom: 1px solid #ddd;
-  position: relative;
-  border-radius: 8px;
-  margin: 8px;
-}
-
-.list-title {
-  position: sticky;
-  top: 0;
-  z-index: 10;
-  background-color: rgba(255, 255, 255, 1);
-  font-size: 16px;
+.sidebar-section h2 {
+  font-size: 17px;
+  margin-bottom: 10px;
+  color: #409eff;
   font-weight: bold;
-  color: #333;
-  padding: 8px 0;
-  border-bottom: 1px solid #ccc;
 }
-
-.friendname,
-.groupname {
+ul {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 18px 0;
+}
+.sidebar-item {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 10px 12px;
-  margin-bottom: 8px;
-  background-color: #ffffff;
-  border-radius: 10px;
+  gap: 10px;
+  padding: 10px 0;
+  border-bottom: 1px solid #f0f0f0;
+  font-size: 15px;
   cursor: pointer;
   transition: background 0.2s;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  border-radius: 6px;
 }
-
-.friendname:hover,
-.groupname:hover {
-  background-color: #f0f8ff;
+.sidebar-item:last-child {
+  border-bottom: none;
 }
-
-/* 小图标样式 */
+.sidebar-item.active {
+  background: #e6f7ff;
+  color: #409eff;
+  font-weight: bold;
+}
 .icon {
   font-size: 18px;
 }
-
-.online {
-  color: #28a745;
-  font-weight: bold;
-}
-
-.notonline {
-  color: #555;
-}
-
-#right {
-  width: 70vw;
-  display: flex;
-  flex-direction: column;
-}
-
-#righttop {
+.name {
   flex: 1;
-  overflow-y: auto;
-  padding: 20px;
+}
+.status {
+  font-size: 13px;
+  margin-left: 6px;
+}
+.online {
+  color: #52c41a;
+}
+.offline {
+  color: #bfbfbf;
+}
+.chat-main {
+  flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  background-color: rgba(255, 255, 255, 0.4);
-  backdrop-filter: blur(10px);
-  border-bottom: 1px solid #ccc;
-  scroll-behavior: smooth;
+  background: #f7faff;
+  border-radius: 0 12px 12px 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
 }
-
-.msgid {
-  position: absolute;
-  top: -18px;
-  font-size: 12px;
-  color: gray;
-}
-
-.mine .msgid {
-  right: 0;
-  text-align: right;
-}
-
-.theirs .msgid {
-  left: 0;
-  text-align: left;
-}
-.content {
-  background-color: #1890ff;
-  max-width: 100%;
-  padding: 10px 14px;
-  border-radius: 18px;
-  font-size: 14px;
-  line-height: 1.4;
-  word-break: break-word;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
-}
-#rightbottom {
+.chat-header {
+  height: 56px;
   display: flex;
   align-items: center;
-  padding: 14px;
-  background-color: rgba(255, 255, 255, 0.6);
-  backdrop-filter: blur(10px);
+  padding: 0 32px;
+  font-size: 18px;
+  color: #409eff;
+  border-bottom: 1px solid #e6e6e6;
+  background: #fff;
+  border-radius: 0 12px 0 0;
+  font-weight: bold;
 }
-
-#rightbottom input {
+.chat-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 32px 0 32px 0;
+  background: #f7faff;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+.message-row {
+  display: flex;
+  align-items: flex-end;
+  margin-bottom: 18px;
+  padding-left: 16px;
+  padding-right: 16px;
+}
+.message-row.mine {
+  flex-direction: row-reverse;
+  justify-content: flex-end;
+}
+.message-row.theirs {
+  justify-content: flex-start;
+}
+.avatar-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 0 8px;
+  min-width: 48px;
+}
+.msg-username {
+  font-size: 13px;
+  color: #8a8a8a;
+  margin-bottom: 2px;
+  text-align: center;
+  word-break: break-all;
+}
+.avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #e6f7ff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+}
+.bubble-block {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  max-width: 70%;
+}
+.message-row.mine .bubble-block {
+  align-items: flex-end;
+}
+.bubble {
+  background: #fff;
+  border-radius: 16px;
+  padding: 12px 18px;
+  font-size: 15px;
+  line-height: 1.5;
+  word-break: break-word;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+  position: relative;
+  min-width: 36px;
+  max-width: 100%;
+  margin: 0 2px;
+}
+.bubble.mine {
+  background: #e6f7ff;
+}
+.chat-input {
+  display: flex;
+  align-items: center;
+  padding: 18px 32px;
+  background: #fff;
+  border-top: 1px solid #e6e6e6;
+  border-radius: 0 0 12px 0;
+  gap: 12px;
+}
+.chat-input input {
   flex: 1;
   padding: 10px 16px;
   border: 1px solid #ccc;
   border-radius: 20px;
-  font-size: 14px;
-  margin-right: 12px;
+  font-size: 15px;
   outline: none;
-  background-color: #fff;
+  background: #f7faff;
 }
-
-#rightbottom button {
-  padding: 8px 16px;
+.chat-input button {
+  padding: 8px 22px;
   border: none;
-  background-color: #007aff;
+  background-color: #409eff;
   color: white;
   border-radius: 20px;
   cursor: pointer;
-  font-size: 14px;
-  transition: background-color 0.3s;
+  font-size: 15px;
+  transition: background 0.2s;
 }
-
-#rightbottom button:hover {
-  background-color: #005bb5;
+.chat-input button:hover {
+  background-color: #307fd6;
 }
-
-::-webkit-scrollbar {
-  width: 8px;
-}
-
-::-webkit-scrollbar-thumb {
-  background-color: rgba(0, 0, 0, 0.2);
-  border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background-color: rgba(0, 0, 0, 0.3);
-}
-
-.left-btn {
-  padding: 6px 12px;
-  margin: 0 6px;
-  background-color: #007aff;
-  color: #fff;
-  border: none;
-  border-radius: 16px;
-  font-size: 14px;
-  cursor: pointer;
-  transition: background 0.3s;
-}
-
-.left-btn:hover {
-  background-color: #005bb5;
-}
-
 #back-container {
   text-align: center;
   margin-top: 10px;
 }
-
 .back-btn {
   padding: 8px 16px;
   background-color: #ff4d4f;
@@ -464,46 +411,9 @@ const scrollToBottom = (): void => {
   cursor: pointer;
   transition: background-color 0.3s;
 }
-
 .back-btn:hover {
   background-color: #d9363e;
 }
-
-#rightbottom input {
-  flex: 1;
-  padding: 10px;
-  border: 1px solid #ccc;
-  border-radius: 1; /* 去除圆角 */
-  background: #ffffff;
-  margin-right: 10px;
-  outline: none;
-  font-size: 14px;
-}
-
-.message {
-  max-width: 70%;
-  padding: 10px 14px;
-  border-radius: 0; /* 去除圆角 */
-  position: relative;
-}
-
-.theirs {
-  align-self: flex-start;
-  color: white;
-}
-
-.mine {
-  align-self: flex-end;
-  color: white;
-}
-
-#back-container {
-  position: absolute;
-  bottom: 20px;
-  left: 20px;
-  z-index: 1000;
-}
-
 .square-btn {
   padding: 8px 16px;
   margin: 0;
@@ -515,47 +425,19 @@ const scrollToBottom = (): void => {
   cursor: pointer;
   transition: background 0.3s ease;
 }
-
-.button-row {
+.chat-empty {
   display: flex;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(255, 255, 255, 0.3); /* 同容器背景 */
-}
-
-.top-action-btn {
-  flex: 1;
-  height: 100%;
-  border: none;
-  border-radius: 0 !important; /* ✅ 保证去掉圆角 */
-  background-color: transparent;
-  box-shadow: none;
-  outline: none;
-  margin: 0;
-  padding: 0;
-  font-size: 16px;
-  font-weight: bold;
-  color: #333;
-  display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  position: relative;
-  cursor: pointer;
+  height: 100%;
+  color: #bfbfbf;
 }
-
-/* 添加按钮之间的分隔线 */
-.top-action-btn:not(:last-child)::after {
-  content: '';
-  position: absolute;
-  right: 0;
-  top: 20%;
-  width: 1px;
-  height: 60%;
-  background-color: #666; /* 可调分割线颜色 */
+.empty-icon {
+  font-size: 64px;
+  margin-bottom: 18px;
 }
-
-/* 悬停时轻微高亮反馈，可选 */
-.top-action-btn:hover {
-  background-color: rgba(255, 255, 255, 0.1);
+.empty-tip {
+  font-size: 18px;
 }
 </style>

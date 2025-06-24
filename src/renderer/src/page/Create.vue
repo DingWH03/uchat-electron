@@ -125,7 +125,6 @@ const clearSelection = (): void => {
   selectedFriendIds.value = []
 }
 </script>
-
 <style scoped>
 .friend-list-container {
   max-width: 480px;
@@ -319,3 +318,4 @@ button.back {
   color: white;
 }
 </style>
+

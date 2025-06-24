@@ -36,9 +36,11 @@
         </el-form-item>
         <div class="botton-link">
           <span class="a-link" @click="changeOpType">{{ isLogin ? '注册' : '返回登录' }}</span>
+          <span class="a-link" @click="showSettings = true" style="margin-left: 16px;">设置服务器</span>
         </div>
       </el-form>
     </div>
+    <SettingsDialog v-if="showSettings" @close="showSettings = false" :show-logout="false" />
   </div>
 </template>
 <script setup lang="ts">
@@ -51,12 +53,15 @@ import '../assets/base.scss'
 import router from '@renderer/router'
 import { Account } from '@/types/localDBModel'
 import { addOrUpdateAccount, getAccounts } from '@renderer/ipcDB'
+import SettingsDialog from '../components/SettingsDialog.vue'
 
 const username = ref('')
 const password = ref('')
 const isLogin = ref(true)
 
 const rememberMe = ref(false)
+
+const showSettings = ref(false)
 
 const changeOpType = (): void => {
   isLogin.value = !isLogin.value
