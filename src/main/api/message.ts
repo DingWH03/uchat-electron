@@ -43,11 +43,33 @@ export async function getLatestTimestampsOfAllGroups(): Promise<
 > {
   const sessionId = getSessionId()
   const baseUrl = getApiBaseUrl()
-  const res = await fetch(`${baseUrl}/message/group/latest`, {
-    method: 'GET',
-    headers: { Cookie: `session_id=${sessionId}` }
-  })
-  return res.json()
+  try {
+    const res = await fetch(`${baseUrl}/message/group/latest`, {
+      method: 'GET',
+      headers: { Cookie: `session_id=${sessionId}` }
+    })
+    
+    if (!res.ok) {
+      const errorText = await res.text()
+      console.error(`[API] getLatestTimestampsOfAllGroups HTTP错误: ${res.status} ${res.statusText}, body: ${errorText}`)
+      return {
+        status: false,
+        code: res.status,
+        message: `HTTP ${res.status}: ${res.statusText} - ${errorText}`,
+        data: undefined
+      }
+    }
+    
+    return await res.json()
+  } catch (error) {
+    console.error('[API] getLatestTimestampsOfAllGroups 请求失败:', error)
+    return {
+      status: false,
+      code: 500,
+      message: error instanceof Error ? error.message : '请求失败',
+      data: undefined
+    }
+  }
 }
 
 // 4. 获取所有群聊中最新一条消息的全局最大时间戳
@@ -122,11 +144,33 @@ export async function getLatestTimestampsOfAllPrivateChats(): Promise<
 > {
   const sessionId = getSessionId()
   const baseUrl = getApiBaseUrl()
-  const res = await fetch(`${baseUrl}/message/user/latest`, {
-    method: 'GET',
-    headers: { Cookie: `session_id=${sessionId}` }
-  })
-  return res.json()
+  try {
+    const res = await fetch(`${baseUrl}/message/user/latest`, {
+      method: 'GET',
+      headers: { Cookie: `session_id=${sessionId}` }
+    })
+    
+    if (!res.ok) {
+      const errorText = await res.text()
+      console.error(`[API] getLatestTimestampsOfAllPrivateChats HTTP错误: ${res.status} ${res.statusText}, body: ${errorText}`)
+      return {
+        status: false,
+        code: res.status,
+        message: `HTTP ${res.status}: ${res.statusText} - ${errorText}`,
+        data: undefined
+      }
+    }
+    
+    return await res.json()
+  } catch (error) {
+    console.error('[API] getLatestTimestampsOfAllPrivateChats 请求失败:', error)
+    return {
+      status: false,
+      code: 500,
+      message: error instanceof Error ? error.message : '请求失败',
+      data: undefined
+    }
+  }
 }
 
 // 10. 获取某时间之后所有私聊消息（带对方 ID）
@@ -164,14 +208,35 @@ export async function getPrivateMessagesAfterTimestamp(
 ): Promise<RequestResponse<SessionMessage[]>> {
   const sessionId = getSessionId()
   const baseUrl = getApiBaseUrl()
-  const query = new URLSearchParams({ after: data.after.toString() })
-  const res = await fetch(`${baseUrl}/message/user/${data.id}/after?${query.toString()}`, {
-    method: 'GET',
-    headers: {
-      Cookie: `session_id=${sessionId}`
+  const query = new URLSearchParams({ timestamp: data.after.toString() })
+  const url = `${baseUrl}/message/user/${data.id}/after?${query.toString()}`
+  try {
+    console.log('[API] getPrivateMessagesAfterTimestamp 请求:', url)
+    const res = await fetch(url, {
+      method: 'GET',
+      headers: { Cookie: `session_id=${sessionId}` }
+    })
+    const text = await res.text()
+    console.log('[API] getPrivateMessagesAfterTimestamp 响应状态:', res.status, res.statusText)
+    console.log('[API] getPrivateMessagesAfterTimestamp 响应体:', text)
+    if (!res.ok) {
+      return {
+        status: false,
+        code: res.status,
+        message: `HTTP ${res.status}: ${res.statusText} - ${text}`,
+        data: undefined
+      }
     }
-  })
-  return res.json()
+    return JSON.parse(text)
+  } catch (error) {
+    console.error('[API] getPrivateMessagesAfterTimestamp 请求失败:', error)
+    return {
+      status: false,
+      code: 500,
+      message: error instanceof Error ? error.message : '请求失败',
+      data: undefined
+    }
+  }
 }
 
 export function registerMessageApi(): void {

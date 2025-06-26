@@ -1,10 +1,11 @@
 import Database from 'better-sqlite3'
 import { join } from 'path'
 import { app } from 'electron'
+import type { SessionMessage } from '../../types/HttpRespond'
 
 let db: Database.Database
 
-const CURRENT_SCHEMA_VERSION = 6 // 每次结构变更时+1
+const CURRENT_SCHEMA_VERSION = 7 // 升级：增加last_message_timestamp字段
 
 const dbFilePath = join(app.getPath('userData'), 'chat.db') // 存储在用户目录，支持打包后运行
 
@@ -14,7 +15,7 @@ export function initDB(): void {
   db.pragma('journal_mode = WAL') // 使用WAL模式提高性能和数据安全性
   db.pragma('synchronous = NORMAL') // 设置同步模式
   db.pragma('cache_size = 10000') // 设置缓存大小
-  
+
   // 检查 user_version
   const row = db.prepare('PRAGMA user_version').get()
   const currentVersion = row.user_version as number
@@ -72,6 +73,7 @@ function createTables(): void {
       avatar TEXT,
       online INTEGER NOT NULL DEFAULT 0,
       last_online_time INTEGER,
+      last_message_timestamp INTEGER NOT NULL DEFAULT 0,
       FOREIGN KEY (account_id) REFERENCES accounts(id) ON DELETE CASCADE
     );
 
@@ -82,6 +84,7 @@ function createTables(): void {
       name TEXT,
       description TEXT,
       avatar TEXT,
+      last_message_timestamp INTEGER NOT NULL DEFAULT 0,
       FOREIGN KEY (account_id) REFERENCES accounts(id) ON DELETE CASCADE
     );
 
@@ -148,4 +151,108 @@ export function saveMessageToDB(params: {
     console.error('[DB] 存储消息失败:', err)
     return false
   }
+}
+
+/**
+ * 获取本地群聊聊天记录（分页）
+ */
+export function getLocalGroupMessages(
+  accountId: number,
+  groupId: number,
+  offset: number,
+  limit: number
+): SessionMessage[] {
+  const db = getDB()
+  const rows = db
+    .prepare(
+      `SELECT sender_id, message_type, content, timestamp
+     FROM messages
+     WHERE account_id = ? AND group_id = ?
+     ORDER BY timestamp ASC
+     LIMIT ? OFFSET ?`
+    )
+    .all(accountId, groupId, limit, offset)
+  return rows.map((row) => ({
+    sender_id: row.sender_id,
+    message_type: row.message_type,
+    content: row.content,
+    timestamp: row.timestamp
+  }))
+}
+
+/**
+ * 获取本地私聊聊天记录（分页）
+ */
+export function getLocalPrivateMessages(
+  accountId: number,
+  userId: number,
+  offset: number,
+  limit: number
+): SessionMessage[] {
+  const db = getDB()
+  const rows = db
+    .prepare(
+      `SELECT sender_id, message_type, content, timestamp
+     FROM messages
+     WHERE account_id = ? AND ((sender_id = ? AND receiver_id = ?) OR (sender_id = ? AND receiver_id = ?))
+     ORDER BY timestamp ASC
+     LIMIT ? OFFSET ?`
+    )
+    .all(accountId, userId, accountId, accountId, userId, limit, offset)
+  return rows.map((row) => ({
+    sender_id: row.sender_id,
+    message_type: row.message_type,
+    content: row.content,
+    timestamp: row.timestamp
+  }))
+}
+
+/**
+ * 获取本地群聊某时间戳后的消息
+ */
+export function getLocalGroupMessagesAfterTimestamp(
+  accountId: number,
+  groupId: number,
+  after: number
+): SessionMessage[] {
+  const db = getDB()
+  const rows = db
+    .prepare(
+      `SELECT sender_id, message_type, content, timestamp
+     FROM messages
+     WHERE account_id = ? AND group_id = ? AND timestamp > ?
+     ORDER BY timestamp ASC`
+    )
+    .all(accountId, groupId, after)
+  return rows.map((row) => ({
+    sender_id: row.sender_id,
+    message_type: row.message_type,
+    content: row.content,
+    timestamp: row.timestamp
+  }))
+}
+
+/**
+ * 获取本地私聊某时间戳后的消息
+ */
+export function getLocalPrivateMessagesAfterTimestamp(
+  accountId: number,
+  userId: number,
+  after: number
+): SessionMessage[] {
+  const db = getDB()
+  const rows = db
+    .prepare(
+      `SELECT sender_id, message_type, content, timestamp
+     FROM messages
+     WHERE account_id = ? AND ((sender_id = ? AND receiver_id = ?) OR (sender_id = ? AND receiver_id = ?)) AND timestamp > ?
+     ORDER BY timestamp ASC`
+    )
+    .all(accountId, userId, accountId, accountId, userId, after)
+  return rows.map((row) => ({
+    sender_id: row.sender_id,
+    message_type: row.message_type,
+    content: row.content,
+    timestamp: row.timestamp
+  }))
 }

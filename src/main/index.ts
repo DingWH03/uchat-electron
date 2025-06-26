@@ -4,7 +4,7 @@ import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.jpg?asset'
 import { Apis } from './api/index.js'
 import { getSessionId } from './config/session'
-import { performLogout } from './api/anthentication'
+import { performLogout, checkNetworkAndSession } from './api/anthentication'
 import { initDB, registerLocalDBIpcHandlers, closeDB } from './localDB'
 
 const login_width = 1000
@@ -130,7 +130,7 @@ function showNotification(title: string, body: string): void {
   }
 }
 
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
   electronApp.setAppUserModelId('com.electron')
 
   app.on('browser-window-created', (_, window) => {
@@ -148,6 +148,23 @@ app.whenReady().then(() => {
 
   // 初始化API
   Apis(mainWindow)
+
+  // 检查是否有有效的会话，如果有则恢复用户ID
+  if (getSessionId()) {
+    console.log('[App] 检测到会话ID，尝试恢复用户状态...')
+    try {
+      const sessionStatus = await checkNetworkAndSession(mainWindow)
+      if (sessionStatus === 'ok') {
+        console.log('[App] 会话恢复成功')
+        // 会话恢复成功，可以自动建立WebSocket连接
+        // 这里可以调用 setupWebSocket(mainWindow) 如果需要的话
+      } else {
+        console.log('[App] 会话无效或网络错误:', sessionStatus)
+      }
+    } catch (error) {
+      console.error('[App] 会话恢复失败:', error)
+    }
+  }
 
   // 监听来自渲染进程的消息通知
   ipcMain.on('new-message', (_, message) => {

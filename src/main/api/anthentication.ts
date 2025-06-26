@@ -10,6 +10,7 @@ import { syncContacts } from '../localDB'
 let loginUser: number = 0
 
 export const myID = (): number => {
+  console.log('[myID] 当前 loginUser:', loginUser)
   return loginUser
 }
 
@@ -31,9 +32,15 @@ export async function checkNetworkAndSession(win: BrowserWindow): Promise<'ok'|'
       headers: { Cookie: `session_id=${sessionId}` }
     })
     const sessionData = await sessionRes.json()
+    console.log('[checkNetworkAndSession] 会话检查响应:', sessionData)
     if (!sessionData || sessionData.status === false) {
       win.webContents.send('ws:status', 'session-invalid')
       return 'session-invalid'
+    }
+    // 如果会话有效，设置用户ID
+    if (sessionData.data && sessionData.data.userid) {
+      console.log('[checkNetworkAndSession] 从会话中恢复用户ID:', sessionData.data.userid)
+      loginUser = sessionData.data.userid
     }
   } catch {
     win.webContents.send('ws:status', 'session-invalid')
@@ -73,6 +80,7 @@ export function registerAnthenticationApi(win: BrowserWindow): void {
   )
   // 登陆的后端接口调用
   ipcMain.handle('api:auth/login', async (_, loginData: LoginRequest): Promise<boolean> => {
+    console.log('[Login] 开始登录，用户ID:', loginData.userid)
     const baseUrl = getApiBaseUrl()
     const res = await fetch(`${baseUrl}/auth/login`, {
       method: 'POST',
@@ -80,13 +88,26 @@ export function registerAnthenticationApi(win: BrowserWindow): void {
       body: JSON.stringify(loginData)
     })
     const data = await res.json()
+    console.log('[Login] 登录响应:', data)
     if (data.status) {
+      console.log('[Login] 登录成功，设置 sessionId 和 loginUser')
       setSessionId(data.data)
-      setupWebSocket(win)
+      console.log('[Login] 设置 loginUser 前:', loginUser)
       loginUser = loginData.userid // 保存登陆用户的id
+      console.log('[Login] 设置 loginUser 后:', loginUser)
+      console.log('[Login] 调用 myID() 验证:', myID())
+      
+      console.log('[Login] 开始同步联系人...')
       await syncContacts() // 同步联系人数据到本地数据库
+      console.log('[Login] 联系人同步完成，再次验证 myID():', myID())
+      
+      console.log('[Login] 开始设置 WebSocket...')
+      setupWebSocket(win)
+      
       win.setResizable(true)
       // win.setTitleBarOverlay()
+    } else {
+      console.log('[Login] 登录失败')
     }
     return data.status
   })

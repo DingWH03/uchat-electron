@@ -93,17 +93,17 @@ const api = {
   friend_messages: async (requestData: MessageRequest) => {
     return await ipcRenderer.invoke('api:message/user', requestData)
   },
-  // WebSocket：发送消息
-  sendMessage: async (msg: string) => {
-    await ipcRenderer.invoke('ws:send', msg)
+  // WebSocket: 发送消息
+  sendMessage: async (message: MessageRequest) => {
+    return await ipcRenderer.invoke('ws:send', message)
+  },
+  // WebSocket: 监听消息
+  onWSMessage: (callback: (message: any) => void) => {
+    ipcRenderer.on('ws:message', (_, message) => callback(message))
   },
   // WebSocket：监听连接状态
   onWSStatus: (callback: (status: string) => void) => {
     ipcRenderer.on('ws:status', (_, status) => callback(status))
-  },
-  // WebSocket：监听主进程推送的消息
-  onWSMessage: (callback: (msg: string) => void) => {
-    ipcRenderer.on('ws:message', (_, msg) => callback(msg))
   },
   // 好友上线监听
   onFriendOnline: (callback: (data: { user_id: number }) => void) => {
@@ -114,7 +114,9 @@ const api = {
     ipcRenderer.on('friend:offline', (_, data) => callback(data))
   },
   // 好友状态批量更新监听
-  onFriendStatusUpdated: (callback: (data: Array<{ user_id: number; online: boolean }>) => void) => {
+  onFriendStatusUpdated: (
+    callback: (data: Array<{ user_id: number; online: boolean }>) => void
+  ) => {
     ipcRenderer.on('friend:status-updated', (_, data) => callback(data))
   }
 }
@@ -141,6 +143,33 @@ const localDB = {
   },
   getFriendStatus: async (userId: number) => {
     return await ipcRenderer.invoke('localdb:friend:status', userId)
+  },
+  // 新增：本地群聊聊天记录（分页）
+  getLocalGroupMessages: async (groupId: number, offset: number, limit: number) => {
+    return await ipcRenderer.invoke('localdb:message/group', groupId, offset, limit)
+  },
+  // 新增：本地私聊聊天记录（分页）
+  getLocalPrivateMessages: async (userId: number, offset: number, limit: number) => {
+    return await ipcRenderer.invoke('localdb:message/user', userId, offset, limit)
+  },
+  // 新增：本地群聊某时间戳后的消息
+  getLocalGroupMessagesAfterTimestamp: async (groupId: number, after: number) => {
+    return await ipcRenderer.invoke('localdb:message/group/after', groupId, after)
+  },
+  // 新增：本地私聊某时间戳后的消息
+  getLocalPrivateMessagesAfterTimestamp: async (userId: number, after: number) => {
+    return await ipcRenderer.invoke('localdb:message/user/after', userId, after)
+  },
+  // 新增：写入本地消息
+  saveMessageToDB: async (params: {
+    type: 'private' | 'group'
+    receiver_id?: number
+    group_id?: number
+    message: string
+    sender_id: number
+    timestamp: number
+  }) => {
+    return await ipcRenderer.invoke('localdb:saveMessageToDB', params)
   }
 }
 

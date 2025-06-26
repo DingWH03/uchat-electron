@@ -6,6 +6,9 @@ import { ClientMessage, ClientMessageSchema } from '../../types/WebsocketRequest
 import { ServerMessage, ServerMessageSchema } from '../../types/WebsocketRespond'
 import { WebSocketStatusManager } from './wsStatusManager'
 import { checkNetworkAndSession } from '../api/anthentication'
+import { syncAllMessagesBeforeWS } from '../localDB/sync'
+import { saveMessageToDB } from '../localDB/db'
+import { myID } from '../api/anthentication'
 
 let ws: WebSocket | null = null
 let reconnectTimeout: NodeJS.Timeout | null = null
@@ -24,6 +27,13 @@ export function setupWebSocket(win: BrowserWindow): void {
 
   // 初始化状态管理器
   statusManager = new WebSocketStatusManager(win)
+
+  // 在WebSocket连接前同步消息
+  syncAllMessagesBeforeWS().then(() => {
+    console.log('[WebSocket] 消息同步完成，开始建立连接')
+  }).catch(err => {
+    console.error('[WebSocket] 消息同步失败:', err)
+  })
 
   const baseUrl = getApiBaseUrl()
   const wsUrl = `${baseUrl}/auth/ws`
@@ -45,15 +55,31 @@ export function setupWebSocket(win: BrowserWindow): void {
 
   ws.onmessage = (event) => {
     try {
-      // console.log('收到消息：', event)
+      console.log('[WebSocket] 收到消息:', event.data)
       const parsed = JSON.parse(event.data)
       const validated: ServerMessage = ServerMessageSchema.parse(parsed)
+      console.log('[WebSocket] 解析后的消息类型:', validated.type)
 
       // 处理上线/下线消息
       if (validated.type === 'OnlineMessage' && statusManager) {
+        console.log('[WebSocket] 处理好友上线消息:', validated.friend_id)
         statusManager.handleFriendOnline(validated.friend_id)
       } else if (validated.type === 'OfflineMessage' && statusManager) {
+        console.log('[WebSocket] 处理好友下线消息:', validated.friend_id)
         statusManager.handleFriendOffline(validated.friend_id)
+      }
+      // 处理私聊消息
+      else if (validated.type === 'SendMessage') {
+        console.log('[WebSocket] 收到私聊消息，准备处理:', validated)
+        handlePrivateMessage(win, validated)
+      }
+      // 处理群聊消息
+      else if (validated.type === 'SendGroupMessage') {
+        console.log('[WebSocket] 收到群聊消息，准备处理:', validated)
+        handleGroupMessage(win, validated)
+      }
+      else {
+        console.log('[WebSocket] 未处理的消息类型:', validated.type)
       }
 
       // 继续发送给前端处理其他消息
@@ -110,4 +136,87 @@ export function closeWebSocket(): void {
   ws?.close()
   statusManager = null
   ipcMain.removeHandler('ws:send')
+}
+
+// 处理私聊消息
+function handlePrivateMessage(win: BrowserWindow, message: ServerMessage & { type: 'SendMessage' }): void {
+  const accountId = myID()
+  console.log('[WebSocket] 处理私聊消息，当前用户ID:', accountId, '消息发送者:', message.sender)
+  
+  if (!accountId) {
+    console.error('[WebSocket] 无法获取当前用户ID，跳过消息处理')
+    return
+  }
+
+  // 跳过自己发送的消息（这些消息在发送时已经保存过了）
+  if (message.sender === accountId) {
+    console.log('[WebSocket] 跳过自己发送的消息')
+    return
+  }
+
+  // 保存消息到数据库
+  const saveResult = saveMessageToDB({
+    account_id: accountId,
+    sender_id: message.sender,
+    receiver_id: accountId, // 接收者是当前用户
+    group_id: null,
+    message_type: 'text',
+    content: message.message,
+    timestamp: message.timestamp
+  })
+
+  if (saveResult) {
+    console.log('[WebSocket] 私聊消息已保存到数据库')
+    // 发送系统通知
+    win.webContents.send('new-message', {
+      type: 'private',
+      sender_id: message.sender,
+      content: message.message,
+      timestamp: message.timestamp
+    })
+  } else {
+    console.error('[WebSocket] 私聊消息保存到数据库失败')
+  }
+}
+
+// 处理群聊消息
+function handleGroupMessage(win: BrowserWindow, message: ServerMessage & { type: 'SendGroupMessage' }): void {
+  const accountId = myID()
+  console.log('[WebSocket] 处理群聊消息，当前用户ID:', accountId, '消息发送者:', message.sender, '群ID:', message.group_id)
+  
+  if (!accountId) {
+    console.error('[WebSocket] 无法获取当前用户ID，跳过消息处理')
+    return
+  }
+
+  // 跳过自己发送的消息（这些消息在发送时已经保存过了）
+  if (message.sender === accountId) {
+    console.log('[WebSocket] 跳过自己发送的群聊消息')
+    return
+  }
+
+  // 保存消息到数据库
+  const saveResult = saveMessageToDB({
+    account_id: accountId,
+    sender_id: message.sender,
+    receiver_id: null,
+    group_id: message.group_id,
+    message_type: 'text',
+    content: message.message,
+    timestamp: message.timestamp
+  })
+
+  if (saveResult) {
+    console.log('[WebSocket] 群聊消息已保存到数据库')
+    // 发送系统通知
+    win.webContents.send('new-message', {
+      type: 'group',
+      sender_id: message.sender,
+      group_id: message.group_id,
+      content: message.message,
+      timestamp: message.timestamp
+    })
+  } else {
+    console.error('[WebSocket] 群聊消息保存到数据库失败')
+  }
 }
