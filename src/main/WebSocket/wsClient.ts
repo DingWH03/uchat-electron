@@ -5,15 +5,17 @@ import { getApiBaseUrl } from '../config/url'
 import { ClientMessage, ClientMessageSchema } from '../../types/WebsocketRequest'
 import { ServerMessage, ServerMessageSchema } from '../../types/WebsocketRespond'
 import { WebSocketStatusManager } from './wsStatusManager'
-import { saveMessageToDB } from '../localDB/db'
-import { getAccounts } from '../localDB/account'
-import { getChatId } from '../config/chatId'
+import { checkNetworkAndSession } from '../api/anthentication'
 
 let ws: WebSocket | null = null
 let reconnectTimeout: NodeJS.Timeout | null = null
 let statusManager: WebSocketStatusManager | null = null
 
 export function setupWebSocket(win: BrowserWindow): void {
+  // 注册 handler 前先移除，避免重复注册
+  ipcMain.removeHandler('ws:manual-reconnect')
+  ipcMain.removeHandler('ws:send')
+
   const sessionId = getSessionId()
   if (!sessionId) {
     console.warn('未找到 SessionId，WebSocket 未连接')
@@ -65,10 +67,18 @@ export function setupWebSocket(win: BrowserWindow): void {
     console.error('WebSocket 错误', err)
   }
 
-  ws.onclose = () => {
-    console.warn('WebSocket 已断开，尝试重连中...')
-    win.webContents.send('ws:status', 'disconnected')
-    reconnectTimeout = setTimeout(() => setupWebSocket(win), 3000)
+  ws.onclose = async () => {
+    console.warn('WebSocket 已断开，检测网络和会话...')
+    const check = await checkNetworkAndSession(win)
+    if (check === 'ok') {
+      win.webContents.send('ws:status', 'reconnecting')
+      reconnectTimeout = setTimeout(() => setupWebSocket(win), 3000)
+    }
+    // network-error/session-invalid 时不自动重连，等待前端操作
+    // 前端可通过 ws:manual-reconnect 主动请求重连
+    else {
+      // 断开通知已在 checkNetworkAndSession 内部完成
+    }
   }
 
   // 支持渲染进程发消息
@@ -85,6 +95,13 @@ export function setupWebSocket(win: BrowserWindow): void {
       console.error('[WebSocket] 尝试发送非法消息:', err)
       return false
     }
+  })
+
+  // 新增：支持前端手动重连
+  ipcMain.handle('ws:manual-reconnect', async () => {
+    if (ws) ws.close()
+    setupWebSocket(win)
+    return true
   })
 }
 

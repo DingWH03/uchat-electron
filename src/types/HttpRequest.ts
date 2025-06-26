@@ -41,3 +41,10 @@ export interface MessageRequest {
   id: number // 用户ID或群组ID
   offset: number
 }
+
+export interface AfterTimestampQuery {
+  id: number
+  after: number
+}
+
+

@@ -56,3 +56,8 @@ export type ContactList = {
   friends: UserSimpleInfo[] // 好友列表
   groups: GroupSimpleInfo[] // 群组列表
 }
+
+export interface IdMessagePair {
+  id: number
+  message: SessionMessage
+}

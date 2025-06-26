@@ -13,6 +13,35 @@ export const myID = (): number => {
   return loginUser
 }
 
+// 新增：检测网络和 session 的函数
+export async function checkNetworkAndSession(win: BrowserWindow): Promise<'ok'|'network-error'|'session-invalid'> {
+  const baseUrl = getApiBaseUrl()
+  // 1. 检查 /ping
+  try {
+    const pingRes = await fetch(`${baseUrl}/ping`)
+    if (!pingRes.ok) throw new Error()
+  } catch {
+    win.webContents.send('ws:status', 'network-error')
+    return 'network-error'
+  }
+  // 2. 检查 session
+  const sessionId = getSessionId()
+  try {
+    const sessionRes = await fetch(`${baseUrl}/auth/myid`, {
+      headers: { Cookie: `session_id=${sessionId}` }
+    })
+    const sessionData = await sessionRes.json()
+    if (!sessionData || sessionData.status === false) {
+      win.webContents.send('ws:status', 'session-invalid')
+      return 'session-invalid'
+    }
+  } catch {
+    win.webContents.send('ws:status', 'session-invalid')
+    return 'session-invalid'
+  }
+  return 'ok'
+}
+
 export async function performLogout(): Promise<RequestResponse<void>> {
   closeWebSocket()
   const baseUrl = getApiBaseUrl()
