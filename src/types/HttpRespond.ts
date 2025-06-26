@@ -13,7 +13,7 @@ export interface RequestResponse<T> {
 export type SessionMessage = {
   sender_id: number
   message: string
-  timestamp: string // ISO 格式字符串
+  timestamp: number // ISO 格式字符串
 }
 
 export type UserSimpleInfo = {

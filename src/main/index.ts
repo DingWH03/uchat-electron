@@ -3,7 +3,7 @@ import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.jpg?asset'
 import { Apis } from './api/index.js'
-import { getSessionId } from './session'
+import { getSessionId } from './config/session'
 import { performLogout } from './api/anthentication'
 import { initDB, registerLocalDBIpcHandlers, closeDB } from './localDB'
 

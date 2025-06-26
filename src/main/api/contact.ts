@@ -1,6 +1,6 @@
 // main/api/friend.ts
-import { getApiBaseUrl } from './config'
-import { getSessionId } from '../session'
+import { getApiBaseUrl } from '../config/url'
+import { getSessionId } from '../config/session'
 import { ContactList, RequestResponse, UpdateTimestamps } from '../../types/HttpRespond'
 
 /// 获取群组和好友的时间戳

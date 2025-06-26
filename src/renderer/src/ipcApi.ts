@@ -91,7 +91,7 @@ const friend_add = async (requestData: FriendRequest): Promise<RequestResponse<v
 }
 
 /// 好友列表的api
-const friend_list = async (): Promise<RequestResponse<UserSimpleInfo[]>> => {
+const friend_list = async (): Promise<RequestResponse<UserSimpleInfoWithStatus[]>> => {
   return window.api.friend_list()
 }
 

@@ -1,7 +1,7 @@
 // main/api/anthentication.ts
 import { BrowserWindow, ipcMain } from 'electron'
-import { getApiBaseUrl } from './config'
-import { getSessionId, setSessionId } from '../session'
+import { getApiBaseUrl } from '../config/url'
+import { getSessionId, setSessionId } from '../config/session'
 import { RegisterRequest, LoginRequest, PasswordRequest } from '../../types/HttpRequest'
 import { closeWebSocket, setupWebSocket } from '../WebSocket/wsClient'
 import { RequestResponse } from '../../types/HttpRespond'

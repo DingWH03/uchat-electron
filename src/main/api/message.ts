@@ -1,8 +1,8 @@
 // main/api/message.ts
 import { ipcMain } from 'electron'
-import { getApiBaseUrl } from './config'
+import { getApiBaseUrl } from '../config/url'
 import { MessageRequest } from '../../types/HttpRequest'
-import { getSessionId } from '../session'
+import { getSessionId } from '../config/session'
 import { RequestResponse, SessionMessage } from '../../types/HttpRespond'
 
 export function registerMessageApi(): void {

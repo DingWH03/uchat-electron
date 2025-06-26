@@ -19,11 +19,11 @@ const api = {
   },
   // 修改后端url
   setBaseUrl: async (URL: string) => {
-    return await ipcRenderer.invoke('api:setBaseUrl', URL)
+    return await ipcRenderer.invoke('config:setBaseUrl', URL)
   },
   // 获取后端url
   getBaseUrl: async () => {
-    return await ipcRenderer.invoke('api:getBaseUrl')
+    return await ipcRenderer.invoke('config:getBaseUrl')
   },
   // Http: 注册账号
   register: async (registerData: RegisterRequest) => {
@@ -104,6 +104,18 @@ const api = {
   // WebSocket：监听主进程推送的消息
   onWSMessage: (callback: (msg: string) => void) => {
     ipcRenderer.on('ws:message', (_, msg) => callback(msg))
+  },
+  // 好友上线监听
+  onFriendOnline: (callback: (data: { user_id: number }) => void) => {
+    ipcRenderer.on('friend:online', (_, data) => callback(data))
+  },
+  // 好友下线监听
+  onFriendOffline: (callback: (data: { user_id: number }) => void) => {
+    ipcRenderer.on('friend:offline', (_, data) => callback(data))
+  },
+  // 好友状态批量更新监听
+  onFriendStatusUpdated: (callback: (data: Array<{ user_id: number; online: boolean }>) => void) => {
+    ipcRenderer.on('friend:status-updated', (_, data) => callback(data))
   }
 }
 
@@ -117,6 +129,18 @@ const localDB = {
   },
   deleteAccount: async (accountId: number) => {
     return await ipcRenderer.invoke('localdb:deleteAccount', accountId)
+  },
+  friend_list: async () => {
+    return await ipcRenderer.invoke('localdb:friend/list')
+  },
+  group_list: async () => {
+    return await ipcRenderer.invoke('localdb:group/list')
+  },
+  getFriendsWithStatus: async () => {
+    return await ipcRenderer.invoke('localdb:friends:with-status')
+  },
+  getFriendStatus: async (userId: number) => {
+    return await ipcRenderer.invoke('localdb:friend:status', userId)
   }
 }
 

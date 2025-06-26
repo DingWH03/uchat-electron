@@ -4,7 +4,7 @@ import { app } from 'electron'
 
 let db: Database.Database
 
-const CURRENT_SCHEMA_VERSION = 5 // 每次结构变更时+1
+const CURRENT_SCHEMA_VERSION = 6 // 每次结构变更时+1
 
 const dbFilePath = join(app.getPath('userData'), 'chat.db') // 存储在用户目录，支持打包后运行
 
@@ -70,6 +70,8 @@ function createTables(): void {
       user_id INTEGER NOT NULL,
       username TEXT,
       avatar TEXT,
+      online INTEGER NOT NULL DEFAULT 0,
+      last_online_time INTEGER,
       FOREIGN KEY (account_id) REFERENCES accounts(id) ON DELETE CASCADE
     );
 
@@ -103,4 +105,47 @@ function createTables(): void {
 export function getDB(): Database.Database {
   if (!db) throw new Error('数据库未初始化')
   return db
+}
+
+// 新增：存储聊天消息到数据库（支持私聊和群聊）
+/**
+ * 存储聊天消息到本地数据库
+ * @param params 消息参数
+ * @param params.account_id 当前账号ID
+ * @param params.sender_id 发送者ID
+ * @param params.receiver_id 接收者ID（私聊时必填，群聊为null）
+ * @param params.group_id 群聊ID（群聊时必填，私聊为null）
+ * @param params.message_type 消息类型
+ * @param params.content 消息内容
+ * @param params.timestamp 消息时间戳
+ * @returns 是否存储成功
+ */
+export function saveMessageToDB(params: {
+  account_id: number
+  sender_id: number
+  receiver_id?: number | null
+  group_id?: number | null
+  message_type: string
+  content: string
+  timestamp: number
+}): boolean {
+  try {
+    const db = getDB()
+    db.prepare(
+      `INSERT INTO messages (account_id, sender_id, receiver_id, group_id, message_type, content, timestamp)
+       VALUES (?, ?, ?, ?, ?, ?, ?)`
+    ).run(
+      params.account_id,
+      params.sender_id,
+      params.receiver_id ?? null,
+      params.group_id ?? null,
+      params.message_type,
+      params.content,
+      params.timestamp
+    )
+    return true
+  } catch (err) {
+    console.error('[DB] 存储消息失败:', err)
+    return false
+  }
 }

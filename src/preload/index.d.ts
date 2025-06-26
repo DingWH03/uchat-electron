@@ -36,7 +36,7 @@ declare global {
       myid: () => number
       // friend
       friend_add: (requestData: FriendRequest) => Promise<RequestResponse<void>>
-      friend_list: () => Promise<RequestResponse<UserSimpleInfo[]>>
+      friend_list: () => Promise<RequestResponse<UserSimpleInfoWithStatus[]>>
       friend_list_v2: () => Promise<RequestResponse<UserSimpleInfoWithStatus[]>>
       friend_info: (requestData: FriendRequest) => Promise<RequestResponse<UserDetailedInfo>>
       // group
@@ -53,11 +53,18 @@ declare global {
       sendMessage: (msg: ClientMessage) => Promise<boolean> // ws发送消息
       onWSStatus: (callback: (status: string) => void) => void // ws状态提示
       onWSMessage: (callback: (msg: ServerMessage) => void) => void // ws接受消息
+      onFriendOnline: (callback: (data: { user_id: number }) => void) => void // 好友上线
+      onFriendOffline: (callback: (data: { user_id: number }) => void) => void // 好友下线
+      onFriendStatusUpdated: (callback: (data: Array<{ user_id: number; online: boolean }>) => void) => void // 好友状态批量更新
     }
     localDB: {
       addOrUpdateAccount: (Data: Account) => Promise<DBResult<void>>
       getAccounts: () => Promise<DBResult<Account[]>>
       deleteAccount: (accountId: number) => Promise<DBResult<void>>
+      group_list: () => Promise<DBResult<GroupSimpleInfo[]>>
+      friend_list: () => Promise<DBResult<UserSimpleInfoWithStatus[]>>
+      getFriendsWithStatus: () => Promise<DBResult<Array<UserSimpleInfo & { online: boolean; lastOnlineTime: number }>>>
+      getFriendStatus: (userId: number) => Promise<DBResult<{ online: boolean; lastOnlineTime: number } | null>>
     }
   }
 }

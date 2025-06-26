@@ -26,18 +26,19 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { friend_list_v2, group_list } from '../ipcApi'
-import { UserSimpleInfoWithStatus, GroupSimpleInfo, RequestResponse } from '@apiType/HttpRespond'
+import { friend_list, group_list } from '../ipcDB'
+import { UserSimpleInfoWithStatus, GroupSimpleInfo } from '@apiType/HttpRespond'
 import ContactListPanel from '../components/ContactListPanel.vue'
 import ContactDetailPanel from '../components/ContactDetailPanel.vue'
+import { DBResult } from '@/types/localDBModel'
 
 const friendList = ref<UserSimpleInfoWithStatus[]>([])
 const groupList = ref<GroupSimpleInfo[]>([])
 
-const selectedType = ref<'friend'|'group'|''>('')
-const selectedId = ref<number|null>(null)
-const selectedFriend = ref<UserSimpleInfoWithStatus|null>(null)
-const selectedGroup = ref<GroupSimpleInfo|null>(null)
+const selectedType = ref<'friend' | 'group' | ''>('')
+const selectedId = ref<number | null>(null)
+const selectedFriend = ref<UserSimpleInfoWithStatus | null>(null)
+const selectedGroup = ref<GroupSimpleInfo | null>(null)
 
 // 表单显示状态
 const showAddFriendForm = ref(false)
@@ -96,12 +97,13 @@ async function refreshLists(): Promise<void> {
 }
 
 async function loadData(): Promise<void> {
-  const flist: RequestResponse<UserSimpleInfoWithStatus[]> = await friend_list_v2()
-  if (flist.status === true) {
+  const flist: DBResult<UserSimpleInfoWithStatus[]> = await friend_list()
+      console.log('Friend list loaded:', flist)
+  if (flist.success === true) {
     friendList.value = flist.data ?? []
   }
-  const glist: RequestResponse<GroupSimpleInfo[]> = await group_list()
-  if (glist.status === true) {
+  const glist: DBResult<GroupSimpleInfo[]> = await group_list()
+  if (glist.success === true) {
     groupList.value = glist.data ?? []
   }
 }
@@ -117,4 +119,4 @@ onMounted(async () => {
   height: 100%;
   background: #f7faff;
 }
-</style> 
+</style>

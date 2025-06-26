@@ -13,12 +13,12 @@ export function getApiBaseUrl(): string {
 }
 
 export function BaseUrlApi(): void {
-  ipcMain.handle('api:setBaseUrl', (_, newUrl: string) => {
+  ipcMain.handle('config:setBaseUrl', (_, newUrl: string) => {
     setApiBaseUrl(newUrl)
     console.log('API base URL updated to:', newUrl)
     return true
   })
-  ipcMain.handle('api:getBaseUrl', (): string => {
+  ipcMain.handle('config:getBaseUrl', (): string => {
     return getApiBaseUrl()
   })
 }

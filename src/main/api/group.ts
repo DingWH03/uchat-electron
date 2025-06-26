@@ -1,8 +1,8 @@
 // main/api/group.ts
 import { ipcMain } from 'electron'
-import { getApiBaseUrl } from './config'
+import { getApiBaseUrl } from '../config/url'
 import { CreateGroupRequest, GroupRequest } from '../../types/HttpRequest'
-import { getSessionId } from '../session'
+import { getSessionId } from '../config/session'
 import {
   GroupDetailedInfo,
   GroupSimpleInfo,
