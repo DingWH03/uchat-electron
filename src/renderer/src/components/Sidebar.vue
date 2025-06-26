@@ -26,7 +26,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { ChatDotRound, User, Setting, Fold, Expand } from '@element-plus/icons-vue'
+import { ChatDotRound, User, Setting } from '@element-plus/icons-vue'
 
 const router = useRouter()
 const route = useRoute()

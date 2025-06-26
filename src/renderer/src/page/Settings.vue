@@ -18,14 +18,6 @@
           </select>
         </div>
       </section>
-      <section class="settings-section">
-        <h3 class="section-title">服务器</h3>
-        <div class="setting-row">
-          <input v-model="serverUrl" class="server-input" placeholder="http://localhost:3000" />
-          <AppButton type="primary" class="save-btn" @click="saveServerUrl">保存</AppButton>
-        </div>
-        <div class="server-tip">如需更换服务器地址，请输入新地址并保存。</div>
-      </section>
     </div>
   </div>
 </template>
@@ -37,16 +29,10 @@ import { logout } from '../ipcApi'
 
 const router = useRouter()
 const theme = ref(localStorage.getItem('theme') || 'light')
-const serverUrl = ref(localStorage.getItem('server_url') || '')
 
 const back = (): void => {
   router.push('/login')
   logout()
-}
-
-const saveServerUrl = (): void => {
-  localStorage.setItem('server_url', serverUrl.value)
-  alert(`已保存: ${serverUrl.value}`)
 }
 
 watch(theme, (val) => {
@@ -105,23 +91,8 @@ watch(theme, (val) => {
   background: #f8f8f8;
   font-size: 1rem;
 }
-.server-input {
-  flex: 1;
-  padding: 0.4rem 0.7rem;
-  border-radius: 6px;
-  border: 1px solid #dcdfe6;
-  font-size: 1rem;
-}
-.save-btn {
-  margin-left: 0.5rem;
-}
 .logout-btn {
   margin-top: 0.5rem;
   width: 100%;
-}
-.server-tip {
-  font-size: 0.92rem;
-  color: #888;
-  margin-top: 0.2rem;
 }
 </style>

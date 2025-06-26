@@ -42,11 +42,6 @@ interface Props {
 
 const props = defineProps<Props>()
 
-const emit = defineEmits<{
-  (e: 'add-item'): void
-  (e: 'select-item', item: UserSimpleInfoWithStatus | GroupSimpleInfo): void
-}>()
-
 const getItemId = (item: UserSimpleInfoWithStatus | GroupSimpleInfo): number => {
   if (props.type === 'friend') {
     return (item as UserSimpleInfoWithStatus).base.user_id
