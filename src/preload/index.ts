@@ -21,6 +21,10 @@ const api = {
   setBaseUrl: async (URL: string) => {
     return await ipcRenderer.invoke('api:setBaseUrl', URL)
   },
+  // 获取后端url
+  getBaseUrl: async () => {
+    return await ipcRenderer.invoke('api:getBaseUrl')
+  },
   // Http: 注册账号
   register: async (registerData: RegisterRequest) => {
     return await ipcRenderer.invoke('api:auth/register', registerData)
@@ -110,6 +114,9 @@ const localDB = {
   },
   getAccounts: async () => {
     return await ipcRenderer.invoke('localdb:getAccounts')
+  },
+  deleteAccount: async (accountId: number) => {
+    return await ipcRenderer.invoke('localdb:deleteAccount', accountId)
   }
 }
 

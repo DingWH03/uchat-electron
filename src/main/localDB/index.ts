@@ -1,3 +1,5 @@
-export { initDB, getDB, persistDB } from './db'
+export { initDB, getDB, closeDB } from './db'
 export * from './account'
 export { registerLocalDBIpcHandlers } from './ipc'
+export * from './contact'
+export * from './sync'

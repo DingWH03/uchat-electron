@@ -10,6 +10,18 @@ import {
   UserSimpleInfoWithStatus
 } from '../../types/HttpRespond'
 
+export async function friend_list(): Promise<RequestResponse<UserSimpleInfo[]>> {
+  const sessionId = getSessionId()
+  const baseUrl = getApiBaseUrl()
+  const res = await fetch(`${baseUrl}/friend/list`, {
+    method: 'GET',
+    headers: {
+      Cookie: `session_id=${sessionId}`
+    }
+  })
+  return res.json()
+}
+
 export function registerFriendApi(): void {
   // 添加好友的后端http api
   ipcMain.handle(
@@ -30,15 +42,7 @@ export function registerFriendApi(): void {
   )
   // 获取好友列表的后端http api
   ipcMain.handle('api:friend/list', async (): Promise<RequestResponse<UserSimpleInfo[]>> => {
-    const sessionId = getSessionId()
-    const baseUrl = getApiBaseUrl()
-    const res = await fetch(`${baseUrl}/friend/list`, {
-      method: 'GET',
-      headers: {
-        Cookie: `session_id=${sessionId}`
-      }
-    })
-    return res.json()
+    return await friend_list()
   })
   // 获取好友列表的后端http apiv2
   ipcMain.handle(

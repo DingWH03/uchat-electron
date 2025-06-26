@@ -22,6 +22,7 @@ export {
   ipcHandle,
   ping,
   setBaseUrl,
+  getBaseUrl,
   register,
   login,
   logout,
@@ -52,6 +53,11 @@ const ping = async (): Promise<string> => {
 // 方法：修改后端URL
 const setBaseUrl = async (URL: string): Promise<boolean> => {
   return await window.api.setBaseUrl(URL)
+}
+
+/// 获取后端URL
+const getBaseUrl = async (): Promise<string> => {
+  return await window.api.getBaseUrl()
 }
 
 /// 注册的api

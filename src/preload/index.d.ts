@@ -27,6 +27,7 @@ declare global {
     api: {
       ping: () => Promise<string>
       setBaseUrl: (URL: string) => Promise<boolean>
+      getBaseUrl: () => Promise<string>
       // auth
       register: (registerData: RegisterRequest) => Promise<RequestResponse<number>>
       login: (loginData: LoginRequest) => Promise<boolean>
@@ -56,6 +57,7 @@ declare global {
     localDB: {
       addOrUpdateAccount: (Data: Account) => Promise<DBResult<void>>
       getAccounts: () => Promise<DBResult<Account[]>>
+      deleteAccount: (accountId: number) => Promise<DBResult<void>>
     }
   }
 }

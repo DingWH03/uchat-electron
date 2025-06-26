@@ -5,8 +5,13 @@ import { getSessionId, setSessionId } from '../session'
 import { RegisterRequest, LoginRequest, PasswordRequest } from '../../types/HttpRequest'
 import { closeWebSocket, setupWebSocket } from '../WebSocket/wsClient'
 import { RequestResponse } from '../../types/HttpRespond'
+import { syncContacts } from '../localDB'
 
 let loginUser: number = 0
+
+export const myID = (): number => {
+  return loginUser
+}
 
 export async function performLogout(): Promise<RequestResponse<void>> {
   closeWebSocket()
@@ -50,6 +55,7 @@ export function registerAnthenticationApi(win: BrowserWindow): void {
       setSessionId(data.data)
       setupWebSocket(win)
       loginUser = loginData.userid // 保存登陆用户的id
+      await syncContacts() // 同步联系人数据到本地数据库
       win.setResizable(true)
       // win.setTitleBarOverlay()
     }

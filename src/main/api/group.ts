@@ -10,18 +10,22 @@ import {
   UserSimpleInfo
 } from '../../types/HttpRespond'
 
+export async function group_list(): Promise<RequestResponse<GroupSimpleInfo>[]> {
+  const sessionId = getSessionId()
+  const baseUrl = getApiBaseUrl()
+  const res = await fetch(`${baseUrl}/group/list`, {
+    method: 'GET',
+    headers: {
+      Cookie: `session_id=${sessionId}`
+    }
+  })
+  return res.json()
+}
+
 export function registerGroupApi(): void {
   // 获取群聊列表的后端http api
   ipcMain.handle('api:group/list', async (): Promise<RequestResponse<GroupSimpleInfo>[]> => {
-    const sessionId = getSessionId()
-    const baseUrl = getApiBaseUrl()
-    const res = await fetch(`${baseUrl}/group/list`, {
-      method: 'GET',
-      headers: {
-        Cookie: `session_id=${sessionId}`
-      }
-    })
-    return res.json()
+    return await group_list()
   })
   // 获取群聊信息的后端http api
   ipcMain.handle(

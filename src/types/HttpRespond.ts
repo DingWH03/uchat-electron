@@ -19,6 +19,7 @@ export type SessionMessage = {
 export type UserSimpleInfo = {
   user_id: number
   username: string
+  avatar_url: string | null // 头像URL，可能为null
 }
 
 export type UserSimpleInfoWithStatus = {
@@ -29,6 +30,8 @@ export type UserSimpleInfoWithStatus = {
 export type GroupSimpleInfo = {
   group_id: number
   title: string
+  description: string | null // 群组描述，可能为null
+  avatar_url: string | null // 群组头像URL，可能为null
 }
 
 export type UserDetailedInfo = {
@@ -40,4 +43,16 @@ export type UserDetailedInfo = {
 export type GroupDetailedInfo = {
   group_id: number
   group_name: string
+}
+
+/// 好友与群组更新时间戳
+export type UpdateTimestamps = {
+  friends_updated_at: number // 好友列表更新时间戳
+  groups_updated_at: number // 群组列表更新时间戳
+}
+
+/// 好友和群组共同返回值，用于存入数据库
+export type ContactList = {
+  friends: UserSimpleInfo[] // 好友列表
+  groups: GroupSimpleInfo[] // 群组列表
 }

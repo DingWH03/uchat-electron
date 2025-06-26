@@ -18,4 +18,7 @@ export function BaseUrlApi(): void {
     console.log('API base URL updated to:', newUrl)
     return true
   })
+  ipcMain.handle('api:getBaseUrl', (): string => {
+    return getApiBaseUrl()
+  })
 }

@@ -5,7 +5,7 @@ import icon from '../../resources/icon.jpg?asset'
 import { Apis } from './api/index.js'
 import { getSessionId } from './session'
 import { performLogout } from './api/anthentication'
-import { initDB, registerLocalDBIpcHandlers } from './localDB'
+import { initDB, registerLocalDBIpcHandlers, closeDB } from './localDB'
 
 const login_width = 1000
 const login_height = 700
@@ -78,6 +78,7 @@ function createTray(win: BrowserWindow): void {
           mainWindow.destroy() // 强制销毁
         }
         tray?.destroy()
+        closeDB() // 关闭数据库连接
         app.quit()
       }
     }
@@ -167,4 +168,29 @@ app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
     // 不再直接退出，由托盘管理
   }
+})
+
+// 应用退出时关闭数据库
+app.on('before-quit', () => {
+  console.log('应用即将退出，正在保存数据...')
+  closeDB()
+})
+
+// 确保在进程退出时关闭数据库
+process.on('exit', () => {
+  console.log('进程退出，关闭数据库连接')
+  closeDB()
+})
+
+// 处理未捕获的异常
+process.on('uncaughtException', (error) => {
+  console.error('未捕获的异常:', error)
+  closeDB()
+  process.exit(1)
+})
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('未处理的Promise拒绝:', reason, 'at', promise)
+  closeDB()
+  process.exit(1)
 })
