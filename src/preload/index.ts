@@ -10,6 +10,7 @@ import {
   MessageRequest
 } from '../types/HttpRequest'
 import { Account } from '../types/localDBModel'
+import { ServerMessage } from '../types/WebsocketRespond'
 
 // Custom APIs for renderer
 const api = {
@@ -98,7 +99,7 @@ const api = {
     return await ipcRenderer.invoke('ws:send', message)
   },
   // WebSocket: 监听消息
-  onWSMessage: (callback: (message: any) => void) => {
+  onWSMessage: (callback: (message: ServerMessage) => void) => {
     ipcRenderer.on('ws:message', (_, message) => callback(message))
   },
   // WebSocket：监听连接状态

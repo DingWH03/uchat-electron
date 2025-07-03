@@ -12,6 +12,7 @@ import { ClientMessage } from 'src/types/WebsocketRequest'
 import { ServerMessage } from 'src/types/WebsocketRespond'
 import {
   GroupDetailedInfo,
+  GroupSessionMessage,
   GroupSimpleInfo,
   RequestResponse,
   SessionMessage,
@@ -56,13 +57,15 @@ declare global {
       group_leave: (requestData: GroupRequest) => Promise<RequestResponse<void>>
       // message
       friend_messages: (requestData: MessageRequest) => Promise<RequestResponse<SessionMessage[]>>
-      group_messages: (requestData: MessageRequest) => Promise<RequestResponse<SessionMessage[]>>
+      group_messages: (
+        requestData: MessageRequest
+      ) => Promise<RequestResponse<GroupSessionMessage[]>>
       // ws
       sendMessage: (msg: ClientMessage) => Promise<boolean> // ws发送消息
       removeWebSocketMessageListener: () => void
       onWSStatus: (callback: (status: string) => void) => void // ws状态提示
       onWSMessage: (callback: (msg: ServerMessage) => void) => void // ws接受消息
-      onWebSocketMessage: (callback: (message: any) => void) => void
+      onWebSocketMessage: (callback: (message: ServerMessage) => void) => void
       onFriendOnline: (callback: (data: { user_id: number }) => void) => void // 好友上线
       onFriendOffline: (callback: (data: { user_id: number }) => void) => void // 好友下线
       onFriendStatusUpdated: (

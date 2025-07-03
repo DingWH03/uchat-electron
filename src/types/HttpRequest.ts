@@ -46,5 +46,3 @@ export interface AfterTimestampQuery {
   id: number
   after: number
 }
-
-

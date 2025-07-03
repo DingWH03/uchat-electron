@@ -9,11 +9,32 @@ export interface RequestResponse<T> {
   data?: T // 成功时返回的数据（可选）
 }
 
-// 通用结构体定义
+// Enum for MessageType
+export enum MessageType {
+  Text = 'text',
+  Image = 'image',
+  File = 'file',
+  Video = 'video',
+  Audio = 'audio'
+}
+
+// Type for SessionMessage
 export type SessionMessage = {
+  message_id: number // 消息ID
+  message_type: MessageType // enum 类型更安全
   sender_id: number
   message: string
   timestamp: number // ISO 格式字符串
+}
+
+// Type for GroupSessionMessage
+export type GroupSessionMessage = {
+  message_id: number // 消息ID
+  message_type: MessageType // enum 类型更安全
+  group_id: number
+  sender_id: number
+  timestamp: number // ISO 格式字符串
+  message: string
 }
 
 export type UserSimpleInfo = {

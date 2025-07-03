@@ -3,12 +3,17 @@ import { ipcMain } from 'electron'
 import { getApiBaseUrl } from '../config/url'
 import { AfterTimestampQuery, MessageRequest } from '../../types/HttpRequest'
 import { getSessionId } from '../config/session'
-import { IdMessagePair, RequestResponse, SessionMessage } from '../../types/HttpRespond'
+import {
+  GroupSessionMessage,
+  IdMessagePair,
+  RequestResponse,
+  SessionMessage
+} from '../../types/HttpRespond'
 
 // 1. 获取群聊聊天记录
 export async function group_message(
   Data: MessageRequest
-): Promise<RequestResponse<SessionMessage[]>> {
+): Promise<RequestResponse<GroupSessionMessage[]>> {
   const sessionId = getSessionId()
   const baseUrl = getApiBaseUrl()
   const query = new URLSearchParams({
@@ -48,10 +53,12 @@ export async function getLatestTimestampsOfAllGroups(): Promise<
       method: 'GET',
       headers: { Cookie: `session_id=${sessionId}` }
     })
-    
+
     if (!res.ok) {
       const errorText = await res.text()
-      console.error(`[API] getLatestTimestampsOfAllGroups HTTP错误: ${res.status} ${res.statusText}, body: ${errorText}`)
+      console.error(
+        `[API] getLatestTimestampsOfAllGroups HTTP错误: ${res.status} ${res.statusText}, body: ${errorText}`
+      )
       return {
         status: false,
         code: res.status,
@@ -59,7 +66,7 @@ export async function getLatestTimestampsOfAllGroups(): Promise<
         data: undefined
       }
     }
-    
+
     return await res.json()
   } catch (error) {
     console.error('[API] getLatestTimestampsOfAllGroups 请求失败:', error)
@@ -149,10 +156,12 @@ export async function getLatestTimestampsOfAllPrivateChats(): Promise<
       method: 'GET',
       headers: { Cookie: `session_id=${sessionId}` }
     })
-    
+
     if (!res.ok) {
       const errorText = await res.text()
-      console.error(`[API] getLatestTimestampsOfAllPrivateChats HTTP错误: ${res.status} ${res.statusText}, body: ${errorText}`)
+      console.error(
+        `[API] getLatestTimestampsOfAllPrivateChats HTTP错误: ${res.status} ${res.statusText}, body: ${errorText}`
+      )
       return {
         status: false,
         code: res.status,
@@ -160,7 +169,7 @@ export async function getLatestTimestampsOfAllPrivateChats(): Promise<
         data: undefined
       }
     }
-    
+
     return await res.json()
   } catch (error) {
     console.error('[API] getLatestTimestampsOfAllPrivateChats 请求失败:', error)

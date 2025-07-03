@@ -6,6 +6,7 @@ import { Apis } from './api/index.js'
 import { getSessionId } from './config/session'
 import { performLogout, checkNetworkAndSession } from './api/anthentication'
 import { initDB, registerLocalDBIpcHandlers, closeDB } from './localDB'
+import { registerConfigHandlers } from './config'
 
 const login_width = 1000
 const login_height = 700
@@ -145,6 +146,9 @@ app.whenReady().then(async () => {
 
   // 注册localDB ipcHandle
   registerLocalDBIpcHandlers()
+
+  // 初始化配置api
+  registerConfigHandlers()
 
   // 初始化API
   Apis(mainWindow)
