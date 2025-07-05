@@ -4,7 +4,7 @@ import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.jpg?asset'
 import { Apis } from './api/index.js'
 import { getSessionId } from './config/session'
-import { performLogout, checkNetworkAndSession } from './api/anthentication'
+import { performLogout, checkNetworkAndSession, myID } from './api/anthentication'
 import { initDB, registerLocalDBIpcHandlers, closeDB } from './localDB'
 import { registerConfigHandlers } from './config'
 
@@ -174,6 +174,14 @@ app.whenReady().then(async () => {
   ipcMain.on('new-message', (_, message) => {
     console.log('收到新消息:', message)
     startBlinking()
+    
+    // 检查是否为当前用户发送的消息
+    const currentUserId = myID()
+    if (message.sender_id && message.sender_id === currentUserId) {
+      console.log('[Main] 跳过自己发送的消息通知')
+      return
+    }
+    
     showNotification('新消息', message.content || '您收到一条新消息')
   })
 

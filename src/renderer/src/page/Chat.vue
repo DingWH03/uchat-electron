@@ -69,7 +69,7 @@ import {
 } from '../ipcDB'
 import { GroupSimpleInfo, RequestResponse, SessionMessage, MessageType } from '@apiType/HttpRespond'
 import { UserSimpleInfoWithStatus } from '@apiType/HttpRespond'
-import { showNotification } from '@renderer/utils/notification'
+import { notificationManager, showMessageNotification, showErrorNotification, showSuccessNotification } from '@renderer/utils/notification'
 import MessageBubble from '../components/MessageBubble.vue'
 import ConversationListPanel from '../components/ConversationListPanel.vue'
 import { ServerMessage } from '@apiType/WebsocketRespond'
@@ -171,8 +171,15 @@ async function loadSession(): Promise<void> {
 }
 
 onMounted(async () => {
-  showNotification('登录成功', '欢迎回来！', '')
+  showSuccessNotification('登录成功', '欢迎回来！')
   myidConst.value = await myid()
+  
+  // 设置通知管理器的当前用户ID
+  notificationManager.setCurrentUserId(myidConst.value)
+  
+  // 加载通知设置
+  notificationManager.loadSettings()
+  
   const flist: RequestResponse<UserSimpleInfoWithStatus[]> = await friend_list_v2()
   if (flist.status === true) friendList.value = flist.data ?? []
   const glist: RequestResponse<GroupSimpleInfo[]> = await group_list()
@@ -220,7 +227,12 @@ function handleWebSocketMessage(message: ServerMessage): void {
       // 如果不是当前聊天，显示通知
       const sender = friendList.value.find(f => f.base.user_id === senderId)
       if (sender) {
-        showNotification('新消息', `${sender.base.username}: ${message.message}`, 'info')
+        showMessageNotification({
+          senderId: senderId,
+          senderName: sender.base.username,
+          message: message.message,
+          chatType: 'private'
+        })
       }
     }
     
@@ -254,7 +266,13 @@ function handleWebSocketMessage(message: ServerMessage): void {
       // 如果不是当前聊天，显示通知
       const group = groupList.value.find(g => g.group_id === groupId)
       if (group) {
-        showNotification('群聊消息', `${group.title}: ${message.message}`, 'info')
+        showMessageNotification({
+          senderId: message.sender,
+          senderName: '群成员', // 这里可以进一步优化，获取发送者的用户名
+          message: message.message,
+          chatType: 'group',
+          groupName: group.title
+        })
       }
     }
     
@@ -271,7 +289,6 @@ watch(() => route.fullPath, loadSession)
 
 async function send_message(): Promise<void> {
   if (!newMessage.value.trim() || !chatType.value || !chatId.value) return
-  const now = Date.now()
   console.log('[Chat] 开始发送消息:', { type: chatType.value, id: chatId.value, message: newMessage.value })
   
   if (chatType.value === 'friend' && currentFriend.value) {
@@ -297,7 +314,7 @@ async function send_message(): Promise<void> {
       }
     } else {
       console.error('[Chat] WebSocket发送失败')
-      showNotification('发送失败', '消息发送失败，请检查网络连接', 'error')
+      showErrorNotification('发送失败', '消息发送失败，请检查网络连接')
     }
   } else if (chatType.value === 'group' && currentGroup.value) {
     const message = {
@@ -322,7 +339,7 @@ async function send_message(): Promise<void> {
       }
     } else {
       console.error('[Chat] WebSocket发送失败')
-      showNotification('发送失败', '消息发送失败，请检查网络连接', 'error')
+      showErrorNotification('发送失败', '消息发送失败，请检查网络连接')
     }
   }
   nextTick(() => {

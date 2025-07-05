@@ -164,14 +164,19 @@ function handlePrivateMessage(win: BrowserWindow, message: ServerMessage & { typ
     console.log('[WebSocket] 私聊消息已保存到数据库，message_id:', message.message_id)
     // 触发器会自动更新last_message_timestamp
     
-    // 发送系统通知
-    win.webContents.send('new-message', {
-      type: 'private',
-      sender_id: message.sender,
-      content: message.message,
-      timestamp: message.timestamp,
-      message_id: message.message_id
-    })
+    // 检查是否为当前用户发送的消息，如果不是则发送通知
+    if (message.sender !== accountId) {
+      console.log('[WebSocket] 发送私聊消息通知')
+      win.webContents.send('new-message', {
+        type: 'private',
+        sender_id: message.sender,
+        content: message.message,
+        timestamp: message.timestamp,
+        message_id: message.message_id
+      })
+    } else {
+      console.log('[WebSocket] 跳过自己发送的私聊消息通知')
+    }
   } else {
     console.error('[WebSocket] 私聊消息保存到数据库失败')
   }
@@ -203,15 +208,20 @@ function handleGroupMessage(win: BrowserWindow, message: ServerMessage & { type:
     console.log('[WebSocket] 群聊消息已保存到数据库，message_id:', message.message_id)
     // 触发器会自动更新last_message_timestamp
     
-    // 发送系统通知
-    win.webContents.send('new-message', {
-      type: 'group',
-      sender_id: message.sender,
-      group_id: message.group_id,
-      content: message.message,
-      timestamp: message.timestamp,
-      message_id: message.message_id
-    })
+    // 检查是否为当前用户发送的消息，如果不是则发送通知
+    if (message.sender !== accountId) {
+      console.log('[WebSocket] 发送群聊消息通知')
+      win.webContents.send('new-message', {
+        type: 'group',
+        sender_id: message.sender,
+        group_id: message.group_id,
+        content: message.message,
+        timestamp: message.timestamp,
+        message_id: message.message_id
+      })
+    } else {
+      console.log('[WebSocket] 跳过自己发送的群聊消息通知')
+    }
   } else {
     console.error('[WebSocket] 群聊消息保存到数据库失败')
   }

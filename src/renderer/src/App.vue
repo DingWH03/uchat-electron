@@ -3,7 +3,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { ref, onMounted } from 'vue'
 import Sidebar from './components/Sidebar.vue'
 import MainContent from './components/MainContent.vue'
-import { showNotification } from './utils/notification'
+import { showSystemNotification } from './utils/notification'
 
 const route = useRoute()
 const router = useRouter()
@@ -16,16 +16,16 @@ onMounted(() => {
     window.electron.ipcRenderer.on('ws:status', (_event, status) => {
       wsStatus.value = status
       if (status === 'network-error') {
-        showNotification('网络异常', '请检查网络连接')
+        showSystemNotification('网络异常', '请检查网络连接')
       } else if (status === 'session-invalid') {
-        showNotification('登录失效', '请重新登录')
+        showSystemNotification('登录失效', '请重新登录')
         router.push({ name: 'Login' })
       } else if (status === 'disconnected') {
-        showNotification('连接断开', '正在尝试重连...')
+        showSystemNotification('连接断开', '正在尝试重连...')
       } else if (status === 'reconnecting') {
-        showNotification('正在重连', '正在尝试重新连接服务器...')
+        showSystemNotification('正在重连', '正在尝试重新连接服务器...')
       } else if (status === 'connected') {
-        showNotification('已连接', 'WebSocket 连接已恢复')
+        showSystemNotification('已连接', 'WebSocket 连接已恢复')
       }
     })
   }
