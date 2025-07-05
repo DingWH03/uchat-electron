@@ -169,6 +169,7 @@ const localDB = {
     message: string
     sender_id: number
     timestamp: number
+    message_id?: number
   }) => {
     return await ipcRenderer.invoke('localdb:saveMessageToDB', params)
   }

@@ -5,7 +5,7 @@ import type { SessionMessage } from '../../types/HttpRespond'
 
 let db: Database.Database
 
-const CURRENT_SCHEMA_VERSION = 7 // 升级：增加last_message_timestamp字段
+const CURRENT_SCHEMA_VERSION = 8 // 升级：增加message_id字段
 
 const dbFilePath = join(app.getPath('userData'), 'chat.db') // 存储在用户目录，支持打包后运行
 
@@ -91,6 +91,7 @@ function createTables(): void {
     CREATE TABLE IF NOT EXISTS messages (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       account_id INTEGER NOT NULL,
+      message_id INTEGER NOT NULL,
       sender_id INTEGER NOT NULL,
       receiver_id INTEGER,
       group_id INTEGER,
@@ -100,9 +101,58 @@ function createTables(): void {
       FOREIGN KEY (account_id) REFERENCES accounts(id) ON DELETE CASCADE
     );
     CREATE INDEX IF NOT EXISTS idx_messages_account_time ON messages (account_id, timestamp);
+    CREATE INDEX IF NOT EXISTS idx_messages_account_message_id ON messages (account_id, message_id);
     CREATE INDEX IF NOT EXISTS idx_friends_account_user ON friends (account_id, user_id);
     CREATE INDEX IF NOT EXISTS idx_groups_account_group ON groups (account_id, group_id);
   `)
+  
+  // 创建触发器来自动更新时间戳
+  createTriggers()
+}
+
+function createTriggers(): void {
+  // 删除已存在的触发器（如果存在）
+  db.exec(`
+    DROP TRIGGER IF EXISTS update_friend_timestamp_trigger;
+    DROP TRIGGER IF EXISTS update_group_timestamp_trigger;
+  `)
+  
+  // 创建私聊消息触发器
+  db.exec(`
+    CREATE TRIGGER update_friend_timestamp_trigger
+    AFTER INSERT ON messages
+    WHEN NEW.group_id IS NULL AND NEW.receiver_id IS NOT NULL
+    BEGIN
+      UPDATE friends 
+      SET last_message_timestamp = CASE 
+        WHEN NEW.timestamp > last_message_timestamp THEN NEW.timestamp 
+        ELSE last_message_timestamp 
+      END
+      WHERE account_id = NEW.account_id 
+      AND user_id = CASE 
+        WHEN NEW.sender_id = NEW.account_id THEN NEW.receiver_id 
+        ELSE NEW.sender_id 
+      END;
+    END;
+  `)
+  
+  // 创建群聊消息触发器
+  db.exec(`
+    CREATE TRIGGER update_group_timestamp_trigger
+    AFTER INSERT ON messages
+    WHEN NEW.group_id IS NOT NULL
+    BEGIN
+      UPDATE groups 
+      SET last_message_timestamp = CASE 
+        WHEN NEW.timestamp > last_message_timestamp THEN NEW.timestamp 
+        ELSE last_message_timestamp 
+      END
+      WHERE account_id = NEW.account_id 
+      AND group_id = NEW.group_id;
+    END;
+  `)
+  
+  console.log('[DB] 触发器创建完成')
 }
 
 export function getDB(): Database.Database {
@@ -125,6 +175,7 @@ export function getDB(): Database.Database {
  */
 export function saveMessageToDB(params: {
   account_id: number
+  message_id: number
   sender_id: number
   receiver_id?: number | null
   group_id?: number | null
@@ -134,11 +185,23 @@ export function saveMessageToDB(params: {
 }): boolean {
   try {
     const db = getDB()
+    
+    // 检查是否已存在相同message_id的消息
+    const existing = db.prepare(
+      `SELECT id FROM messages WHERE account_id = ? AND message_id = ?`
+    ).get(params.account_id, params.message_id)
+    
+    if (existing) {
+      console.log('[DB] 消息已存在，跳过保存，message_id:', params.message_id)
+      return true // 返回true表示"成功"（因为消息已经存在）
+    }
+    
     db.prepare(
-      `INSERT INTO messages (account_id, sender_id, receiver_id, group_id, message_type, content, timestamp)
-       VALUES (?, ?, ?, ?, ?, ?, ?)`
+      `INSERT INTO messages (account_id, message_id, sender_id, receiver_id, group_id, message_type, content, timestamp)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
     ).run(
       params.account_id,
+      params.message_id,
       params.sender_id,
       params.receiver_id ?? null,
       params.group_id ?? null,

@@ -145,13 +145,15 @@ export function registerLocalDBIpcHandlers(): void {
       group_id,
       message,
       sender_id,
-      timestamp
+      timestamp,
+      message_id
     } = params
-    console.log('[IPC] 解析参数:', { type, receiver_id, group_id, message, sender_id, timestamp })
+    console.log('[IPC] 解析参数:', { type, receiver_id, group_id, message, sender_id, timestamp, message_id })
     
     if (type === 'private') {
       const dbParams = {
         account_id: accountId,
+        message_id: message_id || 0, // 如果没有message_id，使用0作为默认值
         sender_id,
         receiver_id,
         group_id: null,
@@ -166,6 +168,7 @@ export function registerLocalDBIpcHandlers(): void {
     } else if (type === 'group') {
       const dbParams = {
         account_id: accountId,
+        message_id: message_id || 0, // 如果没有message_id，使用0作为默认值
         sender_id,
         receiver_id: null,
         group_id,

@@ -140,11 +140,12 @@ export async function syncAllMessagesBeforeWS(): Promise<void> {
           for (const msg of res.data as SessionMessage[]) {
             const saveResult = saveMessageToDB({
               account_id: accountId,
+              message_id: msg.message_id,
               sender_id: msg.sender_id,
               receiver_id: null,
               group_id: groupId,
               message_type: msg.message_type || 'text',
-              content: msg.content || msg.message,
+              content: msg.message,
               timestamp: msg.timestamp
             })
             if (!saveResult) {
@@ -185,17 +186,18 @@ export async function syncAllMessagesBeforeWS(): Promise<void> {
           for (const msg of res.data as SessionMessage[]) {
             console.log(`[Sync] 私聊 ${userId} 处理消息:`, {
               sender_id: msg.sender_id,
-              content: msg.content || msg.message,
+              content: msg.message,
               timestamp: msg.timestamp,
               timestamp_time: new Date(msg.timestamp).toLocaleString()
             })
             const saveResult = saveMessageToDB({
               account_id: accountId,
+              message_id: msg.message_id,
               sender_id: msg.sender_id,
               receiver_id: msg.sender_id === accountId ? userId : accountId,
               group_id: null,
               message_type: msg.message_type || 'text',
-              content: msg.content || msg.message,
+              content: msg.message,
               timestamp: msg.timestamp
             })
             if (!saveResult) {

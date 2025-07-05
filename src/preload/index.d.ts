@@ -78,6 +78,7 @@ declare global {
         message: string
         sender_id: number
         timestamp: number
+        message_id?: number
       }) => Promise<boolean>
     }
     localDB: {

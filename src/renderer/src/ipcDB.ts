@@ -90,7 +90,8 @@ const saveMessageToDB = async (params: {
   group_id?: number,
   message: string,
   sender_id: number,
-  timestamp: number
-}) => {
+  timestamp: number,
+  message_id?: number
+}): Promise<boolean> => {
   return window.localDB.saveMessageToDB(params)
 }

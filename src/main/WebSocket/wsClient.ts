@@ -148,17 +148,12 @@ function handlePrivateMessage(win: BrowserWindow, message: ServerMessage & { typ
     return
   }
 
-  // 跳过自己发送的消息（这些消息在发送时已经保存过了）
-  if (message.sender === accountId) {
-    console.log('[WebSocket] 跳过自己发送的消息')
-    return
-  }
-
-  // 保存消息到数据库
+  // 保存消息到数据库（包括自己发送的消息）
   const saveResult = saveMessageToDB({
     account_id: accountId,
+    message_id: message.message_id,
     sender_id: message.sender,
-    receiver_id: accountId, // 接收者是当前用户
+    receiver_id: message.receiver, // 使用消息中的接收者ID
     group_id: null,
     message_type: 'text',
     content: message.message,
@@ -166,13 +161,16 @@ function handlePrivateMessage(win: BrowserWindow, message: ServerMessage & { typ
   })
 
   if (saveResult) {
-    console.log('[WebSocket] 私聊消息已保存到数据库')
+    console.log('[WebSocket] 私聊消息已保存到数据库，message_id:', message.message_id)
+    // 触发器会自动更新last_message_timestamp
+    
     // 发送系统通知
     win.webContents.send('new-message', {
       type: 'private',
       sender_id: message.sender,
       content: message.message,
-      timestamp: message.timestamp
+      timestamp: message.timestamp,
+      message_id: message.message_id
     })
   } else {
     console.error('[WebSocket] 私聊消息保存到数据库失败')
@@ -189,15 +187,10 @@ function handleGroupMessage(win: BrowserWindow, message: ServerMessage & { type:
     return
   }
 
-  // 跳过自己发送的消息（这些消息在发送时已经保存过了）
-  if (message.sender === accountId) {
-    console.log('[WebSocket] 跳过自己发送的群聊消息')
-    return
-  }
-
-  // 保存消息到数据库
+  // 保存消息到数据库（包括自己发送的消息）
   const saveResult = saveMessageToDB({
     account_id: accountId,
+    message_id: message.message_id,
     sender_id: message.sender,
     receiver_id: null,
     group_id: message.group_id,
@@ -207,14 +200,17 @@ function handleGroupMessage(win: BrowserWindow, message: ServerMessage & { type:
   })
 
   if (saveResult) {
-    console.log('[WebSocket] 群聊消息已保存到数据库')
+    console.log('[WebSocket] 群聊消息已保存到数据库，message_id:', message.message_id)
+    // 触发器会自动更新last_message_timestamp
+    
     // 发送系统通知
     win.webContents.send('new-message', {
       type: 'group',
       sender_id: message.sender,
       group_id: message.group_id,
       content: message.message,
-      timestamp: message.timestamp
+      timestamp: message.timestamp,
+      message_id: message.message_id
     })
   } else {
     console.error('[WebSocket] 群聊消息保存到数据库失败')

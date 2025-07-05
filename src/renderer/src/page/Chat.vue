@@ -284,17 +284,12 @@ async function send_message(): Promise<void> {
     console.log('[Chat] WebSocket发送结果:', sendSuccess)
     
     if (sendSuccess) {
-      console.log('[Chat] WebSocket发送成功，开始写入数据库')
-      const dbResult = await saveMessageToDB({
-        type: 'private',
-        receiver_id: chatId.value,
-        message: newMessage.value,
-        sender_id: myidConst.value,
-        timestamp: now
-      })
-      console.log('[Chat] 数据库写入结果:', dbResult)
+      console.log('[Chat] WebSocket发送成功，等待服务器确认')
       
+      // 临时添加到界面，等待WebSocket返回确认后再保存到数据库
       friend_msg.value.push({
+        message_id: 0, // 临时ID，等待服务器返回真实ID
+        message_type: 'text',
         sender_id: myidConst.value,
         message: newMessage.value,
         timestamp: now
@@ -316,17 +311,12 @@ async function send_message(): Promise<void> {
     console.log('[Chat] WebSocket发送结果:', sendSuccess)
     
     if (sendSuccess) {
-      console.log('[Chat] WebSocket发送成功，开始写入数据库')
-      const dbResult = await saveMessageToDB({
-        type: 'group',
-        group_id: chatId.value,
-        message: newMessage.value,
-        sender_id: myidConst.value,
-        timestamp: now
-      })
-      console.log('[Chat] 数据库写入结果:', dbResult)
+      console.log('[Chat] WebSocket发送成功，等待服务器确认')
       
+      // 临时添加到界面，等待WebSocket返回确认后再保存到数据库
       friend_msg.value.push({
+        message_id: 0, // 临时ID，等待服务器返回真实ID
+        message_type: 'text',
         sender_id: myidConst.value,
         message: newMessage.value,
         timestamp: now

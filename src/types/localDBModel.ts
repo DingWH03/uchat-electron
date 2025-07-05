@@ -21,6 +21,7 @@ export interface Group {
 
 export interface Message {
   id: number
+  message_id: number
   sender_id: number
   receiver_id?: number | null
   group_id?: number | null
