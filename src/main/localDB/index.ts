@@ -1,5 +1,7 @@
 export {
-  initDB, getDB, closeDB,
+  initDB,
+  getDB,
+  closeDB,
   getLocalGroupMessages,
   getLocalPrivateMessages,
   getLocalGroupMessagesAfterTimestamp,

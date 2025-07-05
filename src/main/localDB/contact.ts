@@ -270,7 +270,9 @@ export function getFriendsWithStatus(
 // 获取所有好友的last_message_timestamp
 export function getAllFriendsLastMessageTimestamps(accountId: number): Record<number, number> {
   const db = getDB()
-  const rows = db.prepare('SELECT user_id, last_message_timestamp FROM friends WHERE account_id = ?').all(accountId)
+  const rows = db
+    .prepare('SELECT user_id, last_message_timestamp FROM friends WHERE account_id = ?')
+    .all(accountId)
   const result: Record<number, number> = {}
   for (const row of rows) {
     result[row.user_id] = Number(row.last_message_timestamp ?? 0)
@@ -281,7 +283,9 @@ export function getAllFriendsLastMessageTimestamps(accountId: number): Record<nu
 // 获取所有群的last_message_timestamp
 export function getAllGroupsLastMessageTimestamps(accountId: number): Record<number, number> {
   const db = getDB()
-  const rows = db.prepare('SELECT group_id, last_message_timestamp FROM groups WHERE account_id = ?').all(accountId)
+  const rows = db
+    .prepare('SELECT group_id, last_message_timestamp FROM groups WHERE account_id = ?')
+    .all(accountId)
   const result: Record<number, number> = {}
   for (const row of rows) {
     result[row.group_id] = Number(row.last_message_timestamp ?? 0)
@@ -290,27 +294,46 @@ export function getAllGroupsLastMessageTimestamps(accountId: number): Record<num
 }
 
 // 更新单个好友的last_message_timestamp
-export function updateFriendLastMessageTimestamp(accountId: number, userId: number, timestamp: number): void {
+export function updateFriendLastMessageTimestamp(
+  accountId: number,
+  userId: number,
+  timestamp: number
+): void {
   const db = getDB()
-  console.log(`[updateFriendLastMessageTimestamp] 更新好友 ${userId} 的时间戳: ${timestamp} (${new Date(timestamp).toLocaleString()})`)
-  const result = db.prepare('UPDATE friends SET last_message_timestamp = ? WHERE account_id = ? AND user_id = ?')
+  console.log(
+    `[updateFriendLastMessageTimestamp] 更新好友 ${userId} 的时间戳: ${timestamp} (${new Date(timestamp).toLocaleString()})`
+  )
+  const result = db
+    .prepare('UPDATE friends SET last_message_timestamp = ? WHERE account_id = ? AND user_id = ?')
     .run(timestamp, accountId, userId)
   console.log(`[updateFriendLastMessageTimestamp] 更新结果: ${result.changes} 行受影响`)
 }
 
 // 更新单个群的last_message_timestamp
-export function updateGroupLastMessageTimestamp(accountId: number, groupId: number, timestamp: number): void {
+export function updateGroupLastMessageTimestamp(
+  accountId: number,
+  groupId: number,
+  timestamp: number
+): void {
   const db = getDB()
-  console.log(`[updateGroupLastMessageTimestamp] 更新群 ${groupId} 的时间戳: ${timestamp} (${new Date(timestamp).toLocaleString()})`)
-  const result = db.prepare('UPDATE groups SET last_message_timestamp = ? WHERE account_id = ? AND group_id = ?')
+  console.log(
+    `[updateGroupLastMessageTimestamp] 更新群 ${groupId} 的时间戳: ${timestamp} (${new Date(timestamp).toLocaleString()})`
+  )
+  const result = db
+    .prepare('UPDATE groups SET last_message_timestamp = ? WHERE account_id = ? AND group_id = ?')
     .run(timestamp, accountId, groupId)
   console.log(`[updateGroupLastMessageTimestamp] 更新结果: ${result.changes} 行受影响`)
 }
 
 // 批量更新好友的last_message_timestamp
-export function batchUpdateFriendsLastMessageTimestamp(accountId: number, data: Record<number, number>): void {
+export function batchUpdateFriendsLastMessageTimestamp(
+  accountId: number,
+  data: Record<number, number>
+): void {
   const db = getDB()
-  const stmt = db.prepare('UPDATE friends SET last_message_timestamp = ? WHERE account_id = ? AND user_id = ?')
+  const stmt = db.prepare(
+    'UPDATE friends SET last_message_timestamp = ? WHERE account_id = ? AND user_id = ?'
+  )
   const update = db.transaction((map: Record<number, number>) => {
     for (const userId in map) {
       stmt.run(map[userId], accountId, Number(userId))
@@ -320,9 +343,14 @@ export function batchUpdateFriendsLastMessageTimestamp(accountId: number, data: 
 }
 
 // 批量更新群的last_message_timestamp
-export function batchUpdateGroupsLastMessageTimestamp(accountId: number, data: Record<number, number>): void {
+export function batchUpdateGroupsLastMessageTimestamp(
+  accountId: number,
+  data: Record<number, number>
+): void {
   const db = getDB()
-  const stmt = db.prepare('UPDATE groups SET last_message_timestamp = ? WHERE account_id = ? AND group_id = ?')
+  const stmt = db.prepare(
+    'UPDATE groups SET last_message_timestamp = ? WHERE account_id = ? AND group_id = ?'
+  )
   const update = db.transaction((map: Record<number, number>) => {
     for (const groupId in map) {
       stmt.run(map[groupId], accountId, Number(groupId))

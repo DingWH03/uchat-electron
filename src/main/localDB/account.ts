@@ -4,13 +4,16 @@ import type { Account, DBResult } from '../../types/localDBModel'
 export function addOrUpdateAccount(data: Account): DBResult<void> {
   const db = getDB()
   try {
-    const updateResult = db.prepare( // 避雷 INSERT OR REPLACE，会导致原记录被删除重建
-      `
+    const updateResult = db
+      .prepare(
+        // 避雷 INSERT OR REPLACE，会导致原记录被删除重建
+        `
       UPDATE accounts
       SET username = ?, password = ?, updated_at = ?
       WHERE id = ?
     `
-    ).run(data.username, data.password, Date.now(), data.id)
+      )
+      .run(data.username, data.password, Date.now(), data.id)
 
     if (updateResult.changes === 0) {
       // 若不存在，则插入新账号
@@ -31,7 +34,6 @@ export function addOrUpdateAccount(data: Account): DBResult<void> {
     }
   }
 }
-
 
 export function ensureAccountExistsWithoutPassword(accountId: number): DBResult<void> {
   const db = getDB()
@@ -57,7 +59,6 @@ export function ensureAccountExistsWithoutPassword(accountId: number): DBResult<
     }
   }
 }
-
 
 export function getAccounts(): DBResult<Account[]> {
   const db = getDB()

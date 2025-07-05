@@ -15,7 +15,9 @@ export const myID = (): number => {
 }
 
 // 新增：检测网络和 session 的函数
-export async function checkNetworkAndSession(win: BrowserWindow): Promise<'ok'|'network-error'|'session-invalid'> {
+export async function checkNetworkAndSession(
+  win: BrowserWindow
+): Promise<'ok' | 'network-error' | 'session-invalid'> {
   const baseUrl = getApiBaseUrl()
   // 1. 检查 /ping
   try {
@@ -96,14 +98,14 @@ export function registerAnthenticationApi(win: BrowserWindow): void {
       loginUser = loginData.userid // 保存登陆用户的id
       console.log('[Login] 设置 loginUser 后:', loginUser)
       console.log('[Login] 调用 myID() 验证:', myID())
-      
+
       console.log('[Login] 开始同步联系人...')
       await syncContacts() // 同步联系人数据到本地数据库
       console.log('[Login] 联系人同步完成，再次验证 myID():', myID())
-      
+
       console.log('[Login] 开始设置 WebSocket...')
       setupWebSocket(win)
-      
+
       win.setResizable(true)
       // win.setTitleBarOverlay()
     } else {

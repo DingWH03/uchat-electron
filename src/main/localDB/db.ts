@@ -1,8 +1,8 @@
 import Database from 'better-sqlite3'
 import { join } from 'path'
 import { app } from 'electron'
-import type { SessionMessage } from '../../types/HttpRespond'
-import type { Conversation } from '../../types/localDBModel'
+export * from './message'
+export * from './conversation'
 
 let db: Database.Database
 
@@ -127,7 +127,7 @@ function createTables(): void {
     CREATE INDEX IF NOT EXISTS idx_conversations_account_time ON conversations (account_id, last_message_timestamp DESC);
     CREATE INDEX IF NOT EXISTS idx_conversations_account_type_target ON conversations (account_id, conversation_type, target_id);
   `)
-  
+
   // 创建触发器来自动更新时间戳
   createTriggers()
 }
@@ -140,7 +140,7 @@ function createTriggers(): void {
     DROP TRIGGER IF EXISTS update_conversation_friend_trigger;
     DROP TRIGGER IF EXISTS update_conversation_group_trigger;
   `)
-  
+
   // 创建私聊消息触发器
   db.exec(`
     CREATE TRIGGER update_friend_timestamp_trigger
@@ -159,7 +159,7 @@ function createTriggers(): void {
       END;
     END;
   `)
-  
+
   // 创建群聊消息触发器
   db.exec(`
     CREATE TRIGGER update_group_timestamp_trigger
@@ -175,7 +175,7 @@ function createTriggers(): void {
       AND group_id = NEW.group_id;
     END;
   `)
-  
+
   // 创建私聊会话触发器
   db.exec(`
     CREATE TRIGGER update_conversation_friend_trigger
@@ -201,7 +201,7 @@ function createTriggers(): void {
       );
     END;
   `)
-  
+
   // 创建群聊会话触发器
   db.exec(`
     CREATE TRIGGER update_conversation_group_trigger
@@ -227,324 +227,11 @@ function createTriggers(): void {
       );
     END;
   `)
-  
+
   console.log('[DB] 触发器创建完成')
 }
 
 export function getDB(): Database.Database {
   if (!db) throw new Error('数据库未初始化')
   return db
-}
-
-// 新增：存储聊天消息到数据库（支持私聊和群聊）
-/**
- * 存储聊天消息到本地数据库
- * @param params 消息参数
- * @param params.account_id 当前账号ID
- * @param params.sender_id 发送者ID
- * @param params.receiver_id 接收者ID（私聊时必填，群聊为null）
- * @param params.group_id 群聊ID（群聊时必填，私聊为null）
- * @param params.message_type 消息类型
- * @param params.content 消息内容
- * @param params.timestamp 消息时间戳
- * @returns 是否存储成功
- */
-export function saveMessageToDB(params: {
-  account_id: number
-  message_id: number
-  sender_id: number
-  receiver_id?: number | null
-  group_id?: number | null
-  message_type: string
-  content: string
-  timestamp: number
-}): boolean {
-  try {
-    const db = getDB()
-    // 新查重逻辑：联合唯一索引
-    const existing = db.prepare(
-      `SELECT id FROM messages WHERE account_id = ? AND message_id = ? AND 
-      ((receiver_id IS ? AND group_id IS ?) OR (receiver_id = ? AND group_id = ?))`
-    ).get(
-      params.account_id,
-      params.message_id,
-      params.receiver_id ?? null,
-      params.group_id ?? null,
-      params.receiver_id ?? null,
-      params.group_id ?? null
-    )
-    if (existing) {
-      console.log('[DB] 消息已存在，跳过保存，message_id:', params.message_id, 'receiver_id:', params.receiver_id, 'group_id:', params.group_id)
-      return true // 返回true表示"成功"（因为消息已经存在）
-    }
-    db.prepare(
-      `INSERT INTO messages (account_id, message_id, sender_id, receiver_id, group_id, message_type, content, timestamp)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
-    ).run(
-      params.account_id,
-      params.message_id,
-      params.sender_id,
-      params.receiver_id ?? null,
-      params.group_id ?? null,
-      params.message_type,
-      params.content,
-      params.timestamp
-    )
-    console.log(`[DB] 消息保存成功: account_id=${params.account_id}, message_id=${params.message_id}, receiver_id=${params.receiver_id}, group_id=${params.group_id}, content=${params.content}`)
-    return true
-  } catch (err) {
-    console.error('[DB] 存储消息失败:', err)
-    return false
-  }
-}
-
-/**
- * 获取本地群聊聊天记录（分页）
- */
-export function getLocalGroupMessages(
-  accountId: number,
-  groupId: number,
-  offset: number,
-  limit: number
-): SessionMessage[] {
-  const db = getDB()
-  const rows = db
-    .prepare(
-      `SELECT sender_id, message_type, content, timestamp
-     FROM messages
-     WHERE account_id = ? AND group_id = ?
-     ORDER BY timestamp ASC
-     LIMIT ? OFFSET ?`
-    )
-    .all(accountId, groupId, limit, offset)
-  return rows.map((row) => ({
-    sender_id: row.sender_id,
-    message_type: row.message_type,
-    content: row.content,
-    timestamp: row.timestamp
-  }))
-}
-
-/**
- * 获取本地私聊聊天记录（分页）
- */
-export function getLocalPrivateMessages(
-  accountId: number,
-  userId: number,
-  offset: number,
-  limit: number
-): SessionMessage[] {
-  const db = getDB()
-  const rows = db
-    .prepare(
-      `SELECT sender_id, message_type, content, timestamp
-     FROM messages
-     WHERE account_id = ? AND ((sender_id = ? AND receiver_id = ?) OR (sender_id = ? AND receiver_id = ?))
-     ORDER BY timestamp ASC
-     LIMIT ? OFFSET ?`
-    )
-    .all(accountId, userId, accountId, accountId, userId, limit, offset)
-  return rows.map((row) => ({
-    sender_id: row.sender_id,
-    message_type: row.message_type,
-    content: row.content,
-    timestamp: row.timestamp
-  }))
-}
-
-/**
- * 获取本地群聊某时间戳后的消息
- */
-export function getLocalGroupMessagesAfterTimestamp(
-  accountId: number,
-  groupId: number,
-  after: number
-): SessionMessage[] {
-  const db = getDB()
-  const rows = db
-    .prepare(
-      `SELECT sender_id, message_type, content, timestamp
-     FROM messages
-     WHERE account_id = ? AND group_id = ? AND timestamp > ?
-     ORDER BY timestamp ASC`
-    )
-    .all(accountId, groupId, after)
-  return rows.map((row) => ({
-    sender_id: row.sender_id,
-    message_type: row.message_type,
-    content: row.content,
-    timestamp: row.timestamp
-  }))
-}
-
-/**
- * 获取本地私聊某时间戳后的消息
- */
-export function getLocalPrivateMessagesAfterTimestamp(
-  accountId: number,
-  userId: number,
-  after: number
-): SessionMessage[] {
-  const db = getDB()
-  const rows = db
-    .prepare(
-      `SELECT sender_id, message_type, content, timestamp
-     FROM messages
-     WHERE account_id = ? AND ((sender_id = ? AND receiver_id = ?) OR (sender_id = ? AND receiver_id = ?)) AND timestamp > ?
-     ORDER BY timestamp ASC`
-    )
-    .all(accountId, userId, accountId, accountId, userId, after)
-  return rows.map((row) => ({
-    sender_id: row.sender_id,
-    message_type: row.message_type,
-    content: row.content,
-    timestamp: row.timestamp
-  }))
-}
-
-// 会话相关操作函数
-
-/**
- * 获取用户的所有会话列表（按最后消息时间排序）
- */
-export function getConversations(accountId: number): Conversation[] {
-  const db = getDB()
-  const rows = db
-    .prepare(
-      `SELECT account_id, conversation_type, target_id, target_name, target_avatar,
-              last_message_content, last_message_timestamp, unread_count, updated_at
-       FROM conversations
-       WHERE account_id = ?
-       ORDER BY last_message_timestamp DESC`
-    )
-    .all(accountId)
-  return rows as Conversation[]
-}
-
-/**
- * 获取指定会话信息
- */
-export function getConversation(
-  accountId: number,
-  conversationType: string,
-  targetId: number
-): Conversation | null {
-  const db = getDB()
-  const row = db
-    .prepare(
-      `SELECT account_id, conversation_type, target_id, target_name, target_avatar,
-              last_message_content, last_message_timestamp, unread_count, updated_at
-       FROM conversations
-       WHERE account_id = ? AND conversation_type = ? AND target_id = ?`
-    )
-    .get(accountId, conversationType, targetId)
-  return row as Conversation | null
-}
-
-/**
- * 更新会话未读消息数
- */
-export function updateConversationUnreadCount(
-  accountId: number,
-  conversationType: string,
-  targetId: number,
-  unreadCount: number
-): boolean {
-  try {
-    const db = getDB()
-    db.prepare(
-      `UPDATE conversations 
-       SET unread_count = ?, updated_at = strftime('%s', 'now')
-       WHERE account_id = ? AND conversation_type = ? AND target_id = ?`
-    ).run(unreadCount, accountId, conversationType, targetId)
-    return true
-  } catch (err) {
-    console.error('[DB] 更新会话未读消息数失败:', err)
-    return false
-  }
-}
-
-/**
- * 重置会话未读消息数（标记为已读）
- */
-export function markConversationAsRead(
-  accountId: number,
-  conversationType: string,
-  targetId: number
-): boolean {
-  return updateConversationUnreadCount(accountId, conversationType, targetId, 0)
-}
-
-/**
- * 删除会话
- */
-export function deleteConversation(
-  accountId: number,
-  conversationType: string,
-  targetId: number
-): boolean {
-  try {
-    const db = getDB()
-    db.prepare(
-      `DELETE FROM conversations
-       WHERE account_id = ? AND conversation_type = ? AND target_id = ?`
-    ).run(accountId, conversationType, targetId)
-    return true
-  } catch (err) {
-    console.error('[DB] 删除会话失败:', err)
-    return false
-  }
-}
-
-/**
- * 获取会话总数
- */
-export function getConversationCount(accountId: number): number {
-  const db = getDB()
-  const row = db
-    .prepare(`SELECT COUNT(*) as count FROM conversations WHERE account_id = ?`)
-    .get(accountId)
-  return row?.count || 0
-}
-
-/**
- * 获取总未读消息数
- */
-export function getTotalUnreadCount(accountId: number): number {
-  const db = getDB()
-  const row = db
-    .prepare(`SELECT SUM(unread_count) as total FROM conversations WHERE account_id = ?`)
-    .get(accountId)
-  return row?.total || 0
-}
-
-/**
- * 调试函数：检查数据库中的群组和会话信息
- */
-export function debugDatabaseInfo(accountId: number): void {
-  const db = getDB()
-  
-  // 检查群组信息
-  const groups = db.prepare('SELECT group_id, name FROM groups WHERE account_id = ?').all(accountId)
-  console.log(`[DEBUG] 账户 ${accountId} 的群组信息:`, groups)
-  
-  // 检查会话信息
-  const conversations = db.prepare('SELECT conversation_type, target_id, target_name, last_message_content FROM conversations WHERE account_id = ?').all(accountId)
-  console.log(`[DEBUG] 账户 ${accountId} 的会话信息:`, conversations)
-  
-  // 检查消息信息
-  const messages = db.prepare('SELECT group_id, content, timestamp FROM messages WHERE account_id = ? AND group_id IS NOT NULL ORDER BY timestamp DESC LIMIT 5').all(accountId)
-  console.log(`[DEBUG] 账户 ${accountId} 的最近群聊消息:`, messages)
-  
-  // 检查所有消息信息
-  const allMessages = db.prepare('SELECT group_id, receiver_id, content, timestamp FROM messages WHERE account_id = ? ORDER BY timestamp DESC LIMIT 10').all(accountId)
-  console.log(`[DEBUG] 账户 ${accountId} 的所有最近消息:`, allMessages)
-  
-  // 检查messages表的总数
-  const messageCount = db.prepare('SELECT COUNT(*) as count FROM messages WHERE account_id = ?').get(accountId)
-  console.log(`[DEBUG] 账户 ${accountId} 的消息总数:`, messageCount?.count || 0)
-  
-  // 检查群聊消息数量
-  const groupMessageCount = db.prepare('SELECT COUNT(*) as count FROM messages WHERE account_id = ? AND group_id IS NOT NULL').get(accountId)
-  console.log(`[DEBUG] 账户 ${accountId} 的群聊消息数量:`, groupMessageCount?.count || 0)
 }

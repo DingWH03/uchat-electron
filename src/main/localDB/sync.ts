@@ -12,7 +12,7 @@ import {
 import { ContactList, UpdateTimestamps } from '../../types/HttpRespond'
 import { myID } from '../api/anthentication'
 import { ensureAccountExistsWithoutPassword } from './account'
-import { saveMessageToDB } from './db'
+import { saveMessageToDB } from './message'
 import {
   getLatestTimestampsOfAllGroups,
   getLatestTimestampsOfAllPrivateChats,
@@ -82,17 +82,17 @@ export async function syncAllMessagesBeforeWS(): Promise<void> {
   console.log('[Sync] 调用 myID() 的详细日志:')
   console.log('[Sync] - loginUser 变量值:', accountId)
   console.log('[Sync] - 是否为 0:', accountId === 0)
-  
+
   if (accountId === 0) {
     console.error('[Sync] 错误：accountId 为 0，无法进行消息同步')
     return
   }
-  
+
   // 确保联系人信息是最新的（包括群组信息）
   console.log('[Sync] 开始同步联系人信息...')
   await syncContacts()
   console.log('[Sync] 联系人信息同步完成')
-  
+
   // 1. 本地所有好友/群的last_message_timestamp
   const localFriendTs = getAllFriendsLastMessageTimestamps(accountId)
   const localGroupTs = getAllGroupsLastMessageTimestamps(accountId)
@@ -102,7 +102,7 @@ export async function syncAllMessagesBeforeWS(): Promise<void> {
   console.log('[Sync] 开始获取服务器时间戳...')
   let serverGroupRes, serverFriendRes
   try {
-    [serverGroupRes, serverFriendRes] = await Promise.all([
+    ;[serverGroupRes, serverFriendRes] = await Promise.all([
       getLatestTimestampsOfAllGroups(),
       getLatestTimestampsOfAllPrivateChats()
     ])
@@ -111,17 +111,22 @@ export async function syncAllMessagesBeforeWS(): Promise<void> {
     console.error('[Sync] 获取服务器时间戳失败:', error)
     return
   }
-  
-  if (!serverGroupRes.status || !serverGroupRes.data || !serverFriendRes.status || !serverFriendRes.data) {
-    console.warn('[Sync] 服务器时间戳响应无效:', { 
-      groupStatus: serverGroupRes?.status, 
+
+  if (
+    !serverGroupRes.status ||
+    !serverGroupRes.data ||
+    !serverFriendRes.status ||
+    !serverFriendRes.data
+  ) {
+    console.warn('[Sync] 服务器时间戳响应无效:', {
+      groupStatus: serverGroupRes?.status,
       groupData: serverGroupRes?.data,
-      friendStatus: serverFriendRes?.status, 
-      friendData: serverFriendRes?.data 
+      friendStatus: serverFriendRes?.status,
+      friendData: serverFriendRes?.data
     })
     return
   }
-  
+
   const serverGroupTs = serverGroupRes.data as Record<number, number>
   const serverFriendTs = serverFriendRes.data as Record<number, number>
   console.log('[Sync] 服务器时间戳 - 群聊:', serverGroupTs, '私聊:', serverFriendTs)
@@ -133,14 +138,14 @@ export async function syncAllMessagesBeforeWS(): Promise<void> {
     const serverTs = serverGroupTs[groupId]
     const localTs = localGroupTs[groupId] || 0
     console.log(`[Sync] 群聊 ${groupId}: 服务器=${serverTs}, 本地=${localTs}`)
-    
+
     // 即使时间戳相同，也检查一下是否有消息需要同步
     if (serverTs >= localTs) {
       console.log(`[Sync] 群聊 ${groupId} 需要同步，拉取增量消息...`)
       try {
         const res = await getGroupMessagesAfterTimestamp({ id: groupId, after: localTs })
         console.log(`[Sync] 群聊 ${groupId} 增量消息响应:`, res)
-        
+
         if (res.status && res.data) {
           console.log(`[Sync] 群聊 ${groupId} 保存 ${res.data.length} 条消息到本地`)
           for (const msg of res.data as SessionMessage[]) {
@@ -171,7 +176,7 @@ export async function syncAllMessagesBeforeWS(): Promise<void> {
       console.log(`[Sync] 群聊 ${groupId} 无需同步，本地时间戳已是最新`)
     }
   }
-  
+
   // 4. 私聊增量同步
   console.log('[Sync] 开始私聊同步...')
   for (const userIdStr in serverFriendTs) {
@@ -180,14 +185,16 @@ export async function syncAllMessagesBeforeWS(): Promise<void> {
     const localTs = localFriendTs[userId] || 0
     console.log(`[Sync] 私聊 ${userId}: 服务器=${serverTs}, 本地=${localTs}`)
     console.log(`[Sync] 私聊 ${userId}: 时间差=${serverTs - localTs}ms`)
-    console.log(`[Sync] 私聊 ${userId}: 服务器时间=${new Date(serverTs).toLocaleString()}, 本地时间=${new Date(localTs).toLocaleString()}`)
-    
+    console.log(
+      `[Sync] 私聊 ${userId}: 服务器时间=${new Date(serverTs).toLocaleString()}, 本地时间=${new Date(localTs).toLocaleString()}`
+    )
+
     if (serverTs > localTs) {
       console.log(`[Sync] 私聊 ${userId} 需要同步，拉取增量消息...`)
       try {
         const res = await getPrivateMessagesAfterTimestamp({ id: userId, after: localTs })
         console.log(`[Sync] 私聊 ${userId} 增量消息响应:`, res)
-        
+
         if (res.status && res.data) {
           console.log(`[Sync] 私聊 ${userId} 保存 ${res.data.length} 条消息到本地`)
           console.log(accountId)
@@ -226,8 +233,8 @@ export async function syncAllMessagesBeforeWS(): Promise<void> {
     }
   }
   console.log('[Sync] 聊天记录同步完成')
-  
+
   // 添加调试信息
-  const { debugDatabaseInfo } = await import('./db')
+  const { debugDatabaseInfo } = await import('./conversation')
   debugDatabaseInfo(accountId)
 }
