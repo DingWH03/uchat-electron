@@ -88,6 +88,11 @@ export async function syncAllMessagesBeforeWS(): Promise<void> {
     return
   }
   
+  // 确保联系人信息是最新的（包括群组信息）
+  console.log('[Sync] 开始同步联系人信息...')
+  await syncContacts()
+  console.log('[Sync] 联系人信息同步完成')
+  
   // 1. 本地所有好友/群的last_message_timestamp
   const localFriendTs = getAllFriendsLastMessageTimestamps(accountId)
   const localGroupTs = getAllGroupsLastMessageTimestamps(accountId)
@@ -129,7 +134,8 @@ export async function syncAllMessagesBeforeWS(): Promise<void> {
     const localTs = localGroupTs[groupId] || 0
     console.log(`[Sync] 群聊 ${groupId}: 服务器=${serverTs}, 本地=${localTs}`)
     
-    if (serverTs > localTs) {
+    // 即使时间戳相同，也检查一下是否有消息需要同步
+    if (serverTs >= localTs) {
       console.log(`[Sync] 群聊 ${groupId} 需要同步，拉取增量消息...`)
       try {
         const res = await getGroupMessagesAfterTimestamp({ id: groupId, after: localTs })
@@ -161,6 +167,8 @@ export async function syncAllMessagesBeforeWS(): Promise<void> {
       } catch (error) {
         console.error(`[Sync] 群聊 ${groupId} 同步异常:`, error)
       }
+    } else {
+      console.log(`[Sync] 群聊 ${groupId} 无需同步，本地时间戳已是最新`)
     }
   }
   
@@ -218,4 +226,8 @@ export async function syncAllMessagesBeforeWS(): Promise<void> {
     }
   }
   console.log('[Sync] 聊天记录同步完成')
+  
+  // 添加调试信息
+  const { debugDatabaseInfo } = await import('./db')
+  debugDatabaseInfo(accountId)
 }

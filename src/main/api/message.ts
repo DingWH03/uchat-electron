@@ -96,12 +96,35 @@ export async function getGroupMessagesAfterTimestamp(
 ): Promise<RequestResponse<SessionMessage[]>> {
   const sessionId = getSessionId()
   const baseUrl = getApiBaseUrl()
-  const query = new URLSearchParams({ after: data.after.toString() })
-  const res = await fetch(`${baseUrl}/message/group/${data.id}/after?${query.toString()}`, {
-    method: 'GET',
-    headers: { Cookie: `session_id=${sessionId}` }
-  })
-  return res.json()
+  const query = new URLSearchParams({ timestamp: data.after.toString() })
+  const url = `${baseUrl}/message/group/${data.id}/after?${query.toString()}`
+  try {
+    console.log('[API] getGroupMessagesAfterTimestamp 请求:', url)
+    const res = await fetch(url, {
+      method: 'GET',
+      headers: { Cookie: `session_id=${sessionId}` }
+    })
+    const text = await res.text()
+    console.log('[API] getGroupMessagesAfterTimestamp 响应状态:', res.status, res.statusText)
+    console.log('[API] getGroupMessagesAfterTimestamp 响应体:', text)
+    if (!res.ok) {
+      return {
+        status: false,
+        code: res.status,
+        message: `HTTP ${res.status}: ${res.statusText} - ${text}`,
+        data: undefined
+      }
+    }
+    return JSON.parse(text)
+  } catch (error) {
+    console.error('[API] getGroupMessagesAfterTimestamp 请求失败:', error)
+    return {
+      status: false,
+      code: 500,
+      message: error instanceof Error ? error.message : '请求失败',
+      data: undefined
+    }
+  }
 }
 
 // 6. 获取所有群某时间之后的消息（带群 ID）
@@ -110,7 +133,7 @@ export async function getAllGroupMessagesAfterTimestamp(
 ): Promise<RequestResponse<IdMessagePair[]>> {
   const sessionId = getSessionId()
   const baseUrl = getApiBaseUrl()
-  const query = new URLSearchParams({ after: after.toString() })
+  const query = new URLSearchParams({ timestamp: after.toString() })
   const res = await fetch(`${baseUrl}/message/group/after?${query.toString()}`, {
     method: 'GET',
     headers: { Cookie: `session_id=${sessionId}` }
@@ -188,7 +211,7 @@ export async function getAllPrivateMessagesAfterTimestamp(
 ): Promise<RequestResponse<IdMessagePair[]>> {
   const sessionId = getSessionId()
   const baseUrl = getApiBaseUrl()
-  const query = new URLSearchParams({ after: after.toString() })
+  const query = new URLSearchParams({ timestamp: after.toString() })
   const res = await fetch(`${baseUrl}/message/user/after?${query.toString()}`, {
     method: 'GET',
     headers: { Cookie: `session_id=${sessionId}` }

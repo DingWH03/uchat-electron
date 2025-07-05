@@ -196,12 +196,17 @@ function handleWebSocketMessage(message: ServerMessage): void {
   if (message.type === 'SendMessage') {
     // 私聊消息
     const senderId = message.sender
-    const isCurrentChat = chatType.value === 'friend' && chatId.value === senderId
+    const receiverId = message.receiver
+    const myId = myidConst.value
     
-    // 如果当前正在与发送者聊天，直接添加到消息列表
+    // 判断是否是当前聊天：发送者或接收者是当前聊天对象
+    const isCurrentChat = chatType.value === 'friend' && chatId.value && 
+      (chatId.value === senderId || chatId.value === receiverId)
+    
+    // 如果当前正在与发送者或接收者聊天，直接添加到消息列表
     if (isCurrentChat) {
       friend_msg.value.push({
-        message_id: 0,
+        message_id: message.message_id,
         message_type: MessageType.Text,
         sender_id: senderId,
         message: message.message,
@@ -222,7 +227,9 @@ function handleWebSocketMessage(message: ServerMessage): void {
     // 延迟刷新会话列表，确保数据库已更新
     if (conversationListRef.value) {
       setTimeout(() => {
-        conversationListRef.value?.updateConversation('friend', senderId)
+        // 使用发送者或接收者中不是自己的那个作为会话目标
+        const targetId = senderId === myId ? receiverId : senderId
+        conversationListRef.value?.updateConversation('friend', targetId)
       }, 100)
     }
   } else if (message.type === 'SendGroupMessage') {
@@ -233,7 +240,7 @@ function handleWebSocketMessage(message: ServerMessage): void {
     // 如果当前正在该群聊天，直接添加到消息列表
     if (isCurrentChat) {
       friend_msg.value.push({
-        message_id: 0,
+        message_id: message.message_id,
         message_type: MessageType.Text,
         sender_id: message.sender,
         message: message.message,
@@ -279,16 +286,7 @@ async function send_message(): Promise<void> {
     
     if (sendSuccess) {
       console.log('[Chat] WebSocket发送成功，等待服务器确认')
-      
-      // 临时添加到界面，等待WebSocket返回确认后再保存到数据库
-      friend_msg.value.push({
-        message_id: 0, // 临时ID，等待服务器返回真实ID
-        message_type: MessageType.Text,
-        sender_id: myidConst.value,
-        message: newMessage.value,
-        timestamp: now
-      })
-      console.log('[Chat] 消息已添加到界面，当前消息数量:', friend_msg.value.length)
+      // 清空输入框，消息将通过WebSocket返回后添加到界面
       newMessage.value = ''
       
       // 延迟刷新会话列表，确保数据库已更新
@@ -313,16 +311,7 @@ async function send_message(): Promise<void> {
     
     if (sendSuccess) {
       console.log('[Chat] WebSocket发送成功，等待服务器确认')
-      
-      // 临时添加到界面，等待WebSocket返回确认后再保存到数据库
-      friend_msg.value.push({
-        message_id: 0, // 临时ID，等待服务器返回真实ID
-        message_type: MessageType.Text,
-        sender_id: myidConst.value,
-        message: newMessage.value,
-        timestamp: now
-      })
-      console.log('[Chat] 消息已添加到界面，当前消息数量:', friend_msg.value.length)
+      // 清空输入框，消息将通过WebSocket返回后添加到界面
       newMessage.value = ''
       
       // 延迟刷新会话列表，确保数据库已更新

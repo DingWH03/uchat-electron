@@ -6,7 +6,7 @@ import type { Conversation } from '../../types/localDBModel'
 
 let db: Database.Database
 
-const CURRENT_SCHEMA_VERSION = 10 // 升级：修改conversations表使用复合主键
+const CURRENT_SCHEMA_VERSION = 1 // 升级：修改conversations表使用复合主键
 
 const dbFilePath = join(app.getPath('userData'), 'chat.db') // 存储在用户目录，支持打包后运行
 
@@ -104,6 +104,7 @@ function createTables(): void {
       timestamp INTEGER NOT NULL,
       FOREIGN KEY (account_id) REFERENCES accounts(id) ON DELETE CASCADE
     );
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_messages_unique ON messages (account_id, message_id, receiver_id, group_id);
 
     CREATE TABLE IF NOT EXISTS conversations (
       account_id INTEGER NOT NULL,
@@ -260,17 +261,22 @@ export function saveMessageToDB(params: {
 }): boolean {
   try {
     const db = getDB()
-    
-    // 检查是否已存在相同message_id的消息
+    // 新查重逻辑：联合唯一索引
     const existing = db.prepare(
-      `SELECT id FROM messages WHERE account_id = ? AND message_id = ?`
-    ).get(params.account_id, params.message_id)
-    
+      `SELECT id FROM messages WHERE account_id = ? AND message_id = ? AND 
+      ((receiver_id IS ? AND group_id IS ?) OR (receiver_id = ? AND group_id = ?))`
+    ).get(
+      params.account_id,
+      params.message_id,
+      params.receiver_id ?? null,
+      params.group_id ?? null,
+      params.receiver_id ?? null,
+      params.group_id ?? null
+    )
     if (existing) {
-      console.log('[DB] 消息已存在，跳过保存，message_id:', params.message_id)
+      console.log('[DB] 消息已存在，跳过保存，message_id:', params.message_id, 'receiver_id:', params.receiver_id, 'group_id:', params.group_id)
       return true // 返回true表示"成功"（因为消息已经存在）
     }
-    
     db.prepare(
       `INSERT INTO messages (account_id, message_id, sender_id, receiver_id, group_id, message_type, content, timestamp)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
@@ -284,6 +290,7 @@ export function saveMessageToDB(params: {
       params.content,
       params.timestamp
     )
+    console.log(`[DB] 消息保存成功: account_id=${params.account_id}, message_id=${params.message_id}, receiver_id=${params.receiver_id}, group_id=${params.group_id}, content=${params.content}`)
     return true
   } catch (err) {
     console.error('[DB] 存储消息失败:', err)
@@ -509,4 +516,35 @@ export function getTotalUnreadCount(accountId: number): number {
     .prepare(`SELECT SUM(unread_count) as total FROM conversations WHERE account_id = ?`)
     .get(accountId)
   return row?.total || 0
+}
+
+/**
+ * 调试函数：检查数据库中的群组和会话信息
+ */
+export function debugDatabaseInfo(accountId: number): void {
+  const db = getDB()
+  
+  // 检查群组信息
+  const groups = db.prepare('SELECT group_id, name FROM groups WHERE account_id = ?').all(accountId)
+  console.log(`[DEBUG] 账户 ${accountId} 的群组信息:`, groups)
+  
+  // 检查会话信息
+  const conversations = db.prepare('SELECT conversation_type, target_id, target_name, last_message_content FROM conversations WHERE account_id = ?').all(accountId)
+  console.log(`[DEBUG] 账户 ${accountId} 的会话信息:`, conversations)
+  
+  // 检查消息信息
+  const messages = db.prepare('SELECT group_id, content, timestamp FROM messages WHERE account_id = ? AND group_id IS NOT NULL ORDER BY timestamp DESC LIMIT 5').all(accountId)
+  console.log(`[DEBUG] 账户 ${accountId} 的最近群聊消息:`, messages)
+  
+  // 检查所有消息信息
+  const allMessages = db.prepare('SELECT group_id, receiver_id, content, timestamp FROM messages WHERE account_id = ? ORDER BY timestamp DESC LIMIT 10').all(accountId)
+  console.log(`[DEBUG] 账户 ${accountId} 的所有最近消息:`, allMessages)
+  
+  // 检查messages表的总数
+  const messageCount = db.prepare('SELECT COUNT(*) as count FROM messages WHERE account_id = ?').get(accountId)
+  console.log(`[DEBUG] 账户 ${accountId} 的消息总数:`, messageCount?.count || 0)
+  
+  // 检查群聊消息数量
+  const groupMessageCount = db.prepare('SELECT COUNT(*) as count FROM messages WHERE account_id = ? AND group_id IS NOT NULL').get(accountId)
+  console.log(`[DEBUG] 账户 ${accountId} 的群聊消息数量:`, groupMessageCount?.count || 0)
 }
