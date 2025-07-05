@@ -31,6 +31,29 @@ export interface Message {
 }
 
 /**
+ * 会话类型枚举
+ */
+export enum ConversationType {
+  FRIEND = 'friend',
+  GROUP = 'group'
+}
+
+/**
+ * 会话接口
+ */
+export interface Conversation {
+  account_id: number
+  conversation_type: ConversationType
+  target_id: number // 好友ID或群组ID
+  target_name: string // 好友用户名或群组名称
+  target_avatar?: string | null
+  last_message_content: string
+  last_message_timestamp: number
+  unread_count: number
+  updated_at: number
+}
+
+/**
  * 通用接口返回错误类型
  */
 export interface ErrorResult {

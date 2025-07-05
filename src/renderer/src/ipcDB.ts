@@ -1,5 +1,5 @@
 import { GroupSimpleInfo, UserSimpleInfo, UserSimpleInfoWithStatus } from '@/types/HttpRespond'
-import { Account, DBResult } from '@/types/localDBModel'
+import { Account, DBResult, Conversation } from '@/types/localDBModel'
 
 // 本地数据库返回的消息结构
 interface LocalSessionMessage {
@@ -21,7 +21,14 @@ export {
   getLocalPrivateMessages,
   getLocalGroupMessagesAfterTimestamp,
   getLocalPrivateMessagesAfterTimestamp,
-  saveMessageToDB
+  saveMessageToDB,
+  getConversations,
+  getConversation,
+  updateConversationUnread,
+  markConversationRead,
+  deleteConversation,
+  getConversationCount,
+  getTotalUnreadCount
 }
 
 /// 插入登录账号到本地数据库
@@ -94,4 +101,41 @@ const saveMessageToDB = async (params: {
   message_id?: number
 }): Promise<boolean> => {
   return window.localDB.saveMessageToDB(params)
+}
+
+// 会话相关接口
+
+/// 获取会话列表
+const getConversations = async (): Promise<DBResult<Conversation[]>> => {
+  return window.localDB.getConversations()
+}
+
+/// 获取指定会话信息
+const getConversation = async (conversationType: string, targetId: number): Promise<DBResult<Conversation | null>> => {
+  return window.localDB.getConversation(conversationType, targetId)
+}
+
+/// 更新会话未读消息数
+const updateConversationUnread = async (conversationType: string, targetId: number, unreadCount: number): Promise<DBResult<boolean>> => {
+  return window.localDB.updateConversationUnread(conversationType, targetId, unreadCount)
+}
+
+/// 标记会话为已读
+const markConversationRead = async (conversationType: string, targetId: number): Promise<DBResult<boolean>> => {
+  return window.localDB.markConversationRead(conversationType, targetId)
+}
+
+/// 删除会话
+const deleteConversation = async (conversationType: string, targetId: number): Promise<DBResult<boolean>> => {
+  return window.localDB.deleteConversation(conversationType, targetId)
+}
+
+/// 获取会话总数
+const getConversationCount = async (): Promise<DBResult<number>> => {
+  return window.localDB.getConversationCount()
+}
+
+/// 获取总未读消息数
+const getTotalUnreadCount = async (): Promise<DBResult<number>> => {
+  return window.localDB.getTotalUnreadCount()
 }

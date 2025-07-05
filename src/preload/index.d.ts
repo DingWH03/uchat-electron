@@ -20,7 +20,7 @@ import {
   UserSimpleInfo,
   UserSimpleInfoWithStatus
 } from 'src/types/HttpRespond'
-import { Account, DBResult } from '@/types/localDBModel'
+import { Account, DBResult, Conversation } from '@/types/localDBModel'
 
 // 本地数据库返回的消息结构
 interface LocalSessionMessage {
@@ -111,6 +111,22 @@ declare global {
         userId: number,
         after: number
       ) => Promise<LocalSessionMessage[]>
+      saveMessageToDB: (params: {
+        type: 'private' | 'group'
+        receiver_id?: number
+        group_id?: number
+        message: string
+        sender_id: number
+        timestamp: number
+        message_id?: number
+      }) => Promise<boolean>
+      getConversations: () => Promise<DBResult<Conversation[]>>
+      getConversation: (conversationType: string, targetId: number) => Promise<DBResult<Conversation | null>>
+      updateConversationUnread: (conversationType: string, targetId: number, unreadCount: number) => Promise<DBResult<boolean>>
+      markConversationRead: (conversationType: string, targetId: number) => Promise<DBResult<boolean>>
+      deleteConversation: (conversationType: string, targetId: number) => Promise<DBResult<boolean>>
+      getConversationCount: () => Promise<DBResult<number>>
+      getTotalUnreadCount: () => Promise<DBResult<number>>
     }
   }
 }

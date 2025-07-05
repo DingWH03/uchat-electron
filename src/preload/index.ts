@@ -172,6 +172,28 @@ const localDB = {
     message_id?: number
   }) => {
     return await ipcRenderer.invoke('localdb:saveMessageToDB', params)
+  },
+  // 会话相关接口
+  getConversations: async () => {
+    return await ipcRenderer.invoke('get-conversations')
+  },
+  getConversation: async (conversationType: string, targetId: number) => {
+    return await ipcRenderer.invoke('get-conversation', conversationType, targetId)
+  },
+  updateConversationUnread: async (conversationType: string, targetId: number, unreadCount: number) => {
+    return await ipcRenderer.invoke('update-conversation-unread', conversationType, targetId, unreadCount)
+  },
+  markConversationRead: async (conversationType: string, targetId: number) => {
+    return await ipcRenderer.invoke('mark-conversation-read', conversationType, targetId)
+  },
+  deleteConversation: async (conversationType: string, targetId: number) => {
+    return await ipcRenderer.invoke('delete-conversation', conversationType, targetId)
+  },
+  getConversationCount: async () => {
+    return await ipcRenderer.invoke('get-conversation-count')
+  },
+  getTotalUnreadCount: async () => {
+    return await ipcRenderer.invoke('get-total-unread-count')
   }
 }
 

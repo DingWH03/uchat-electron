@@ -5,6 +5,7 @@ import { registerAnthenticationApi } from './anthentication'
 import { registerFriendApi } from './friend'
 import { registerGroupApi } from './group'
 import { registerMessageApi } from './message'
+import './conversation'
 
 export function Apis(win: BrowserWindow): void {
   registerPingApi()

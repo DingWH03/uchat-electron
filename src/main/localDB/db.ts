@@ -2,10 +2,11 @@ import Database from 'better-sqlite3'
 import { join } from 'path'
 import { app } from 'electron'
 import type { SessionMessage } from '../../types/HttpRespond'
+import type { Conversation } from '../../types/localDBModel'
 
 let db: Database.Database
 
-const CURRENT_SCHEMA_VERSION = 8 // 升级：增加message_id字段
+const CURRENT_SCHEMA_VERSION = 10 // 升级：修改conversations表使用复合主键
 
 const dbFilePath = join(app.getPath('userData'), 'chat.db') // 存储在用户目录，支持打包后运行
 
@@ -15,6 +16,8 @@ export function initDB(): void {
   db.pragma('journal_mode = WAL') // 使用WAL模式提高性能和数据安全性
   db.pragma('synchronous = NORMAL') // 设置同步模式
   db.pragma('cache_size = 10000') // 设置缓存大小
+  db.pragma('busy_timeout = 30000') // 设置忙等待超时时间（30秒）
+  db.pragma('locking_mode = EXCLUSIVE') // 使用独占锁模式
 
   // 检查 user_version
   const row = db.prepare('PRAGMA user_version').get()
@@ -47,6 +50,7 @@ function resetDatabase(): void {
     DROP TABLE IF EXISTS friends;
     DROP TABLE IF EXISTS groups;
     DROP TABLE IF EXISTS accounts;
+    DROP TABLE IF EXISTS conversations;
   `)
   createTables()
 }
@@ -100,10 +104,27 @@ function createTables(): void {
       timestamp INTEGER NOT NULL,
       FOREIGN KEY (account_id) REFERENCES accounts(id) ON DELETE CASCADE
     );
+
+    CREATE TABLE IF NOT EXISTS conversations (
+      account_id INTEGER NOT NULL,
+      conversation_type TEXT NOT NULL CHECK (conversation_type IN ('friend', 'group')),
+      target_id INTEGER NOT NULL,
+      target_name TEXT NOT NULL,
+      target_avatar TEXT,
+      last_message_content TEXT NOT NULL DEFAULT '',
+      last_message_timestamp INTEGER NOT NULL DEFAULT 0,
+      unread_count INTEGER NOT NULL DEFAULT 0,
+      updated_at INTEGER NOT NULL,
+      PRIMARY KEY (account_id, conversation_type, target_id),
+      FOREIGN KEY (account_id) REFERENCES accounts(id) ON DELETE CASCADE
+    );
+
     CREATE INDEX IF NOT EXISTS idx_messages_account_time ON messages (account_id, timestamp);
     CREATE INDEX IF NOT EXISTS idx_messages_account_message_id ON messages (account_id, message_id);
     CREATE INDEX IF NOT EXISTS idx_friends_account_user ON friends (account_id, user_id);
     CREATE INDEX IF NOT EXISTS idx_groups_account_group ON groups (account_id, group_id);
+    CREATE INDEX IF NOT EXISTS idx_conversations_account_time ON conversations (account_id, last_message_timestamp DESC);
+    CREATE INDEX IF NOT EXISTS idx_conversations_account_type_target ON conversations (account_id, conversation_type, target_id);
   `)
   
   // 创建触发器来自动更新时间戳
@@ -115,6 +136,8 @@ function createTriggers(): void {
   db.exec(`
     DROP TRIGGER IF EXISTS update_friend_timestamp_trigger;
     DROP TRIGGER IF EXISTS update_group_timestamp_trigger;
+    DROP TRIGGER IF EXISTS update_conversation_friend_trigger;
+    DROP TRIGGER IF EXISTS update_conversation_group_trigger;
   `)
   
   // 创建私聊消息触发器
@@ -149,6 +172,58 @@ function createTriggers(): void {
       END
       WHERE account_id = NEW.account_id 
       AND group_id = NEW.group_id;
+    END;
+  `)
+  
+  // 创建私聊会话触发器
+  db.exec(`
+    CREATE TRIGGER update_conversation_friend_trigger
+    AFTER INSERT ON messages
+    WHEN NEW.group_id IS NULL AND NEW.receiver_id IS NOT NULL
+    BEGIN
+      INSERT OR REPLACE INTO conversations (
+        account_id, conversation_type, target_id, target_name, target_avatar,
+        last_message_content, last_message_timestamp, unread_count, updated_at
+      )
+      SELECT
+        NEW.account_id,
+        'friend',
+        CASE WHEN NEW.sender_id = NEW.account_id THEN NEW.receiver_id ELSE NEW.sender_id END,
+        (SELECT username FROM friends WHERE account_id = NEW.account_id AND user_id = CASE WHEN NEW.sender_id = NEW.account_id THEN NEW.receiver_id ELSE NEW.sender_id END),
+        (SELECT avatar FROM friends WHERE account_id = NEW.account_id AND user_id = CASE WHEN NEW.sender_id = NEW.account_id THEN NEW.receiver_id ELSE NEW.sender_id END),
+        NEW.content,
+        NEW.timestamp,
+        CASE WHEN NEW.sender_id != NEW.account_id THEN 1 ELSE 0 END,
+        strftime('%s', 'now')
+      WHERE EXISTS (
+        SELECT 1 FROM friends WHERE account_id = NEW.account_id AND user_id = CASE WHEN NEW.sender_id = NEW.account_id THEN NEW.receiver_id ELSE NEW.sender_id END
+      );
+    END;
+  `)
+  
+  // 创建群聊会话触发器
+  db.exec(`
+    CREATE TRIGGER update_conversation_group_trigger
+    AFTER INSERT ON messages
+    WHEN NEW.group_id IS NOT NULL
+    BEGIN
+      INSERT OR REPLACE INTO conversations (
+        account_id, conversation_type, target_id, target_name, target_avatar,
+        last_message_content, last_message_timestamp, unread_count, updated_at
+      )
+      SELECT
+        NEW.account_id,
+        'group',
+        NEW.group_id,
+        (SELECT name FROM groups WHERE account_id = NEW.account_id AND group_id = NEW.group_id),
+        (SELECT avatar FROM groups WHERE account_id = NEW.account_id AND group_id = NEW.group_id),
+        NEW.content,
+        NEW.timestamp,
+        CASE WHEN NEW.sender_id != NEW.account_id THEN 1 ELSE 0 END,
+        strftime('%s', 'now')
+      WHERE EXISTS (
+        SELECT 1 FROM groups WHERE account_id = NEW.account_id AND group_id = NEW.group_id
+      );
     END;
   `)
   
@@ -318,4 +393,120 @@ export function getLocalPrivateMessagesAfterTimestamp(
     content: row.content,
     timestamp: row.timestamp
   }))
+}
+
+// 会话相关操作函数
+
+/**
+ * 获取用户的所有会话列表（按最后消息时间排序）
+ */
+export function getConversations(accountId: number): Conversation[] {
+  const db = getDB()
+  const rows = db
+    .prepare(
+      `SELECT account_id, conversation_type, target_id, target_name, target_avatar,
+              last_message_content, last_message_timestamp, unread_count, updated_at
+       FROM conversations
+       WHERE account_id = ?
+       ORDER BY last_message_timestamp DESC`
+    )
+    .all(accountId)
+  return rows as Conversation[]
+}
+
+/**
+ * 获取指定会话信息
+ */
+export function getConversation(
+  accountId: number,
+  conversationType: string,
+  targetId: number
+): Conversation | null {
+  const db = getDB()
+  const row = db
+    .prepare(
+      `SELECT account_id, conversation_type, target_id, target_name, target_avatar,
+              last_message_content, last_message_timestamp, unread_count, updated_at
+       FROM conversations
+       WHERE account_id = ? AND conversation_type = ? AND target_id = ?`
+    )
+    .get(accountId, conversationType, targetId)
+  return row as Conversation | null
+}
+
+/**
+ * 更新会话未读消息数
+ */
+export function updateConversationUnreadCount(
+  accountId: number,
+  conversationType: string,
+  targetId: number,
+  unreadCount: number
+): boolean {
+  try {
+    const db = getDB()
+    db.prepare(
+      `UPDATE conversations 
+       SET unread_count = ?, updated_at = strftime('%s', 'now')
+       WHERE account_id = ? AND conversation_type = ? AND target_id = ?`
+    ).run(unreadCount, accountId, conversationType, targetId)
+    return true
+  } catch (err) {
+    console.error('[DB] 更新会话未读消息数失败:', err)
+    return false
+  }
+}
+
+/**
+ * 重置会话未读消息数（标记为已读）
+ */
+export function markConversationAsRead(
+  accountId: number,
+  conversationType: string,
+  targetId: number
+): boolean {
+  return updateConversationUnreadCount(accountId, conversationType, targetId, 0)
+}
+
+/**
+ * 删除会话
+ */
+export function deleteConversation(
+  accountId: number,
+  conversationType: string,
+  targetId: number
+): boolean {
+  try {
+    const db = getDB()
+    db.prepare(
+      `DELETE FROM conversations
+       WHERE account_id = ? AND conversation_type = ? AND target_id = ?`
+    ).run(accountId, conversationType, targetId)
+    return true
+  } catch (err) {
+    console.error('[DB] 删除会话失败:', err)
+    return false
+  }
+}
+
+/**
+ * 获取会话总数
+ */
+export function getConversationCount(accountId: number): number {
+  const db = getDB()
+  const row = db
+    .prepare(`SELECT COUNT(*) as count FROM conversations WHERE account_id = ?`)
+    .get(accountId)
+  return row?.count || 0
+}
+
+/**
+ * 获取总未读消息数
+ */
+export function getTotalUnreadCount(accountId: number): number {
+  const db = getDB()
+  const row = db
+    .prepare(`SELECT SUM(unread_count) as total FROM conversations WHERE account_id = ?`)
+    .get(accountId)
+  return row?.total || 0
 }
