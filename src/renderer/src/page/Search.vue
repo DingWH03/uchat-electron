@@ -30,7 +30,7 @@ const search = async () => {
   const result = await friend_add(request)
   if (result.status == true) {
     ElMessage('添加成功')
-    console.log('添加成功')
+    // console.log('添加成功')
     router.push('/chat')
   }
 }

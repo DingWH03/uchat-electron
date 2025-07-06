@@ -52,7 +52,7 @@ export function updateConversationUnreadCount(
   try {
     const db = getDB()
     db.prepare(
-      `UPDATE conversations 
+      `UPDATE conversations
        SET unread_count = ?, updated_at = strftime('%s', 'now')
        WHERE account_id = ? AND conversation_type = ? AND target_id = ?`
     ).run(unreadCount, accountId, conversationType, targetId)

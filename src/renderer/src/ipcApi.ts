@@ -81,7 +81,7 @@ const password = async (requestData: PasswordRequest): Promise<RequestResponse<v
 }
 
 /// 获取登陆user id
-const myid = (): number => {
+const myid = async (): Promise<number> => {
   return window.api.myid()
 }
 

@@ -99,14 +99,14 @@ export async function getGroupMessagesAfterTimestamp(
   const query = new URLSearchParams({ timestamp: data.after.toString() })
   const url = `${baseUrl}/message/group/${data.id}/after?${query.toString()}`
   try {
-    console.log('[API] getGroupMessagesAfterTimestamp 请求:', url)
+    // console.log('[API] getGroupMessagesAfterTimestamp 请求:', url)
     const res = await fetch(url, {
       method: 'GET',
       headers: { Cookie: `session_id=${sessionId}` }
     })
     const text = await res.text()
-    console.log('[API] getGroupMessagesAfterTimestamp 响应状态:', res.status, res.statusText)
-    console.log('[API] getGroupMessagesAfterTimestamp 响应体:', text)
+    // console.log('[API] getGroupMessagesAfterTimestamp 响应状态:', res.status, res.statusText)
+    // console.log('[API] getGroupMessagesAfterTimestamp 响应体:', text)
     if (!res.ok) {
       return {
         status: false,
@@ -243,14 +243,14 @@ export async function getPrivateMessagesAfterTimestamp(
   const query = new URLSearchParams({ timestamp: data.after.toString() })
   const url = `${baseUrl}/message/user/${data.id}/after?${query.toString()}`
   try {
-    console.log('[API] getPrivateMessagesAfterTimestamp 请求:', url)
+    // console.log('[API] getPrivateMessagesAfterTimestamp 请求:', url)
     const res = await fetch(url, {
       method: 'GET',
       headers: { Cookie: `session_id=${sessionId}` }
     })
     const text = await res.text()
-    console.log('[API] getPrivateMessagesAfterTimestamp 响应状态:', res.status, res.statusText)
-    console.log('[API] getPrivateMessagesAfterTimestamp 响应体:', text)
+    // console.log('[API] getPrivateMessagesAfterTimestamp 响应状态:', res.status, res.statusText)
+    // console.log('[API] getPrivateMessagesAfterTimestamp 响应体:', text)
     if (!res.ok) {
       return {
         status: false,

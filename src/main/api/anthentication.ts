@@ -10,7 +10,7 @@ import { syncContacts } from '../localDB'
 let loginUser: number = 0
 
 export const myID = (): number => {
-  console.log('[myID] 当前 loginUser:', loginUser)
+  // console.log('[myID] 当前 loginUser:', loginUser)
   return loginUser
 }
 
@@ -82,7 +82,7 @@ export function registerAnthenticationApi(win: BrowserWindow): void {
   )
   // 登陆的后端接口调用
   ipcMain.handle('api:auth/login', async (_, loginData: LoginRequest): Promise<boolean> => {
-    console.log('[Login] 开始登录，用户ID:', loginData.userid)
+    // console.log('[Login] 开始登录，用户ID:', loginData.userid)
     const baseUrl = getApiBaseUrl()
     const res = await fetch(`${baseUrl}/auth/login`, {
       method: 'POST',
@@ -90,26 +90,26 @@ export function registerAnthenticationApi(win: BrowserWindow): void {
       body: JSON.stringify(loginData)
     })
     const data = await res.json()
-    console.log('[Login] 登录响应:', data)
+    // console.log('[Login] 登录响应:', data)
     if (data.status) {
-      console.log('[Login] 登录成功，设置 sessionId 和 loginUser')
+      // console.log('[Login] 登录成功，设置 sessionId 和 loginUser')
       setSessionId(data.data)
-      console.log('[Login] 设置 loginUser 前:', loginUser)
+      // console.log('[Login] 设置 loginUser 前:', loginUser)
       loginUser = loginData.userid // 保存登陆用户的id
-      console.log('[Login] 设置 loginUser 后:', loginUser)
-      console.log('[Login] 调用 myID() 验证:', myID())
+      // console.log('[Login] 设置 loginUser 后:', loginUser)
+      // console.log('[Login] 调用 myID() 验证:', myID())
 
-      console.log('[Login] 开始同步联系人...')
+      // console.log('[Login] 开始同步联系人...')
       await syncContacts() // 同步联系人数据到本地数据库
-      console.log('[Login] 联系人同步完成，再次验证 myID():', myID())
+      // console.log('[Login] 联系人同步完成，再次验证 myID():', myID())
 
-      console.log('[Login] 开始设置 WebSocket...')
+      // console.log('[Login] 开始设置 WebSocket...')
       setupWebSocket(win)
 
       win.setResizable(true)
       // win.setTitleBarOverlay()
     } else {
-      console.log('[Login] 登录失败')
+      console.error('[Login] 登录失败')
     }
     return data.status
   })

@@ -8,15 +8,15 @@
         </div>
         <p class="app-subtitle">欢迎使用聊天应用</p>
       </div>
-      
+
       <div class="login-form">
         <el-form ref="formDataRef" label-width="0px" @submit.prevent @keydown.enter="handleSubmit">
           <!-- 用户名输入（集成账户选择） -->
           <el-form-item prop="username">
             <div class="username-input-wrapper">
-              <el-input 
-                v-model="username" 
-                placeholder="请输入用户ID" 
+              <el-input
+                v-model="username"
+                placeholder="请输入用户ID"
                 class="username-input"
                 @input="onUsernameInput"
                 @focus="onUsernameFocus"
@@ -26,19 +26,19 @@
                   <span class="iconfont icon-email"></span>
                 </template>
               </el-input>
-              <el-dropdown 
+              <el-dropdown
                 v-if="savedAccounts.length > 0"
-                @command="onAccountSelect"
                 trigger="click"
                 class="account-dropdown"
+                @command="onAccountSelect"
               >
-                <el-button class="dropdown-btn" type="text">
+                <el-button class="dropdown-btn" type="default">
                   <el-icon><ArrowDown /></el-icon>
                 </el-button>
                 <template #dropdown>
                   <el-dropdown-menu>
-                    <el-dropdown-item 
-                      v-for="account in savedAccounts" 
+                    <el-dropdown-item
+                      v-for="account in savedAccounts"
                       :key="account.id"
                       :command="account.id.toString()"
                     >
@@ -52,9 +52,12 @@
               </el-dropdown>
             </div>
             <!-- 自动补全下拉框 -->
-            <div v-if="showAutocomplete && filteredAccounts.length > 0" class="autocomplete-dropdown">
-              <div 
-                v-for="account in filteredAccounts" 
+            <div
+              v-if="showAutocomplete && filteredAccounts.length > 0"
+              class="autocomplete-dropdown"
+            >
+              <div
+                v-for="account in filteredAccounts"
                 :key="account.id"
                 class="autocomplete-item"
                 @click="selectAutocomplete(account)"
@@ -64,7 +67,7 @@
               </div>
             </div>
           </el-form-item>
-          
+
           <!-- 密码输入 -->
           <el-form-item prop="password">
             <el-input
@@ -81,39 +84,30 @@
               </template>
             </el-input>
           </el-form-item>
-          
+
           <!-- 记住密码选项 -->
           <el-form-item v-if="isLogin">
-            <el-checkbox v-model="rememberMe" class="remember-checkbox">
-              记住账号密码
-            </el-checkbox>
+            <el-checkbox v-model="rememberMe" class="remember-checkbox"> 记住账号密码 </el-checkbox>
           </el-form-item>
-          
+
           <!-- 登录/注册按钮 -->
           <el-form-item>
-            <el-button 
-              type="primary" 
-              class="submit-btn" 
-              @click="handleSubmit"
-              :loading="loading"
-            >
+            <el-button type="primary" class="submit-btn" :loading="loading" @click="handleSubmit">
               {{ isLogin ? '登录' : '注册' }}
             </el-button>
           </el-form-item>
-          
+
           <!-- 底部链接 -->
           <div class="bottom-links">
             <span class="link-btn" @click="changeOpType">
               {{ isLogin ? '注册新账户' : '返回登录' }}
             </span>
-            <span class="link-btn" @click="showServerSettings = true">
-              服务器设置
-            </span>
+            <span class="link-btn" @click="showServerSettings = true"> 服务器设置 </span>
           </div>
         </el-form>
       </div>
     </div>
-    
+
     <ServerSettingsDialog v-if="showServerSettings" @close="showServerSettings = false" />
   </div>
 </template>
@@ -143,9 +137,7 @@ const showAutocomplete = ref(false)
 // 计算过滤后的账户列表
 const filteredAccounts = computed(() => {
   if (!username.value) return savedAccounts.value
-  return savedAccounts.value.filter(account => 
-    account.id.toString().includes(username.value)
-  )
+  return savedAccounts.value.filter((account) => account.id.toString().includes(username.value))
 })
 
 // 页面加载时获取保存的账户
@@ -173,7 +165,7 @@ const loadSavedAccounts = async (): Promise<void> => {
 // 用户名输入处理
 const onUsernameInput = (value: string): void => {
   // 检查是否是已保存的账户
-  const account = savedAccounts.value.find(acc => acc.id.toString() === value)
+  const account = savedAccounts.value.find((acc) => acc.id.toString() === value)
   if (account) {
     // 如果是已保存的账户，自动填充密码
     password.value = account.password
@@ -201,7 +193,7 @@ const onUsernameBlur = (): void => {
 
 // 从下拉菜单选择账户
 const onAccountSelect = (value: string): void => {
-  const account = savedAccounts.value.find(acc => acc.id.toString() === value)
+  const account = savedAccounts.value.find((acc) => acc.id.toString() === value)
   if (account) {
     username.value = account.id.toString()
     password.value = account.password
@@ -230,9 +222,9 @@ const handleSubmit = async (): Promise<void> => {
     ElMessage.warning('请输入用户名和密码')
     return
   }
-  
+
   loading.value = true
-  
+
   try {
     if (isLogin.value) {
       await handleLogin()
@@ -254,12 +246,12 @@ const handleLogin = async (): Promise<void> => {
       userid: Number(username.value),
       password: password.value
     }
-    
+
     const success = await login(loginData)
-    
+
     if (success) {
       ElMessage.success('登录成功')
-      
+
       // 如果勾选了记住密码，保存账户信息
       if (rememberMe.value) {
         const inputAccount: Account = {
@@ -267,16 +259,16 @@ const handleLogin = async (): Promise<void> => {
           username: username.value,
           password: password.value
         }
-        
+
         const result = await addOrUpdateAccount(inputAccount)
         if (result.success) {
-          console.log('成功保存账户信息')
+          // console.log('成功保存账户信息')
           await loadSavedAccounts() // 重新加载账户列表
         } else {
-          console.log('保存账户信息失败')
+          console.error('保存账户信息失败')
         }
       }
-      
+
       router.push('/chat')
     } else {
       ElMessage.error('登录失败，请检查用户名和密码')
@@ -294,7 +286,7 @@ const handleRegister = async (): Promise<void> => {
       username: username.value,
       password: password.value
     }
-    
+
     const result = await register(request)
     if (result.status === true && result.data !== undefined) {
       ElMessage.success(`注册成功，用户ID: ${result.data}`)
@@ -369,36 +361,36 @@ const handleRegister = async (): Promise<void> => {
     display: flex;
     align-items: center;
   }
-  
+
   .username-input {
     flex: 1;
-    
+
     :deep(.el-input__wrapper) {
       border-radius: 12px;
       border: 2px solid #f0f0f0;
       transition: all 0.3s ease;
       box-shadow: none;
       height: 48px;
-      
+
       &:hover {
         border-color: #409eff;
       }
-      
+
       &.is-focus {
         border-color: #409eff;
         box-shadow: 0 0 0 2px rgba(64, 158, 255, 0.2);
       }
     }
-    
+
     :deep(.el-input__inner) {
       height: 48px;
       font-size: 16px;
     }
   }
-  
+
   .account-dropdown {
     margin-left: 8px;
-    
+
     .dropdown-btn {
       height: 48px;
       width: 40px;
@@ -411,18 +403,18 @@ const handleRegister = async (): Promise<void> => {
       display: flex;
       align-items: center;
       justify-content: center;
-      
+
       &:hover {
         border-color: #409eff;
         color: #409eff;
       }
-      
+
       .el-icon {
         font-size: 16px;
       }
     }
   }
-  
+
   .dropdown-account-item {
     display: flex;
     justify-content: space-between;
@@ -430,11 +422,11 @@ const handleRegister = async (): Promise<void> => {
     width: 100%;
     padding: 8px 0;
   }
-  
+
   .account-id {
     font-weight: 500;
   }
-  
+
   .account-saved-tag {
     font-size: 12px;
     color: #409eff;
@@ -442,7 +434,7 @@ const handleRegister = async (): Promise<void> => {
     padding: 2px 6px;
     border-radius: 4px;
   }
-  
+
   .autocomplete-dropdown {
     position: absolute;
     top: 100%;
@@ -457,7 +449,7 @@ const handleRegister = async (): Promise<void> => {
     max-height: 200px;
     overflow-y: auto;
   }
-  
+
   .autocomplete-item {
     display: flex;
     justify-content: space-between;
@@ -465,25 +457,25 @@ const handleRegister = async (): Promise<void> => {
     padding: 12px 16px;
     cursor: pointer;
     transition: background 0.2s ease;
-    
+
     &:hover {
       background: #f5f7fa;
     }
-    
+
     &:first-child {
       border-radius: 0 0 0 10px;
     }
-    
+
     &:last-child {
       border-radius: 0 0 10px 10px;
     }
   }
-  
+
   .autocomplete-id {
     font-weight: 500;
     color: #333;
   }
-  
+
   .autocomplete-saved {
     font-size: 12px;
     color: #409eff;
@@ -491,39 +483,39 @@ const handleRegister = async (): Promise<void> => {
     padding: 2px 6px;
     border-radius: 4px;
   }
-  
+
   .custom-input {
     :deep(.el-input__wrapper) {
       border-radius: 12px;
       border: 2px solid #f0f0f0;
       transition: all 0.3s ease;
       box-shadow: none;
-      
+
       &:hover {
         border-color: #409eff;
       }
-      
+
       &.is-focus {
         border-color: #409eff;
         box-shadow: 0 0 0 2px rgba(64, 158, 255, 0.2);
       }
     }
-    
+
     :deep(.el-input__inner) {
       height: 48px;
       font-size: 16px;
     }
   }
-  
+
   .remember-checkbox {
     margin: 16px 0;
-    
+
     :deep(.el-checkbox__label) {
       color: #666;
       font-size: 14px;
     }
   }
-  
+
   .submit-btn {
     width: 100%;
     height: 48px;
@@ -533,17 +525,17 @@ const handleRegister = async (): Promise<void> => {
     background: linear-gradient(135deg, #409eff 0%, #66b1ff 100%);
     border: none;
     transition: all 0.3s ease;
-    
+
     &:hover {
       transform: translateY(-2px);
       box-shadow: 0 8px 20px rgba(64, 158, 255, 0.3);
     }
-    
+
     &:active {
       transform: translateY(0);
     }
   }
-  
+
   .bottom-links {
     display: flex;
     justify-content: space-between;
@@ -551,13 +543,13 @@ const handleRegister = async (): Promise<void> => {
     padding-top: 20px;
     border-top: 1px solid #f0f0f0;
   }
-  
+
   .link-btn {
     color: #409eff;
     font-size: 14px;
     cursor: pointer;
     transition: color 0.3s ease;
-    
+
     &:hover {
       color: #66b1ff;
       text-decoration: underline;
@@ -570,15 +562,15 @@ const handleRegister = async (): Promise<void> => {
   .login-container {
     padding: 10px;
   }
-  
+
   .login-card {
     padding: 30px 20px;
   }
-  
+
   .app-title {
     font-size: 24px;
   }
-  
+
   .bottom-links {
     flex-direction: column;
     gap: 10px;

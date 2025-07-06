@@ -57,19 +57,15 @@
 <script setup lang="ts">
 import { ref, nextTick, onMounted, watch, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import {
-  friend_list_v2,
-  sendMessage,
-  myid,
-  group_list
-} from '../ipcApi'
-import {
-  getLocalPrivateMessages,
-  getLocalGroupMessages
-} from '../ipcDB'
+import { friend_list_v2, sendMessage, myid, group_list } from '../ipcApi'
+import { getLocalPrivateMessages, getLocalGroupMessages } from '../ipcDB'
 import { GroupSimpleInfo, RequestResponse, SessionMessage, MessageType } from '@apiType/HttpRespond'
 import { UserSimpleInfoWithStatus } from '@apiType/HttpRespond'
-import { notificationManager, showMessageNotification, showErrorNotification, showSuccessNotification } from '@renderer/utils/notification'
+import {
+  notificationManager,
+  showMessageNotification,
+  showErrorNotification
+} from '@renderer/utils/notification'
 import MessageBubble from '../components/MessageBubble.vue'
 import ConversationListPanel from '../components/ConversationListPanel.vue'
 import { ServerMessage } from '@apiType/WebsocketRespond'
@@ -118,15 +114,15 @@ async function loadSession(): Promise<void> {
   } else if (route.name === 'ChatGroup') {
     type = 'group'
   }
-  console.log('route.params:', route.params, 'type:', type, 'id:', id, 'route.name:', route.name)
+  // console.log('route.params:', route.params, 'type:', type, 'id:', id, 'route.name:', route.name)
   if (type === 'friend' && id) {
     chatType.value = 'friend'
     chatId.value = Number(id)
     currentFriend.value = friendList.value.find((f) => f.base.user_id === Number(id)) || null
     if (currentFriend.value) {
-      console.log('[Chat] 加载私聊消息，userId:', Number(id))
+      // console.log('[Chat] 加载私聊消息，userId:', Number(id))
       const result = await getLocalPrivateMessages(Number(id), 0, 50)
-      console.log('[Chat] 私聊消息加载结果:', result)
+      // console.log('[Chat] 私聊消息加载结果:', result)
       friend_msg.value = (result ?? []).map((msg: LocalSessionMessage) => ({
         message_id: 0,
         message_type: MessageType.Text,
@@ -134,21 +130,23 @@ async function loadSession(): Promise<void> {
         message: msg.content,
         timestamp: msg.timestamp
       }))
-      console.log('[Chat] 映射后的私聊消息:', friend_msg.value)
+      // console.log('[Chat] 映射后的私聊消息:', friend_msg.value)
       // 添加时间戳调试信息
-      console.log('[Chat] 消息时间戳详情:')
-      friend_msg.value.forEach((msg, index) => {
-        console.log(`[Chat] 消息${index + 1}: ${msg.message} - 时间戳: ${msg.timestamp} - 时间: ${new Date(msg.timestamp).toLocaleString()}`)
-      })
+      // console.log('[Chat] 消息时间戳详情:')
+      // friend_msg.value.forEach((msg, index) => {
+      //   console.log(
+      //     `[Chat] 消息${index + 1}: ${msg.message} - 时间戳: ${msg.timestamp} - 时间: ${new Date(msg.timestamp).toLocaleString()}`
+      //   )
+      // })
     }
   } else if (type === 'group' && id) {
     chatType.value = 'group'
     chatId.value = Number(id)
     currentGroup.value = groupList.value.find((g) => g.group_id === Number(id)) || null
     if (currentGroup.value) {
-      console.log('[Chat] 加载群聊消息，groupId:', Number(id))
+      // console.log('[Chat] 加载群聊消息，groupId:', Number(id))
       const result = await getLocalGroupMessages(Number(id), 0, 50)
-      console.log('[Chat] 群聊消息加载结果:', result)
+      // console.log('[Chat] 群聊消息加载结果:', result)
       friend_msg.value = (result ?? []).map((msg: LocalSessionMessage) => ({
         message_id: 0,
         message_type: MessageType.Text,
@@ -156,12 +154,14 @@ async function loadSession(): Promise<void> {
         message: msg.content,
         timestamp: msg.timestamp
       }))
-      console.log('[Chat] 映射后的群聊消息:', friend_msg.value)
+      // console.log('[Chat] 映射后的群聊消息:', friend_msg.value)
       // 添加时间戳调试信息
-      console.log('[Chat] 群聊消息时间戳详情:')
-      friend_msg.value.forEach((msg, index) => {
-        console.log(`[Chat] 群聊消息${index + 1}: ${msg.message} - 时间戳: ${msg.timestamp} - 时间: ${new Date(msg.timestamp).toLocaleString()}`)
-      })
+      // console.log('[Chat] 群聊消息时间戳详情:')
+      // friend_msg.value.forEach((msg, index) => {
+      //   console.log(
+      //     `[Chat] 群聊消息${index + 1}: ${msg.message} - 时间戳: ${msg.timestamp} - 时间: ${new Date(msg.timestamp).toLocaleString()}`
+      //   )
+      // })
     }
   }
   nextTick(() => {
@@ -171,24 +171,23 @@ async function loadSession(): Promise<void> {
 }
 
 onMounted(async () => {
-  showSuccessNotification('登录成功', '欢迎回来！')
   myidConst.value = await myid()
-  
+
   // 设置通知管理器的当前用户ID
   notificationManager.setCurrentUserId(myidConst.value)
-  
+
   // 加载通知设置
   notificationManager.loadSettings()
-  
+
   const flist: RequestResponse<UserSimpleInfoWithStatus[]> = await friend_list_v2()
   if (flist.status === true) friendList.value = flist.data ?? []
   const glist: RequestResponse<GroupSimpleInfo[]> = await group_list()
   if (glist.status === true) groupList.value = glist.data ?? []
   await loadSession()
-  
+
   // 监听WebSocket消息
   window.api.onWSMessage((message: ServerMessage) => {
-    console.log('[Chat] 收到WebSocket消息:', message)
+    // console.log('[Chat] 收到WebSocket消息:', message)
     handleWebSocketMessage(message)
   })
 })
@@ -205,11 +204,13 @@ function handleWebSocketMessage(message: ServerMessage): void {
     const senderId = message.sender
     const receiverId = message.receiver
     const myId = myidConst.value
-    
+
     // 判断是否是当前聊天：发送者或接收者是当前聊天对象
-    const isCurrentChat = chatType.value === 'friend' && chatId.value && 
+    const isCurrentChat =
+      chatType.value === 'friend' &&
+      chatId.value &&
       (chatId.value === senderId || chatId.value === receiverId)
-    
+
     // 如果当前正在与发送者或接收者聊天，直接添加到消息列表
     if (isCurrentChat) {
       friend_msg.value.push({
@@ -225,7 +226,7 @@ function handleWebSocketMessage(message: ServerMessage): void {
       })
     } else {
       // 如果不是当前聊天，显示通知
-      const sender = friendList.value.find(f => f.base.user_id === senderId)
+      const sender = friendList.value.find((f) => f.base.user_id === senderId)
       if (sender) {
         showMessageNotification({
           senderId: senderId,
@@ -235,7 +236,7 @@ function handleWebSocketMessage(message: ServerMessage): void {
         })
       }
     }
-    
+
     // 延迟刷新会话列表，确保数据库已更新
     if (conversationListRef.value) {
       setTimeout(() => {
@@ -248,7 +249,7 @@ function handleWebSocketMessage(message: ServerMessage): void {
     // 群聊消息
     const groupId = message.group_id
     const isCurrentChat = chatType.value === 'group' && chatId.value === groupId
-    
+
     // 如果当前正在该群聊天，直接添加到消息列表
     if (isCurrentChat) {
       friend_msg.value.push({
@@ -264,7 +265,7 @@ function handleWebSocketMessage(message: ServerMessage): void {
       })
     } else {
       // 如果不是当前聊天，显示通知
-      const group = groupList.value.find(g => g.group_id === groupId)
+      const group = groupList.value.find((g) => g.group_id === groupId)
       if (group) {
         showMessageNotification({
           senderId: message.sender,
@@ -275,7 +276,7 @@ function handleWebSocketMessage(message: ServerMessage): void {
         })
       }
     }
-    
+
     // 延迟刷新会话列表，确保数据库已更新
     if (conversationListRef.value) {
       setTimeout(() => {
@@ -289,23 +290,27 @@ watch(() => route.fullPath, loadSession)
 
 async function send_message(): Promise<void> {
   if (!newMessage.value.trim() || !chatType.value || !chatId.value) return
-  console.log('[Chat] 开始发送消息:', { type: chatType.value, id: chatId.value, message: newMessage.value })
-  
+  // console.log('[Chat] 开始发送消息:', {
+  //   type: chatType.value,
+  //   id: chatId.value,
+  //   message: newMessage.value
+  // })
+
   if (chatType.value === 'friend' && currentFriend.value) {
     const message = {
       type: 'SendMessage' as const,
       receiver: chatId.value,
       message: newMessage.value
     }
-    console.log('[Chat] 发送私聊WebSocket消息:', message)
+    // console.log('[Chat] 发送私聊WebSocket消息:', message)
     const sendSuccess = await sendMessage(message)
-    console.log('[Chat] WebSocket发送结果:', sendSuccess)
-    
+    // console.log('[Chat] WebSocket发送结果:', sendSuccess)
+
     if (sendSuccess) {
-      console.log('[Chat] WebSocket发送成功，等待服务器确认')
+      // console.log('[Chat] WebSocket发送成功，等待服务器确认')
       // 清空输入框，消息将通过WebSocket返回后添加到界面
       newMessage.value = ''
-      
+
       // 延迟刷新会话列表，确保数据库已更新
       if (conversationListRef.value && chatId.value !== null) {
         setTimeout(() => {
@@ -322,15 +327,15 @@ async function send_message(): Promise<void> {
       group_id: chatId.value,
       message: newMessage.value
     }
-    console.log('[Chat] 发送群聊WebSocket消息:', message)
+    // console.log('[Chat] 发送群聊WebSocket消息:', message)
     const sendSuccess = await sendMessage(message)
-    console.log('[Chat] WebSocket发送结果:', sendSuccess)
-    
+    // console.log('[Chat] WebSocket发送结果:', sendSuccess)
+
     if (sendSuccess) {
-      console.log('[Chat] WebSocket发送成功，等待服务器确认')
+      // console.log('[Chat] WebSocket发送成功，等待服务器确认')
       // 清空输入框，消息将通过WebSocket返回后添加到界面
       newMessage.value = ''
-      
+
       // 延迟刷新会话列表，确保数据库已更新
       if (conversationListRef.value && chatId.value !== null) {
         setTimeout(() => {

@@ -18,8 +18,8 @@ export async function user_status(userIds: number[]): Promise<RequestResponse<Us
     const baseUrl = getApiBaseUrl()
 
     const url = `${baseUrl}/friend/status`
-    console.log('[user_status] 请求URL:', url)
-    console.log('[user_status] 请求体:', { user_ids: userIds })
+    // console.log('[user_status] 请求URL:', url)
+    // console.log('[user_status] 请求体:', { user_ids: userIds })
 
     const res = await fetch(url, {
       method: 'POST',
@@ -32,7 +32,7 @@ export async function user_status(userIds: number[]): Promise<RequestResponse<Us
       })
     })
 
-    console.log('[user_status] 响应状态:', res.status, res.statusText)
+    // console.log('[user_status] 响应状态:', res.status, res.statusText)
 
     if (!res.ok) {
       let errorMessage = `HTTP ${res.status}: ${res.statusText}`

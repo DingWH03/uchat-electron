@@ -147,15 +147,15 @@ function createTriggers(): void {
     AFTER INSERT ON messages
     WHEN NEW.group_id IS NULL AND NEW.receiver_id IS NOT NULL
     BEGIN
-      UPDATE friends 
-      SET last_message_timestamp = CASE 
-        WHEN NEW.timestamp > last_message_timestamp THEN NEW.timestamp 
-        ELSE last_message_timestamp 
+      UPDATE friends
+      SET last_message_timestamp = CASE
+        WHEN NEW.timestamp > last_message_timestamp THEN NEW.timestamp
+        ELSE last_message_timestamp
       END
-      WHERE account_id = NEW.account_id 
-      AND user_id = CASE 
-        WHEN NEW.sender_id = NEW.account_id THEN NEW.receiver_id 
-        ELSE NEW.sender_id 
+      WHERE account_id = NEW.account_id
+      AND user_id = CASE
+        WHEN NEW.sender_id = NEW.account_id THEN NEW.receiver_id
+        ELSE NEW.sender_id
       END;
     END;
   `)
@@ -166,12 +166,12 @@ function createTriggers(): void {
     AFTER INSERT ON messages
     WHEN NEW.group_id IS NOT NULL
     BEGIN
-      UPDATE groups 
-      SET last_message_timestamp = CASE 
-        WHEN NEW.timestamp > last_message_timestamp THEN NEW.timestamp 
-        ELSE last_message_timestamp 
+      UPDATE groups
+      SET last_message_timestamp = CASE
+        WHEN NEW.timestamp > last_message_timestamp THEN NEW.timestamp
+        ELSE last_message_timestamp
       END
-      WHERE account_id = NEW.account_id 
+      WHERE account_id = NEW.account_id
       AND group_id = NEW.group_id;
     END;
   `)
@@ -228,7 +228,7 @@ function createTriggers(): void {
     END;
   `)
 
-  console.log('[DB] 触发器创建完成')
+  console.log('[DB] 数据库初始化完成')
 }
 
 export function getDB(): Database.Database {

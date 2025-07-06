@@ -13,12 +13,12 @@
   </div>
 </template>
 <script setup lang="ts">
-const props = defineProps({
+defineProps({
   msg: { type: Object, required: true },
   isMine: { type: Boolean, required: true },
   isGroup: { type: Boolean, required: true }
 })
-console.log('MessageBubble props:', props)
+// console.log('MessageBubble props:', props)
 </script>
 <style scoped>
 .message-row {

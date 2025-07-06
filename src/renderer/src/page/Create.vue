@@ -72,10 +72,10 @@ const create = async (): Promise<void> => {
     members: [...selectedFriendIds.value] // 解构Proxy得到纯数组
   }
 
-  console.log('处理后数据:', JSON.parse(JSON.stringify(request))) // 验证可序列化
+  // console.log('处理后数据:', JSON.parse(JSON.stringify(request))) // 验证可序列化
   const result = await group_new(request)
   if (result.status == true) {
-    console.log(result.message)
+    // console.log(result.message)
     back()
   }
 }
@@ -87,7 +87,7 @@ const f5 = async (): Promise<void> => {
   const flist: RequestResponse<UserSimpleInfoWithStatus[]> = await friend_list_v2()
   if (flist.status === true && flist.data) {
     friendList.value = flist.data ?? []
-    console.log('好友列表加载完成:', friendList.value)
+    // console.log('好友列表加载完成:', friendList.value)
   }
 }
 

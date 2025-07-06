@@ -23,16 +23,16 @@ export class WebSocketStatusManager {
 
       const friendIds = getAllFriendIds(accountId)
       if (friendIds.length === 0) {
-        console.log('[WebSocketStatusManager] 没有好友，跳过状态查询')
+        // console.log('[WebSocketStatusManager] 没有好友，跳过状态查询')
         return
       }
 
-      console.log(`[WebSocketStatusManager] 开始查询 ${friendIds.length} 个好友的状态`)
+      // console.log(`[WebSocketStatusManager] 开始查询 ${friendIds.length} 个好友的状态`)
       const response = await user_status(friendIds)
 
       if (response.status && response.data) {
         updateFriendsStatus(accountId, response.data)
-        console.log(`[WebSocketStatusManager] 成功更新 ${response.data.length} 个好友的状态`)
+        // console.log(`[WebSocketStatusManager] 成功更新 ${response.data.length} 个好友的状态`)
 
         // 通知前端好友状态已更新
         this.win.webContents.send('friend:status-updated', response.data)

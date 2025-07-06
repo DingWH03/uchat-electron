@@ -8,14 +8,14 @@ import { myID } from '../api/anthentication'
 import { getDB } from './db'
 import { UserStatus } from '../../types/Model'
 
-export function dumpAccountsTable(): void {
-  const db = getDB()
-  const rows = db.prepare('SELECT * FROM accounts').all()
-  console.log('accounts 表当前内容:')
-  for (const row of rows) {
-    console.log(row)
-  }
-}
+// export function dumpAccountsTable(): void {
+//   const db = getDB()
+//   const rows = db.prepare('SELECT * FROM accounts').all()
+//   console.log('accounts 表当前内容:')
+//   for (const row of rows) {
+//     console.log(row)
+//   }
+// }
 
 export function getLocalUpdateTimestamps(accountId: number): UpdateTimestamps {
   const db = getDB()
@@ -35,7 +35,7 @@ export function getLocalUpdateTimestamps(accountId: number): UpdateTimestamps {
       friends_updated_at: Number(row.friends_updated_at ?? 0),
       groups_updated_at: Number(row.groups_updated_at ?? 0)
     }
-    console.log('[getLocalUpdateTimestamps] 读取结果:', row)
+    // console.log('[getLocalUpdateTimestamps] 读取结果:', row)
   } else {
     console.warn(`[getLocalUpdateTimestamps] 没找到 id=${accountId} 的记录`)
   }
@@ -101,7 +101,7 @@ export function saveFriendList(accountId: number, friends: UserSimpleInfo[]): vo
   })
 
   saveFriends(friends)
-  console.log(`[saveFriendList] 保存了 ${friends.length} 个好友到账户 ${accountId}`)
+  // console.log(`[saveFriendList] 保存了 ${friends.length} 个好友到账户 ${accountId}`)
 }
 
 export function saveGroupList(accountId: number, groups: GroupSimpleInfo[]): void {
@@ -126,7 +126,7 @@ export function saveGroupList(accountId: number, groups: GroupSimpleInfo[]): voi
   })
 
   saveGroups(groups)
-  console.log(`[saveGroupList] 保存了 ${groups.length} 个群组到账户 ${accountId}`)
+  // console.log(`[saveGroupList] 保存了 ${groups.length} 个群组到账户 ${accountId}`)
 }
 
 export function friend_list(): UserSimpleInfoWithStatus[] {
@@ -178,13 +178,13 @@ export function updateFriendStatus(accountId: number, userId: number, online: bo
 
   db.prepare(
     `
-    UPDATE friends 
+    UPDATE friends
     SET online = ?, last_online_time = ?
     WHERE account_id = ? AND user_id = ?
   `
   ).run(online ? 1 : 0, currentTime, accountId, userId)
 
-  console.log(`[updateFriendStatus] 更新好友 ${userId} 状态为 ${online ? '在线' : '离线'}`)
+  // console.log(`[updateFriendStatus] 更新好友 ${userId} 状态为 ${online ? '在线' : '离线'}`)
 }
 
 export function updateFriendsStatus(accountId: number, userStatuses: UserStatus[]): void {
@@ -192,7 +192,7 @@ export function updateFriendsStatus(accountId: number, userStatuses: UserStatus[
   const currentTime = Date.now()
 
   const updateStmt = db.prepare(`
-    UPDATE friends 
+    UPDATE friends
     SET online = ?, last_online_time = ?
     WHERE account_id = ? AND user_id = ?
   `)
@@ -204,7 +204,7 @@ export function updateFriendsStatus(accountId: number, userStatuses: UserStatus[
   })
 
   updateStatuses(userStatuses)
-  console.log(`[updateFriendsStatus] 批量更新了 ${userStatuses.length} 个好友的状态`)
+  // console.log(`[updateFriendsStatus] 批量更新了 ${userStatuses.length} 个好友的状态`)
 }
 
 export function getFriendStatus(
@@ -250,8 +250,8 @@ export function getFriendsWithStatus(
   const rows = db
     .prepare(
       `
-    SELECT user_id, username, avatar, online, last_online_time 
-    FROM friends 
+    SELECT user_id, username, avatar, online, last_online_time
+    FROM friends
     WHERE account_id = ?
     ORDER BY username
   `
@@ -293,36 +293,28 @@ export function getAllGroupsLastMessageTimestamps(accountId: number): Record<num
   return result
 }
 
-// 更新单个好友的last_message_timestamp
+// 更新单个好友的last_message_timestamp（无日志，提升性能）
 export function updateFriendLastMessageTimestamp(
   accountId: number,
   userId: number,
   timestamp: number
 ): void {
   const db = getDB()
-  console.log(
-    `[updateFriendLastMessageTimestamp] 更新好友 ${userId} 的时间戳: ${timestamp} (${new Date(timestamp).toLocaleString()})`
-  )
-  const result = db
-    .prepare('UPDATE friends SET last_message_timestamp = ? WHERE account_id = ? AND user_id = ?')
-    .run(timestamp, accountId, userId)
-  console.log(`[updateFriendLastMessageTimestamp] 更新结果: ${result.changes} 行受影响`)
+  db.prepare(
+    'UPDATE friends SET last_message_timestamp = ? WHERE account_id = ? AND user_id = ?'
+  ).run(timestamp, accountId, userId)
 }
 
-// 更新单个群的last_message_timestamp
+// 更新单个群的last_message_timestamp（无日志，提升性能）
 export function updateGroupLastMessageTimestamp(
   accountId: number,
   groupId: number,
   timestamp: number
 ): void {
   const db = getDB()
-  console.log(
-    `[updateGroupLastMessageTimestamp] 更新群 ${groupId} 的时间戳: ${timestamp} (${new Date(timestamp).toLocaleString()})`
-  )
-  const result = db
-    .prepare('UPDATE groups SET last_message_timestamp = ? WHERE account_id = ? AND group_id = ?')
-    .run(timestamp, accountId, groupId)
-  console.log(`[updateGroupLastMessageTimestamp] 更新结果: ${result.changes} 行受影响`)
+  db.prepare(
+    'UPDATE groups SET last_message_timestamp = ? WHERE account_id = ? AND group_id = ?'
+  ).run(timestamp, accountId, groupId)
 }
 
 // 批量更新好友的last_message_timestamp

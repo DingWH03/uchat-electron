@@ -29,7 +29,7 @@ export function saveMessageToDB(params: {
     // 新查重逻辑：联合唯一索引
     const existing = db
       .prepare(
-        `SELECT id FROM messages WHERE account_id = ? AND message_id = ? AND 
+        `SELECT id FROM messages WHERE account_id = ? AND message_id = ? AND
       ((receiver_id IS ? AND group_id IS ?) OR (receiver_id = ? AND group_id = ?))`
       )
       .get(
@@ -41,14 +41,14 @@ export function saveMessageToDB(params: {
         params.group_id ?? null
       )
     if (existing) {
-      console.log(
-        '[DB] 消息已存在，跳过保存，message_id:',
-        params.message_id,
-        'receiver_id:',
-        params.receiver_id,
-        'group_id:',
-        params.group_id
-      )
+      // console.log(
+      //   '[DB] 消息已存在，跳过保存，message_id:',
+      //   params.message_id,
+      //   'receiver_id:',
+      //   params.receiver_id,
+      //   'group_id:',
+      //   params.group_id
+      // )
       return true // 返回true表示"成功"（因为消息已经存在）
     }
     db.prepare(
@@ -64,9 +64,9 @@ export function saveMessageToDB(params: {
       params.content,
       params.timestamp
     )
-    console.log(
-      `[DB] 消息保存成功: account_id=${params.account_id}, message_id=${params.message_id}, receiver_id=${params.receiver_id}, group_id=${params.group_id}, content=${params.content}`
-    )
+    // console.log(
+    //   `[DB] 消息保存成功: account_id=${params.account_id}, message_id=${params.message_id}, receiver_id=${params.receiver_id}, group_id=${params.group_id}, content=${params.content}`
+    // )
     return true
   } catch (err) {
     console.error('[DB] 存储消息失败:', err)

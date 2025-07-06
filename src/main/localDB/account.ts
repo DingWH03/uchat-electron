@@ -46,9 +46,9 @@ export function ensureAccountExistsWithoutPassword(accountId: number): DBResult<
         VALUES (?, ?, ?, ?)
       `
       ).run(accountId, '', '', Date.now())
-      console.log(`[ensureAccountExistsWithoutPassword] 插入新账号 id=${accountId}`)
+      // console.log(`[ensureAccountExistsWithoutPassword] 插入新账号 id=${accountId}`)
     } else {
-      console.log(`[ensureAccountExistsWithoutPassword] 账号 id=${accountId} 已存在`)
+      // console.log(`[ensureAccountExistsWithoutPassword] 账号 id=${accountId} 已存在`)
     }
     return { success: true, data: undefined }
   } catch (error) {
@@ -85,7 +85,7 @@ export function deleteAccount(accountId: number): DBResult<void> {
   try {
     db.pragma('foreign_keys = ON')
     db.prepare(`DELETE FROM accounts WHERE id = ?`).run(accountId)
-    console.log(`已删除账号及其关联数据：account_id=${accountId}`)
+    // console.log(`已删除账号及其关联数据：account_id=${accountId}`)
     return { success: true, data: undefined }
   } catch (error) {
     console.error('localDB Err:', error)

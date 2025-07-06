@@ -95,13 +95,13 @@ export function registerLocalDBIpcHandlers(): void {
     'localdb:message/group',
     (_event, groupId: number, offset: number, limit: number) => {
       const accountId = myID()
-      console.log('[IPC] 查询群聊消息:', { accountId, groupId, offset, limit })
+      // console.log('[IPC] 查询群聊消息:', { accountId, groupId, offset, limit })
       if (!accountId) {
         console.error('[IPC] 未找到accountId，无法查询群聊消息')
         return []
       }
       const result = localDB.getLocalGroupMessages(accountId, groupId, offset, limit)
-      console.log('[IPC] 群聊消息查询结果:', result)
+      // console.log('[IPC] 群聊消息查询结果:', result)
       return result
     }
   )
@@ -111,13 +111,13 @@ export function registerLocalDBIpcHandlers(): void {
     'localdb:message/user',
     (_event, userId: number, offset: number, limit: number) => {
       const accountId = myID()
-      console.log('[IPC] 查询私聊消息:', { accountId, userId, offset, limit })
+      // console.log('[IPC] 查询私聊消息:', { accountId, userId, offset, limit })
       if (!accountId) {
         console.error('[IPC] 未找到accountId，无法查询私聊消息')
         return []
       }
       const result = localDB.getLocalPrivateMessages(accountId, userId, offset, limit)
-      console.log('[IPC] 私聊消息查询结果:', result)
+      // console.log('[IPC] 私聊消息查询结果:', result)
       return result
     }
   )
@@ -139,22 +139,21 @@ export function registerLocalDBIpcHandlers(): void {
   // 新增：写入本地消息
   ipcMain.handle('localdb:saveMessageToDB', (_event, params) => {
     const accountId = myID()
-    console.log('[IPC] 当前accountId:', accountId)
-    console.log('[IPC] 当前accountId:', accountId)
+    // console.log('[IPC] 当前accountId:', accountId)
     if (!accountId) {
       console.error('[IPC] 未找到accountId，无法保存消息')
       return false
     }
     const { type, receiver_id, group_id, message, sender_id, timestamp, message_id } = params
-    console.log('[IPC] 解析参数:', {
-      type,
-      receiver_id,
-      group_id,
-      message,
-      sender_id,
-      timestamp,
-      message_id
-    })
+    // console.log('[IPC] 解析参数:', {
+    //   type,
+    //   receiver_id,
+    //   group_id,
+    //   message,
+    //   sender_id,
+    //   timestamp,
+    //   message_id
+    // })
 
     if (type === 'private') {
       const dbParams = {
@@ -167,9 +166,9 @@ export function registerLocalDBIpcHandlers(): void {
         content: message,
         timestamp
       }
-      console.log('[IPC] 私聊数据库参数:', dbParams)
+      // console.log('[IPC] 私聊数据库参数:', dbParams)
       const result = db.saveMessageToDB(dbParams)
-      console.log('[IPC] 私聊数据库保存结果:', result)
+      // console.log('[IPC] 私聊数据库保存结果:', result)
       return result
     } else if (type === 'group') {
       const dbParams = {
@@ -182,9 +181,9 @@ export function registerLocalDBIpcHandlers(): void {
         content: message,
         timestamp
       }
-      console.log('[IPC] 群聊数据库参数:', dbParams)
+      // console.log('[IPC] 群聊数据库参数:', dbParams)
       const result = db.saveMessageToDB(dbParams)
-      console.log('[IPC] 群聊数据库保存结果:', result)
+      // console.log('[IPC] 群聊数据库保存结果:', result)
       return result
     }
     console.error('[IPC] 未知的消息类型:', type)

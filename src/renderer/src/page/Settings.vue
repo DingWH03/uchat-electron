@@ -26,6 +26,7 @@
 import { ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { logout } from '../ipcApi'
+import AppButton from '../components/AppButton.vue'
 
 const router = useRouter()
 const theme = ref(localStorage.getItem('theme') || 'light')

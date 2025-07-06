@@ -98,7 +98,7 @@ async function refreshLists(): Promise<void> {
 
 async function loadData(): Promise<void> {
   const flist: DBResult<UserSimpleInfoWithStatus[]> = await friend_list()
-      console.log('Friend list loaded:', flist)
+  // console.log('Friend list loaded:', flist)
   if (flist.success === true) {
     friendList.value = flist.data ?? []
   }
