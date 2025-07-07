@@ -2,11 +2,13 @@ import { app, shell, BrowserWindow, Tray, Menu, nativeImage, ipcMain, Notificati
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.jpg?asset'
-import { Apis } from './api/index.js'
-import { getSessionId } from './config/session'
-import { performLogout, checkNetworkAndSession, myID } from './api/anthentication'
-import { initDB, registerLocalDBIpcHandlers, closeDB } from './localDB'
-import { registerConfigHandlers } from './config'
+import { Apis } from './service/api/index.js'
+import { getSessionId } from './service/config/session'
+import { performLogout } from './service/api/anthentication'
+import { registerLocalDBIpcHandlers, closeDB } from '@main/service/cache'
+import { getMyID } from './service/config/myID'
+import { initService } from './service'
+import { setOnlineStatus, setOfflineStatus } from './service/WebSocket/wsClient'
 
 const login_width = 1000
 const login_height = 700
@@ -68,6 +70,18 @@ function createTray(win: BrowserWindow): void {
     {
       label: '打开主窗口',
       click: () => win.show()
+    },
+    {
+      label: '切换为在线',
+      click: () => {
+        setOnlineStatus()
+      }
+    },
+    {
+      label: '切换为离线',
+      click: () => {
+        setOfflineStatus()
+      }
     },
     {
       label: '退出',
@@ -141,47 +155,27 @@ app.whenReady().then(async () => {
   mainWindow = createLoginWindow()
   createTray(mainWindow)
 
-  // 初始化sqlite
-  initDB()
-
   // 注册localDB ipcHandle
   registerLocalDBIpcHandlers()
 
-  // 初始化配置api
-  registerConfigHandlers()
+  // 初始化service
+  initService(mainWindow)
 
   // 初始化API
-  Apis(mainWindow)
-
-  // 检查是否有有效的会话，如果有则恢复用户ID
-  if (getSessionId()) {
-    console.log('[App] 检测到会话ID，尝试恢复用户状态...')
-    try {
-      const sessionStatus = await checkNetworkAndSession(mainWindow)
-      if (sessionStatus === 'ok') {
-        console.log('[App] 会话恢复成功')
-        // 会话恢复成功，可以自动建立WebSocket连接
-        // 这里可以调用 setupWebSocket(mainWindow) 如果需要的话
-      } else {
-        console.log('[App] 会话无效或网络错误:', sessionStatus)
-      }
-    } catch (error) {
-      console.error('[App] 会话恢复失败:', error)
-    }
-  }
+  Apis()
 
   // 监听来自渲染进程的消息通知
   ipcMain.on('new-message', (_, message) => {
     console.log('收到新消息:', message)
     startBlinking()
-    
+
     // 检查是否为当前用户发送的消息
-    const currentUserId = myID()
+    const currentUserId = getMyID()
     if (message.sender_id && message.sender_id === currentUserId) {
       console.log('[Main] 跳过自己发送的消息通知')
       return
     }
-    
+
     showNotification('新消息', message.content || '您收到一条新消息')
   })
 

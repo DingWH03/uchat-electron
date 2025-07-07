@@ -44,7 +44,7 @@
 </template>
 
 <script setup lang="ts">
-import { RequestResponse } from '@/types/HttpRespond'
+import { RequestResponse } from '@apiType/HttpRespond'
 import { friend_list_v2, group_new } from '@renderer/ipcApi'
 import router from '@renderer/router'
 import { ref, computed, onMounted } from 'vue' // 替换为您的实际API路径

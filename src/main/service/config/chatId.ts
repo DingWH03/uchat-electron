@@ -1,5 +1,4 @@
-import { ipcMain } from 'electron'
-import { chatInfo } from '../../types/Model'
+import { chatInfo } from '@apiType/Model'
 
 // 记录正在聊天的会话ID
 let currentChatId: number | null = null
@@ -14,14 +13,4 @@ export function getChatId(): chatInfo {
     id: currentChatId,
     type: currentChatType
   } as chatInfo
-}
-
-export function BaseUrlApi(): void {
-  ipcMain.handle('config:setChatId', (_, info: chatInfo) => {
-    setChatId(info)
-    return true
-  })
-  ipcMain.handle('config:getChatId', (): chatInfo => {
-    return getChatId()
-  })
 }

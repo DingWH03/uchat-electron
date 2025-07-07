@@ -1,14 +1,14 @@
 // main/api/message.ts
 import { ipcMain } from 'electron'
 import { getApiBaseUrl } from '../config/url'
-import { AfterTimestampQuery, MessageRequest } from '../../types/HttpRequest'
+import { AfterTimestampQuery, MessageRequest } from '../../../types/HttpRequest'
 import { getSessionId } from '../config/session'
 import {
   GroupSessionMessage,
   IdMessagePair,
   RequestResponse,
   SessionMessage
-} from '../../types/HttpRespond'
+} from '../../../types/HttpRespond'
 
 // 1. 获取群聊聊天记录
 export async function group_message(

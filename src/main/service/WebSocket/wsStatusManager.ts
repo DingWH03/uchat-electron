@@ -1,7 +1,7 @@
 import { BrowserWindow } from 'electron'
-import { user_status } from '../api/friend'
-import { updateFriendStatus, updateFriendsStatus, getAllFriendIds } from '../localDB/contact'
-import { myID } from '../api/anthentication'
+import { user_status } from '@main/service/api/friend'
+import { updateFriendStatus, updateFriendsStatus, getAllFriendIds } from '@main/service/cache'
+import { getMyID } from '../config/myID'
 
 export class WebSocketStatusManager {
   private win: BrowserWindow
@@ -15,7 +15,7 @@ export class WebSocketStatusManager {
    */
   async queryAllFriendsStatus(): Promise<void> {
     try {
-      const accountId = myID()
+      const accountId = getMyID()
       if (!accountId) {
         console.warn('[WebSocketStatusManager] 未找到当前用户ID，跳过状态查询')
         return
@@ -51,7 +51,7 @@ export class WebSocketStatusManager {
    */
   handleFriendOnline(friendId: number): void {
     try {
-      const accountId = myID()
+      const accountId = getMyID()
       if (!accountId) {
         console.warn('[WebSocketStatusManager] 未找到当前用户ID，跳过状态更新')
         return
@@ -74,7 +74,7 @@ export class WebSocketStatusManager {
    */
   handleFriendOffline(friendId: number): void {
     try {
-      const accountId = myID()
+      const accountId = getMyID()
       if (!accountId) {
         console.warn('[WebSocketStatusManager] 未找到当前用户ID，跳过状态更新')
         return

@@ -9,8 +9,7 @@ import {
   updateFriendLastMessageTimestamp,
   updateGroupLastMessageTimestamp
 } from './contact'
-import { ContactList, UpdateTimestamps } from '../../types/HttpRespond'
-import { myID } from '../api/anthentication'
+import { ContactList, UpdateTimestamps } from '@apiType/HttpRespond'
 import { ensureAccountExistsWithoutPassword } from './account'
 import { saveMessageToDB } from './message'
 import {
@@ -19,10 +18,11 @@ import {
   getGroupMessagesAfterTimestamp,
   getPrivateMessagesAfterTimestamp
 } from '../api/message'
-import type { SessionMessage } from '../../types/HttpRespond'
+import type { SessionMessage } from '@apiType/HttpRespond'
+import { getMyID } from '../config/myID'
 
 export async function syncContacts(): Promise<void> {
-  const accountId = myID()
+  const accountId = getMyID()
   // console.log('[syncContacts] 开始同步联系人，获取到的 accountId:', accountId)
   ensureAccountExistsWithoutPassword(accountId)
   // 获取服务端更新时间
@@ -79,7 +79,7 @@ export async function syncContacts(): Promise<void> {
  * 3. 对比后拉取增量消息，保存到本地并更新本地last_message_timestamp
  */
 export async function syncAllMessagesBeforeWS(): Promise<void> {
-  const accountId = myID()
+  const accountId = getMyID()
   // console.log('[Sync] 开始同步消息，accountId:', accountId)
   // console.log('[Sync] 调用 myID() 的详细日志:')
   // console.log('[Sync] - loginUser 变量值:', accountId)

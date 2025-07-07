@@ -1,14 +1,14 @@
 // main/api/group.ts
 import { ipcMain } from 'electron'
 import { getApiBaseUrl } from '../config/url'
-import { CreateGroupRequest, GroupRequest } from '../../types/HttpRequest'
+import { CreateGroupRequest, GroupRequest } from '../../../types/HttpRequest'
 import { getSessionId } from '../config/session'
 import {
   GroupDetailedInfo,
   GroupSimpleInfo,
   RequestResponse,
   UserSimpleInfo
-} from '../../types/HttpRespond'
+} from '../../../types/HttpRespond'
 
 export async function group_list(): Promise<RequestResponse<GroupSimpleInfo>[]> {
   const sessionId = getSessionId()

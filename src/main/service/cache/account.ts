@@ -1,5 +1,5 @@
 import { getDB } from './db'
-import type { Account, DBResult } from '../../types/localDBModel'
+import type { Account, DBResult } from '@apiType/localDBModel'
 
 export function addOrUpdateAccount(data: Account): DBResult<void> {
   const db = getDB()

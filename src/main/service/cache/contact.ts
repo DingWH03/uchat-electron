@@ -3,10 +3,10 @@ import {
   UpdateTimestamps,
   UserSimpleInfo,
   UserSimpleInfoWithStatus
-} from '../../types/HttpRespond'
-import { myID } from '../api/anthentication'
+} from '@apiType/HttpRespond'
 import { getDB } from './db'
-import { UserStatus } from '../../types/Model'
+import { UserStatus } from '@apiType/Model'
+import { getMyID } from '../config/myID'
 
 // export function dumpAccountsTable(): void {
 //   const db = getDB()
@@ -131,7 +131,7 @@ export function saveGroupList(accountId: number, groups: GroupSimpleInfo[]): voi
 
 export function friend_list(): UserSimpleInfoWithStatus[] {
   const db = getDB()
-  const accountId = myID()
+  const accountId = getMyID()
   const rows = db
     .prepare(
       `
@@ -153,7 +153,7 @@ export function friend_list(): UserSimpleInfoWithStatus[] {
 
 export function group_list(): GroupSimpleInfo[] {
   const db = getDB()
-  const accountId = myID()
+  const accountId = getMyID()
   const rows = db
     .prepare(
       `

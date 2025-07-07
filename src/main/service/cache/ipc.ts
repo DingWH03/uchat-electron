@@ -1,10 +1,10 @@
 import { ipcMain, IpcMainInvokeEvent } from 'electron'
 import * as localDB from './index'
-import type { Account, DBResult } from '../../types/localDBModel'
-import { GroupSimpleInfo, UserSimpleInfoWithStatus } from '../../types/HttpRespond'
-import { myID } from '../api/anthentication'
+import type { Account, DBResult } from '@apiType/localDBModel'
+import { GroupSimpleInfo, UserSimpleInfoWithStatus } from '@apiType/HttpRespond'
 import { getFriendsWithStatus, getFriendStatus } from './contact'
 import * as db from './db'
+import { getMyID } from '../config/myID'
 
 export function registerLocalDBIpcHandlers(): void {
   ipcMain.handle(
@@ -78,14 +78,14 @@ export function registerLocalDBIpcHandlers(): void {
 
   // 获取所有好友及其状态
   ipcMain.handle('localdb:friends/with-status', async () => {
-    const accountId = myID()
+    const accountId = getMyID()
     if (!accountId) return []
     return getFriendsWithStatus(accountId)
   })
 
   // 获取指定好友的状态
   ipcMain.handle('localdb:friend/status', async (_, userId: number) => {
-    const accountId = myID()
+    const accountId = getMyID()
     if (!accountId) return null
     return getFriendStatus(accountId, userId)
   })
@@ -94,7 +94,7 @@ export function registerLocalDBIpcHandlers(): void {
   ipcMain.handle(
     'localdb:message/group',
     (_event, groupId: number, offset: number, limit: number) => {
-      const accountId = myID()
+      const accountId = getMyID()
       // console.log('[IPC] 查询群聊消息:', { accountId, groupId, offset, limit })
       if (!accountId) {
         console.error('[IPC] 未找到accountId，无法查询群聊消息')
@@ -110,7 +110,7 @@ export function registerLocalDBIpcHandlers(): void {
   ipcMain.handle(
     'localdb:message/user',
     (_event, userId: number, offset: number, limit: number) => {
-      const accountId = myID()
+      const accountId = getMyID()
       // console.log('[IPC] 查询私聊消息:', { accountId, userId, offset, limit })
       if (!accountId) {
         console.error('[IPC] 未找到accountId，无法查询私聊消息')
@@ -124,21 +124,21 @@ export function registerLocalDBIpcHandlers(): void {
 
   // 获取本地群聊某时间戳后的消息
   ipcMain.handle('localdb:message/group/after', (_event, groupId: number, after: number) => {
-    const accountId = myID()
+    const accountId = getMyID()
     if (!accountId) return []
     return localDB.getLocalGroupMessagesAfterTimestamp(accountId, groupId, after)
   })
 
   // 获取本地私聊某时间戳后的消息
   ipcMain.handle('localdb:message/user/after', (_event, userId: number, after: number) => {
-    const accountId = myID()
+    const accountId = getMyID()
     if (!accountId) return []
     return localDB.getLocalPrivateMessagesAfterTimestamp(accountId, userId, after)
   })
 
   // 新增：写入本地消息
   ipcMain.handle('localdb:saveMessageToDB', (_event, params) => {
-    const accountId = myID()
+    const accountId = getMyID()
     // console.log('[IPC] 当前accountId:', accountId)
     if (!accountId) {
       console.error('[IPC] 未找到accountId，无法保存消息')

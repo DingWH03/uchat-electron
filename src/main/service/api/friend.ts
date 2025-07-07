@@ -1,15 +1,15 @@
 // main/api/friend.ts
 import { ipcMain } from 'electron'
 import { getApiBaseUrl } from '../config/url'
-import { FriendRequest } from '../../types/HttpRequest'
+import { FriendRequest } from '../../../types/HttpRequest'
 import { getSessionId } from '../config/session'
 import {
   RequestResponse,
   UserDetailedInfo,
   UserSimpleInfoWithStatus
-} from '../../types/HttpRespond'
-import { UserStatus } from '../../types/Model'
-import { friend_list as localFriendList } from '../localDB/contact'
+} from '../../../types/HttpRespond'
+import { UserStatus } from '../../../types/Model'
+import { friend_list as localFriendList } from '@main/service/cache'
 
 /// 根据用户id数组查询在线情况（使用 POST + JSON body）
 export async function user_status(userIds: number[]): Promise<RequestResponse<UserStatus[]>> {

@@ -1,15 +1,11 @@
 // main/api/baseUrl.ts
-import { BrowserWindow } from 'electron'
 import { registerPingApi } from './ping'
-import { registerAnthenticationApi } from './anthentication'
 import { registerFriendApi } from './friend'
 import { registerGroupApi } from './group'
 import { registerMessageApi } from './message'
-import './conversation'
 
-export function Apis(win: BrowserWindow): void {
+export function Apis(): void {
   registerPingApi()
-  registerAnthenticationApi(win)
   registerFriendApi()
   registerGroupApi()
   registerMessageApi()

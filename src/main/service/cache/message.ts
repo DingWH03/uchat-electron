@@ -1,5 +1,5 @@
 // 新增：存储聊天消息到数据库（支持私聊和群聊）
-import { SessionMessage } from '../../types/HttpRespond'
+import { SessionMessage } from '@apiType/HttpRespond'
 import { getDB } from './db'
 
 /**

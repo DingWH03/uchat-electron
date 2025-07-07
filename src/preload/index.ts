@@ -44,7 +44,7 @@ const api = {
   },
   // 获取登陆用户的id
   myid: () => {
-    return ipcRenderer.invoke('api:auth/myid')
+    return ipcRenderer.invoke('config:myid')
   },
   // Http: 添加好友
   friend_add: async (requestData: FriendRequest) => {
