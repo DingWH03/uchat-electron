@@ -6,58 +6,44 @@ import {
   markConversationAsRead,
   deleteConversation,
   getConversationCount,
-  getTotalUnreadCount,
-  getDB
-} from '@main/service/cache'
-import type { DBResult, Conversation } from '@apiType/localDBModel'
+  getTotalUnreadCount
+} from '@main/service/localDB'
+import type { ApiResponse, Conversation } from '@apiType/Model'
+import { getMyID } from '../config/myID'
 
 export function registerConversationHandlers(): void {
   // 获取会话列表
-  ipcMain.handle('get-conversations', async (): Promise<DBResult<Conversation[]>> => {
-    try {
-      // 从当前登录的账号获取accountId
-      const db = getDB()
-      const accounts = db.prepare('SELECT id FROM accounts ORDER BY updated_at DESC LIMIT 1').get()
-      if (!accounts) {
+  ipcMain.handle(
+    'api:conversation/get-conversations',
+    async (): Promise<ApiResponse<Conversation[]>> => {
+      try {
+        const id = getMyID()
+        const conversations = getConversations(id)
+        return {
+          success: true,
+          data: conversations
+        }
+      } catch (error) {
+        console.error('[API] 获取会话列表失败:', error)
         return {
           success: false,
-          error: '未找到登录账号'
+          error: '获取会话列表失败'
         }
       }
-      const conversations = getConversations(accounts.id)
-      return {
-        success: true,
-        data: conversations
-      }
-    } catch (error) {
-      console.error('[API] 获取会话列表失败:', error)
-      return {
-        success: false,
-        error: '获取会话列表失败'
-      }
     }
-  })
+  )
 
   // 获取指定会话信息
   ipcMain.handle(
-    'get-conversation',
+    'api:conversation/get-conversation',
     async (
       _event,
       conversationType: string,
       targetId: number
-    ): Promise<DBResult<Conversation | null>> => {
+    ): Promise<ApiResponse<Conversation | null>> => {
       try {
-        const db = getDB()
-        const accounts = db
-          .prepare('SELECT id FROM accounts ORDER BY updated_at DESC LIMIT 1')
-          .get()
-        if (!accounts) {
-          return {
-            success: false,
-            error: '未找到登录账号'
-          }
-        }
-        const conversation = getConversation(accounts.id, conversationType, targetId)
+        const id = getMyID()
+        const conversation = getConversation(id, conversationType, targetId)
         return {
           success: true,
           data: conversation
@@ -74,30 +60,16 @@ export function registerConversationHandlers(): void {
 
   // 更新会话未读消息数
   ipcMain.handle(
-    'update-conversation-unread',
+    'api:conversation/update-conversation-unread',
     async (
       _event,
       conversationType: string,
       targetId: number,
       unreadCount: number
-    ): Promise<DBResult<boolean>> => {
+    ): Promise<ApiResponse<boolean>> => {
       try {
-        const db = getDB()
-        const accounts = db
-          .prepare('SELECT id FROM accounts ORDER BY updated_at DESC LIMIT 1')
-          .get()
-        if (!accounts) {
-          return {
-            success: false,
-            error: '未找到登录账号'
-          }
-        }
-        const success = updateConversationUnreadCount(
-          accounts.id,
-          conversationType,
-          targetId,
-          unreadCount
-        )
+        const id = getMyID()
+        const success = updateConversationUnreadCount(id, conversationType, targetId, unreadCount)
         return {
           success: true,
           data: success
@@ -114,20 +86,11 @@ export function registerConversationHandlers(): void {
 
   // 标记会话为已读
   ipcMain.handle(
-    'mark-conversation-read',
-    async (_event, conversationType: string, targetId: number): Promise<DBResult<boolean>> => {
+    'api:conversation/mark-conversation-read',
+    async (_event, conversationType: string, targetId: number): Promise<ApiResponse<boolean>> => {
       try {
-        const db = getDB()
-        const accounts = db
-          .prepare('SELECT id FROM accounts ORDER BY updated_at DESC LIMIT 1')
-          .get()
-        if (!accounts) {
-          return {
-            success: false,
-            error: '未找到登录账号'
-          }
-        }
-        const success = markConversationAsRead(accounts.id, conversationType, targetId)
+        const id = getMyID()
+        const success = markConversationAsRead(id, conversationType, targetId)
         return {
           success: true,
           data: success
@@ -144,20 +107,11 @@ export function registerConversationHandlers(): void {
 
   // 删除会话
   ipcMain.handle(
-    'delete-conversation',
-    async (_event, conversationType: string, targetId: number): Promise<DBResult<boolean>> => {
+    'api:conversation/delete-conversation',
+    async (_event, conversationType: string, targetId: number): Promise<ApiResponse<boolean>> => {
       try {
-        const db = getDB()
-        const accounts = db
-          .prepare('SELECT id FROM accounts ORDER BY updated_at DESC LIMIT 1')
-          .get()
-        if (!accounts) {
-          return {
-            success: false,
-            error: '未找到登录账号'
-          }
-        }
-        const success = deleteConversation(accounts.id, conversationType, targetId)
+        const id = getMyID()
+        const success = deleteConversation(id, conversationType, targetId)
         return {
           success: true,
           data: success
@@ -173,52 +127,44 @@ export function registerConversationHandlers(): void {
   )
 
   // 获取会话总数
-  ipcMain.handle('get-conversation-count', async (): Promise<DBResult<number>> => {
-    try {
-      const db = getDB()
-      const accounts = db.prepare('SELECT id FROM accounts ORDER BY updated_at DESC LIMIT 1').get()
-      if (!accounts) {
+  ipcMain.handle(
+    'api:conversation/get-conversation-count',
+    async (): Promise<ApiResponse<number>> => {
+      try {
+        const id = getMyID()
+        const count = getConversationCount(id)
+        return {
+          success: true,
+          data: count
+        }
+      } catch (error) {
+        console.error('[API] 获取会话总数失败:', error)
         return {
           success: false,
-          error: '未找到登录账号'
+          error: '获取会话总数失败'
         }
       }
-      const count = getConversationCount(accounts.id)
-      return {
-        success: true,
-        data: count
-      }
-    } catch (error) {
-      console.error('[API] 获取会话总数失败:', error)
-      return {
-        success: false,
-        error: '获取会话总数失败'
-      }
     }
-  })
+  )
 
   // 获取总未读消息数
-  ipcMain.handle('get-total-unread-count', async (): Promise<DBResult<number>> => {
-    try {
-      const db = getDB()
-      const accounts = db.prepare('SELECT id FROM accounts ORDER BY updated_at DESC LIMIT 1').get()
-      if (!accounts) {
+  ipcMain.handle(
+    'api:conversation/get-total-unread-count',
+    async (): Promise<ApiResponse<number>> => {
+      try {
+        const id = getMyID()
+        const count = getTotalUnreadCount(id)
+        return {
+          success: true,
+          data: count
+        }
+      } catch (error) {
+        console.error('[API] 获取总未读消息数失败:', error)
         return {
           success: false,
-          error: '未找到登录账号'
+          error: '获取总未读消息数失败'
         }
       }
-      const count = getTotalUnreadCount(accounts.id)
-      return {
-        success: true,
-        data: count
-      }
-    } catch (error) {
-      console.error('[API] 获取总未读消息数失败:', error)
-      return {
-        success: false,
-        error: '获取总未读消息数失败'
-      }
     }
-  })
+  )
 }

@@ -57,9 +57,15 @@
 <script setup lang="ts">
 import { ref, nextTick, onMounted, watch, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { friend_list_v2, sendMessage, myid, group_list } from '../ipcApi'
-import { getLocalPrivateMessages, getLocalGroupMessages } from '../ipcDB'
-import { GroupSimpleInfo, RequestResponse, SessionMessage, MessageType } from '@apiType/HttpRespond'
+import {
+  sendMessage,
+  myid,
+  group_list,
+  getLocalPrivateMessages,
+  getLocalGroupMessages,
+  friend_list
+} from '../ipcApi'
+import { GroupSimpleInfo, SessionMessage, MessageType } from '@apiType/HttpRespond'
 import { UserSimpleInfoWithStatus } from '@apiType/HttpRespond'
 import {
   notificationManager,
@@ -69,7 +75,7 @@ import {
 import MessageBubble from '../components/MessageBubble.vue'
 import ConversationListPanel from '../components/ConversationListPanel.vue'
 import { ServerMessage } from '@apiType/WebsocketRespond'
-import type { Conversation } from '@/types/localDBModel'
+import type { Conversation, ApiResponse } from '@apiType/Model'
 
 const route = useRoute()
 const router = useRouter()
@@ -179,10 +185,10 @@ onMounted(async () => {
   // 加载通知设置
   notificationManager.loadSettings()
 
-  const flist: RequestResponse<UserSimpleInfoWithStatus[]> = await friend_list_v2()
-  if (flist.status === true) friendList.value = flist.data ?? []
-  const glist: RequestResponse<GroupSimpleInfo[]> = await group_list()
-  if (glist.status === true) groupList.value = glist.data ?? []
+  const flist: ApiResponse<UserSimpleInfoWithStatus[]> = await friend_list()
+  if (flist.success === true) friendList.value = flist.data ?? []
+  const glist: ApiResponse<GroupSimpleInfo[]> = await group_list()
+  if (glist.success === true) groupList.value = glist.data ?? []
   await loadSession()
 
   // 监听WebSocket消息

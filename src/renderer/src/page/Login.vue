@@ -114,15 +114,14 @@
 
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
-import { register, login } from '../ipcApi'
+import { register, login, addOrUpdateAccount, getAccounts } from '../ipcApi'
 import { LoginRequest, RegisterRequest } from '@apiType/HttpRequest'
 import { ElMessage } from 'element-plus'
 import { ArrowDown } from '@element-plus/icons-vue'
 import '../assets/iconfont/iconfont.css'
 import '../assets/base.scss'
 import router from '@renderer/router'
-import { Account } from '@/types/localDBModel'
-import { addOrUpdateAccount, getAccounts } from '@renderer/ipcDB'
+import { Account } from '@apiType/Model'
 import ServerSettingsDialog from '../components/ServerSettingsDialog.vue'
 
 const username = ref('')

@@ -1,8 +1,6 @@
 import Database from 'better-sqlite3'
 import { join } from 'path'
 import { app } from 'electron'
-export * from './message'
-export * from './conversation'
 
 let db: Database.Database
 

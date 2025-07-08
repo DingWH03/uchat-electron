@@ -1,6 +1,6 @@
 import { ServerMessage } from '@apiType/WebsocketRespond'
 import { BrowserWindow } from 'electron'
-import { saveMessageToDB } from '../cache/message'
+import { saveMessageToDB } from '../localDB/message'
 import { getMyID } from '../config/myID'
 
 // 处理私聊消息

@@ -34,7 +34,7 @@ onMounted(async () => {
   }
 })
 
-const save = async () => {
+const save = async (): Promise<void> => {
   try {
     const success = await setBaseUrl(url.value)
     if (success) {
@@ -49,7 +49,7 @@ const save = async () => {
   }
 }
 
-const close = () => {
+const close = (): void => {
   emit('close')
 }
 </script>
@@ -69,9 +69,9 @@ const close = () => {
   padding: 24px 24px 12px 24px;
   border-radius: 8px;
   width: 340px;
-  box-shadow: 0 2px 16px rgba(0,0,0,0.08);
+  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.08);
 }
 .settings-form {
   margin-bottom: 12px;
 }
-</style> 
+</style>

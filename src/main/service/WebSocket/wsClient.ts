@@ -4,7 +4,7 @@ import { getSessionId } from '@main/service/config/session'
 import { getApiBaseUrl } from '@main/service/config/url'
 import { ServerMessage, ServerMessageSchema } from '@apiType/WebsocketRespond'
 import { WebSocketStatusManager } from './wsStatusManager'
-import { syncAllMessagesBeforeWS } from '@main/service/cache/sync'
+import { syncAllMessagesBeforeWS } from '@main/service/localDB/sync'
 import { setAppStatus, isOnline, isOffline, isLoggedIn } from '../appStatus'
 import { handleGroupMessage, handlePrivateMessage } from './wsHandler'
 

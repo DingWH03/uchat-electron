@@ -5,10 +5,15 @@
       <h2>好友信息</h2>
       <div class="detail-row"><b>用户名：</b>{{ selectedFriend.base.username }}</div>
       <div class="detail-row"><b>用户ID：</b>{{ selectedFriend.base.user_id }}</div>
-      <div class="detail-row"><b>状态：</b><span :class="selectedFriend.online ? 'online' : 'offline'">{{ selectedFriend.online ? '在线' : '离线' }}</span></div>
+      <div class="detail-row">
+        <b>状态：</b
+        ><span :class="selectedFriend.online ? 'online' : 'offline'">{{
+          selectedFriend.online ? '在线' : '离线'
+        }}</span>
+      </div>
       <button class="open-chat-btn" @click="openChat">打开会话</button>
     </div>
-    
+
     <!-- 群聊详情 -->
     <div v-else-if="selectedType === 'group' && selectedGroup" class="detail-content">
       <h2>群聊信息</h2>
@@ -16,7 +21,7 @@
       <div class="detail-row"><b>群ID：</b>{{ selectedGroup.group_id }}</div>
       <button class="open-chat-btn" @click="openChat">打开会话</button>
     </div>
-    
+
     <!-- 添加好友表单 -->
     <div v-else-if="showAddFriendForm" class="form-content">
       <h2>添加好友</h2>
@@ -29,7 +34,7 @@
         <button class="cancel-btn" @click="hideAddFriendForm">取消</button>
       </div>
     </div>
-    
+
     <!-- 创建群聊表单 -->
     <div v-else-if="showCreateGroupForm" class="form-content">
       <h2>创建群聊</h2>
@@ -54,7 +59,7 @@
         <button class="cancel-btn" @click="hideCreateGroupForm">取消</button>
       </div>
     </div>
-    
+
     <!-- 默认空状态 -->
     <div v-else class="empty-detail">
       <div class="empty-icon">👥</div>
@@ -70,16 +75,16 @@
         </div>
         <div class="modal-content">
           <div class="search-box">
-            <input 
-              v-model="searchQuery" 
-              type="text" 
-              placeholder="搜索好友..." 
+            <input
+              v-model="searchQuery"
+              type="text"
+              placeholder="搜索好友..."
               class="search-input"
             />
           </div>
           <div class="friend-list">
-            <div 
-              v-for="friend in filteredFriends" 
+            <div
+              v-for="friend in filteredFriends"
               :key="friend.base.user_id"
               class="friend-item"
               :class="{ selected: selectedFriendIds.includes(friend.base.user_id) }"
@@ -96,15 +101,15 @@
                 {{ friend.online ? '在线' : '离线' }}
               </div>
               <div class="selection-indicator">
-                <span v-if="selectedFriendIds.includes(friend.base.user_id)" class="selected-icon">✓</span>
+                <span v-if="selectedFriendIds.includes(friend.base.user_id)" class="selected-icon"
+                  >✓</span
+                >
               </div>
             </div>
           </div>
         </div>
         <div class="modal-footer">
-          <div class="selection-info">
-            已选择 {{ selectedFriendIds.length }} 个好友
-          </div>
+          <div class="selection-info">已选择 {{ selectedFriendIds.length }} 个好友</div>
           <div class="modal-actions">
             <button class="cancel-btn" @click="closeFriendSelector">取消</button>
             <button class="confirm-btn" @click="confirmSelection">确定</button>
@@ -156,9 +161,10 @@ const filteredFriends = computed(() => {
   if (!searchQuery.value.trim()) {
     return props.friendList
   }
-  return props.friendList.filter(friend =>
-    friend.base.username.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-    friend.base.user_id.toString().includes(searchQuery.value)
+  return props.friendList.filter(
+    (friend) =>
+      friend.base.username.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
+      friend.base.user_id.toString().includes(searchQuery.value)
   )
 })
 
@@ -175,7 +181,7 @@ const addFriend = async (): Promise<void> => {
     ElMessage.warning('请输入好友ID')
     return
   }
-  
+
   try {
     const request: FriendRequest = { id: Number(friendId.value) }
     const result = await friend_add(request)
@@ -197,12 +203,12 @@ const createGroup = async (): Promise<void> => {
     ElMessage.warning('请输入群名称')
     return
   }
-  
+
   if (selectedFriendIds.value.length === 0) {
     ElMessage.warning('请至少选择一个好友')
     return
   }
-  
+
   try {
     const request: CreateGroupRequest = {
       group_name: groupName.value,
@@ -278,7 +284,8 @@ const hideCreateGroupForm = (): void => {
   min-height: 100vh;
 }
 
-.detail-content, .form-content {
+.detail-content,
+.form-content {
   width: 100%;
   max-width: 500px;
   height: 100%;
@@ -290,7 +297,8 @@ const hideCreateGroupForm = (): void => {
   padding: 40px 32px;
 }
 
-.detail-content h2, .form-content h2 {
+.detail-content h2,
+.form-content h2 {
   font-size: 24px;
   color: #333;
   margin-bottom: 24px;
@@ -371,7 +379,8 @@ const hideCreateGroupForm = (): void => {
   margin-top: 24px;
 }
 
-.submit-btn, .cancel-btn {
+.submit-btn,
+.cancel-btn {
   padding: 10px 24px;
   border: none;
   border-radius: 6px;
@@ -633,4 +642,4 @@ const hideCreateGroupForm = (): void => {
 .confirm-btn:hover {
   background: #307fd6;
 }
-</style> 
+</style>

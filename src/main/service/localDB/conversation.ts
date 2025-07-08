@@ -1,6 +1,6 @@
 // 会话相关操作函数
 
-import { Conversation } from '@apiType/localDBModel'
+import { Conversation } from '@apiType/Model'
 import { getDB } from './db'
 
 /**

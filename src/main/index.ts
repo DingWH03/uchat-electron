@@ -2,10 +2,9 @@ import { app, shell, BrowserWindow, Tray, Menu, nativeImage, ipcMain, Notificati
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.jpg?asset'
-import { Apis } from './service/api/index.js'
 import { getSessionId } from './service/config/session'
 import { performLogout } from './service/api/anthentication'
-import { registerLocalDBIpcHandlers, closeDB } from '@main/service/cache'
+import { closeDB } from '@main/service/localDB'
 import { getMyID } from './service/config/myID'
 import { initService } from './service'
 import { setOnlineStatus, setOfflineStatus } from './service/WebSocket/wsClient'
@@ -155,14 +154,8 @@ app.whenReady().then(async () => {
   mainWindow = createLoginWindow()
   createTray(mainWindow)
 
-  // 注册localDB ipcHandle
-  registerLocalDBIpcHandlers()
-
   // 初始化service
   initService(mainWindow)
-
-  // 初始化API
-  Apis()
 
   // 监听来自渲染进程的消息通知
   ipcMain.on('new-message', (_, message) => {

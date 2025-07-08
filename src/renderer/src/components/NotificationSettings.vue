@@ -3,44 +3,30 @@
     <h3>通知设置</h3>
     <div class="setting-item">
       <label class="setting-label">
-        <input 
-          type="checkbox" 
-          v-model="isEnabled" 
-          @change="toggleNotification"
-        />
+        <input v-model="isEnabled" type="checkbox" @change="toggleNotification" />
         <span class="setting-text">启用桌面通知</span>
       </label>
-      <p class="setting-description">
-        当收到新消息时显示桌面通知
-      </p>
+      <p class="setting-description">当收到新消息时显示桌面通知</p>
     </div>
-    
-    <div class="setting-item" v-if="isEnabled">
+
+    <div v-if="isEnabled" class="setting-item">
       <label class="setting-label">
-        <input 
-          type="checkbox" 
-          v-model="showOwnMessages" 
-          @change="toggleOwnMessageNotification"
-        />
+        <input v-model="showOwnMessages" type="checkbox" @change="toggleOwnMessageNotification" />
         <span class="setting-text">显示自己发送的消息通知</span>
       </label>
-      <p class="setting-description">
-        默认情况下不会显示自己发送的消息通知
-      </p>
+      <p class="setting-description">默认情况下不会显示自己发送的消息通知</p>
     </div>
-    
+
     <div class="setting-item">
       <label class="setting-label">
-        <input 
-          type="checkbox" 
-          v-model="showSystemNotifications" 
+        <input
+          v-model="showSystemNotifications"
+          type="checkbox"
           @change="toggleSystemNotification"
         />
         <span class="setting-text">显示系统通知</span>
       </label>
-      <p class="setting-description">
-        显示连接状态、错误等系统通知
-      </p>
+      <p class="setting-description">显示连接状态、错误等系统通知</p>
     </div>
   </div>
 </template>
@@ -66,7 +52,7 @@ function loadSettings(): void {
     showOwnMessages.value = parsed.showOwnMessages ?? false
     showSystemNotifications.value = parsed.showSystemNotifications ?? true
   }
-  
+
   // 应用设置到通知管理器
   applySettings()
 }
@@ -130,7 +116,7 @@ function toggleSystemNotification(): void {
   color: #333;
 }
 
-.setting-label input[type="checkbox"] {
+.setting-label input[type='checkbox'] {
   margin-right: 10px;
   width: 18px;
   height: 18px;
@@ -147,4 +133,4 @@ function toggleSystemNotification(): void {
   color: #666;
   line-height: 1.4;
 }
-</style> 
+</style>

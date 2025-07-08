@@ -2,7 +2,12 @@ import { RequestResponse } from '@apiType/HttpRespond'
 import { getApiBaseUrl } from '@main/service/config'
 import { getSessionId } from '@main/service/config'
 
-type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE'
+export enum HttpMethod {
+  GET = 'GET',
+  POST = 'POST',
+  PUT = 'PUT',
+  DELETE = 'DELETE'
+}
 
 interface RequestOptions {
   method?: HttpMethod
@@ -16,7 +21,7 @@ export async function request<T>(
   endpoint: string,
   options: RequestOptions = {}
 ): Promise<RequestResponse<T>> {
-  const { method = 'GET', data, query, auth = false, headers = {} } = options
+  const { method = HttpMethod.GET, data, query, auth = false, headers = {} } = options
 
   let url = `${getApiBaseUrl()}${endpoint}`
 

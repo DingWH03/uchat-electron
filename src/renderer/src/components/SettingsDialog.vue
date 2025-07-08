@@ -4,7 +4,7 @@
       <h3>设置</h3>
       <el-divider>账户</el-divider>
       <div class="logout-row">
-        <el-button type="danger" @click="logout" plain>退出登录</el-button>
+        <el-button type="danger" plain @click="logout">退出登录</el-button>
       </div>
     </div>
   </div>
@@ -17,11 +17,11 @@ import { ElMessage } from 'element-plus'
 const emit = defineEmits(['close'])
 const router = useRouter()
 
-const close = () => {
+const close = (): void => {
   emit('close')
 }
 
-const logout = () => {
+const logout = (): void => {
   localStorage.removeItem('token')
   localStorage.removeItem('user')
   ElMessage.success('已退出登录')
@@ -45,7 +45,7 @@ const logout = () => {
   padding: 24px 24px 12px 24px;
   border-radius: 8px;
   width: 340px;
-  box-shadow: 0 2px 16px rgba(0,0,0,0.08);
+  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.08);
 }
 .logout-row {
   display: flex;

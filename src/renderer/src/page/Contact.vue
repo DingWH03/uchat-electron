@@ -26,11 +26,11 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { friend_list, group_list } from '../ipcDB'
 import { UserSimpleInfoWithStatus, GroupSimpleInfo } from '@apiType/HttpRespond'
 import ContactListPanel from '../components/ContactListPanel.vue'
 import ContactDetailPanel from '../components/ContactDetailPanel.vue'
-import { DBResult } from '@/types/localDBModel'
+import { ApiResponse } from '@apiType/Model'
+import { friend_list, group_list } from '@renderer/ipcApi'
 
 const friendList = ref<UserSimpleInfoWithStatus[]>([])
 const groupList = ref<GroupSimpleInfo[]>([])
@@ -97,12 +97,12 @@ async function refreshLists(): Promise<void> {
 }
 
 async function loadData(): Promise<void> {
-  const flist: DBResult<UserSimpleInfoWithStatus[]> = await friend_list()
+  const flist: ApiResponse<UserSimpleInfoWithStatus[]> = await friend_list()
   // console.log('Friend list loaded:', flist)
   if (flist.success === true) {
     friendList.value = flist.data ?? []
   }
-  const glist: DBResult<GroupSimpleInfo[]> = await group_list()
+  const glist: ApiResponse<GroupSimpleInfo[]> = await group_list()
   if (glist.success === true) {
     groupList.value = glist.data ?? []
   }

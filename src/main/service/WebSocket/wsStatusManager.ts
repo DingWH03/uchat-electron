@@ -1,6 +1,6 @@
 import { BrowserWindow } from 'electron'
 import { user_status } from '@main/service/api/friend'
-import { updateFriendStatus, updateFriendsStatus, getAllFriendIds } from '@main/service/cache'
+import { updateFriendStatus, updateFriendsStatus, getAllFriendIds } from '@main/service/localDB'
 import { getMyID } from '../config/myID'
 
 export class WebSocketStatusManager {

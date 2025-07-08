@@ -1,17 +1,17 @@
 <template>
   <div class="contact-list-panel">
-    <ContactSection 
-      title="好友" 
-      :items="friendList" 
+    <ContactSection
+      title="好友"
+      :items="friendList"
       type="friend"
       :selected-type="selectedType"
       :selected-id="selectedId"
       @select-item="handleSelectFriend"
       @add-item="showAddFriend"
     />
-    <ContactSection 
-      title="群聊" 
-      :items="groupList" 
+    <ContactSection
+      title="群聊"
+      :items="groupList"
       type="group"
       :selected-type="selectedType"
       :selected-id="selectedId"
@@ -75,4 +75,4 @@ const showCreateGroup = (): void => {
   padding: 24px 0 24px 0;
   box-sizing: border-box;
 }
-</style> 
+</style>

@@ -9,7 +9,7 @@ import {
   CreateGroupRequest,
   MessageRequest
 } from '../types/HttpRequest'
-import { Account } from '../types/localDBModel'
+import { Account } from '../types/Model'
 import { ServerMessage } from '../types/WebsocketRespond'
 
 // Custom APIs for renderer
@@ -25,6 +25,16 @@ const api = {
   // 获取后端url
   getBaseUrl: async () => {
     return await ipcRenderer.invoke('config:getBaseUrl')
+  },
+  // 添加登陆账户
+  addOrUpdateAccount: async (Data: Account) => {
+    return await ipcRenderer.invoke('api:account/addOrUpdateAccount', Data)
+  },
+  getAccounts: async () => {
+    return await ipcRenderer.invoke('api:account/getAccounts')
+  },
+  deleteAccount: async (accountId: number) => {
+    return await ipcRenderer.invoke('api:account/deleteAccount', accountId)
   },
   // Http: 注册账号
   register: async (registerData: RegisterRequest) => {
@@ -50,22 +60,34 @@ const api = {
   friend_add: async (requestData: FriendRequest) => {
     return await ipcRenderer.invoke('api:friend/add', requestData)
   },
-  // Http: 好友列表
   friend_list: async () => {
     return await ipcRenderer.invoke('api:friend/list')
   },
-  // Http: 好友列表 v2
-  friend_list_v2: async () => {
-    return await ipcRenderer.invoke('api:friend/listv2')
+  group_list: async () => {
+    return await ipcRenderer.invoke('api:group/list')
   },
+  getFriendsWithStatus: async () => {
+    return await ipcRenderer.invoke('api:friends:with-status')
+  },
+  getFriendStatus: async (userId: number) => {
+    return await ipcRenderer.invoke('api:friend:status', userId)
+  },
+  // // Http: 好友列表
+  // friend_list: async () => {
+  //   return await ipcRenderer.invoke('api:friend/list')
+  // },
+  // // Http: 好友列表 v2
+  // friend_list_v2: async () => {
+  //   return await ipcRenderer.invoke('api:friend/listv2')
+  // },
   // Http: 好友信息
   friend_info: async (requestData: FriendRequest) => {
     return await ipcRenderer.invoke('api:friend/info', requestData)
   },
-  // Http: 群组列表
-  group_list: async () => {
-    return await ipcRenderer.invoke('api:group/list')
-  },
+  // // Http: 群组列表
+  // group_list: async () => {
+  //   return await ipcRenderer.invoke('api:group/list')
+  // },
   // Http: 群组信息
   group_info: async (requestData: GroupRequest) => {
     return await ipcRenderer.invoke('api:group/info', requestData)
@@ -86,13 +108,72 @@ const api = {
   group_leave: async (requestData: GroupRequest) => {
     return await ipcRenderer.invoke('api:group/leave', requestData)
   },
-  // Http: 获取群组消息
-  group_messages: async (requestData: MessageRequest) => {
-    return await ipcRenderer.invoke('api:message/group', requestData)
+  // 新增：本地群聊聊天记录（分页）
+  getLocalGroupMessages: async (groupId: number, offset: number, limit: number) => {
+    return await ipcRenderer.invoke('api:message/group', groupId, offset, limit)
   },
-  // Http: 获取私聊消息
-  friend_messages: async (requestData: MessageRequest) => {
-    return await ipcRenderer.invoke('api:message/user', requestData)
+  // 新增：本地私聊聊天记录（分页）
+  getLocalPrivateMessages: async (userId: number, offset: number, limit: number) => {
+    return await ipcRenderer.invoke('api:message/user', userId, offset, limit)
+  },
+  // 新增：本地群聊某时间戳后的消息
+  getLocalGroupMessagesAfterTimestamp: async (groupId: number, after: number) => {
+    return await ipcRenderer.invoke('api:message/group/after', groupId, after)
+  },
+  // 新增：本地私聊某时间戳后的消息
+  getLocalPrivateMessagesAfterTimestamp: async (userId: number, after: number) => {
+    return await ipcRenderer.invoke('api:message/user/after', userId, after)
+  },
+  // 新增：写入本地消息
+  saveMessageToDB: async (params: {
+    type: 'private' | 'group'
+    receiver_id?: number
+    group_id?: number
+    message: string
+    sender_id: number
+    timestamp: number
+    message_id?: number
+  }) => {
+    return await ipcRenderer.invoke('api:saveMessageToDB', params)
+  },
+  // 会话相关接口
+  getConversations: async () => {
+    return await ipcRenderer.invoke('api:conversation/get-conversations')
+  },
+  getConversation: async (conversationType: string, targetId: number) => {
+    return await ipcRenderer.invoke('api:conversation/get-conversation', conversationType, targetId)
+  },
+  updateConversationUnread: async (
+    conversationType: string,
+    targetId: number,
+    unreadCount: number
+  ) => {
+    return await ipcRenderer.invoke(
+      'api:conversation/update-conversation-unread',
+      conversationType,
+      targetId,
+      unreadCount
+    )
+  },
+  markConversationRead: async (conversationType: string, targetId: number) => {
+    return await ipcRenderer.invoke(
+      'api:conversation/mark-conversation-read',
+      conversationType,
+      targetId
+    )
+  },
+  deleteConversation: async (conversationType: string, targetId: number) => {
+    return await ipcRenderer.invoke(
+      'api:conversation/delete-conversation',
+      conversationType,
+      targetId
+    )
+  },
+  getConversationCount: async () => {
+    return await ipcRenderer.invoke('api:conversation/get-conversation-count')
+  },
+  getTotalUnreadCount: async () => {
+    return await ipcRenderer.invoke('api:conversation/get-total-unread-count')
   },
   // WebSocket: 发送消息
   sendMessage: async (message: MessageRequest) => {
@@ -122,81 +203,6 @@ const api = {
   }
 }
 
-const localDB = {
-  // 添加登陆账户
-  addOrUpdateAccount: async (Data: Account) => {
-    return await ipcRenderer.invoke('localdb:addOrUpdateAccount', Data)
-  },
-  getAccounts: async () => {
-    return await ipcRenderer.invoke('localdb:getAccounts')
-  },
-  deleteAccount: async (accountId: number) => {
-    return await ipcRenderer.invoke('localdb:deleteAccount', accountId)
-  },
-  friend_list: async () => {
-    return await ipcRenderer.invoke('localdb:friend/list')
-  },
-  group_list: async () => {
-    return await ipcRenderer.invoke('localdb:group/list')
-  },
-  getFriendsWithStatus: async () => {
-    return await ipcRenderer.invoke('localdb:friends:with-status')
-  },
-  getFriendStatus: async (userId: number) => {
-    return await ipcRenderer.invoke('localdb:friend:status', userId)
-  },
-  // 新增：本地群聊聊天记录（分页）
-  getLocalGroupMessages: async (groupId: number, offset: number, limit: number) => {
-    return await ipcRenderer.invoke('localdb:message/group', groupId, offset, limit)
-  },
-  // 新增：本地私聊聊天记录（分页）
-  getLocalPrivateMessages: async (userId: number, offset: number, limit: number) => {
-    return await ipcRenderer.invoke('localdb:message/user', userId, offset, limit)
-  },
-  // 新增：本地群聊某时间戳后的消息
-  getLocalGroupMessagesAfterTimestamp: async (groupId: number, after: number) => {
-    return await ipcRenderer.invoke('localdb:message/group/after', groupId, after)
-  },
-  // 新增：本地私聊某时间戳后的消息
-  getLocalPrivateMessagesAfterTimestamp: async (userId: number, after: number) => {
-    return await ipcRenderer.invoke('localdb:message/user/after', userId, after)
-  },
-  // 新增：写入本地消息
-  saveMessageToDB: async (params: {
-    type: 'private' | 'group'
-    receiver_id?: number
-    group_id?: number
-    message: string
-    sender_id: number
-    timestamp: number
-    message_id?: number
-  }) => {
-    return await ipcRenderer.invoke('localdb:saveMessageToDB', params)
-  },
-  // 会话相关接口
-  getConversations: async () => {
-    return await ipcRenderer.invoke('get-conversations')
-  },
-  getConversation: async (conversationType: string, targetId: number) => {
-    return await ipcRenderer.invoke('get-conversation', conversationType, targetId)
-  },
-  updateConversationUnread: async (conversationType: string, targetId: number, unreadCount: number) => {
-    return await ipcRenderer.invoke('update-conversation-unread', conversationType, targetId, unreadCount)
-  },
-  markConversationRead: async (conversationType: string, targetId: number) => {
-    return await ipcRenderer.invoke('mark-conversation-read', conversationType, targetId)
-  },
-  deleteConversation: async (conversationType: string, targetId: number) => {
-    return await ipcRenderer.invoke('delete-conversation', conversationType, targetId)
-  },
-  getConversationCount: async () => {
-    return await ipcRenderer.invoke('get-conversation-count')
-  },
-  getTotalUnreadCount: async () => {
-    return await ipcRenderer.invoke('get-total-unread-count')
-  }
-}
-
 // Use `contextBridge` APIs to expose Electron APIs to
 // renderer only if context isolation is enabled, otherwise
 // just add to the DOM global.
@@ -204,7 +210,6 @@ if (process.contextIsolated) {
   try {
     contextBridge.exposeInMainWorld('electron', electronAPI)
     contextBridge.exposeInMainWorld('api', api)
-    contextBridge.exposeInMainWorld('localDB', localDB)
   } catch (error) {
     console.error(error)
   }
@@ -213,6 +218,4 @@ if (process.contextIsolated) {
   window.electron = electronAPI
   // @ts-ignore (define in dts)
   window.api = api
-  // @ts-ignore (define in dts)
-  window.localDB = localDB
 }

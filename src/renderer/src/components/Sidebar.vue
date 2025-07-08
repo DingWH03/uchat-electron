@@ -7,15 +7,15 @@
       </el-icon>
     </div>
     <ul>
-      <li :class="{active: isActive('/chat')}" @click="goTo('/chat')">
+      <li :class="{ active: isActive('/chat') }" @click="goTo('/chat')">
         <el-icon><ChatDotRound /></el-icon>
         <span>聊天</span>
       </li>
-      <li :class="{active: isActive('/contact')}" @click="goTo('/contact')">
+      <li :class="{ active: isActive('/contact') }" @click="goTo('/contact')">
         <el-icon><User /></el-icon>
         <span>联系人</span>
       </li>
-      <li :class="{active: isActive('/settings')}" @click="goTo('/settings')">
+      <li :class="{ active: isActive('/settings') }" @click="goTo('/settings')">
         <el-icon><Setting /></el-icon>
         <span>设置</span>
       </li>
@@ -103,7 +103,9 @@ li {
   gap: 10px;
   padding: 16px 24px;
   cursor: pointer;
-  transition: background 0.2s, color 0.2s;
+  transition:
+    background 0.2s,
+    color 0.2s;
   border-left: 4px solid transparent;
   width: 100%;
 }
@@ -114,7 +116,8 @@ li {
   gap: 0;
 }
 
-li.active, li:hover {
+li.active,
+li:hover {
   background: #e0e7ef;
   color: #409eff;
   border-left: 4px solid #409eff;

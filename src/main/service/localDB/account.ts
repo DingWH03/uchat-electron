@@ -1,7 +1,7 @@
 import { getDB } from './db'
-import type { Account, DBResult } from '@apiType/localDBModel'
+import type { Account, ApiResponse } from '@apiType/Model'
 
-export function addOrUpdateAccount(data: Account): DBResult<void> {
+export function addOrUpdateAccount(data: Account): ApiResponse<void> {
   const db = getDB()
   try {
     const updateResult = db
@@ -35,7 +35,7 @@ export function addOrUpdateAccount(data: Account): DBResult<void> {
   }
 }
 
-export function ensureAccountExistsWithoutPassword(accountId: number): DBResult<void> {
+export function ensureAccountExistsWithoutPassword(accountId: number): ApiResponse<void> {
   const db = getDB()
   try {
     const row = db.prepare(`SELECT 1 FROM accounts WHERE id = ?`).get(accountId)
@@ -60,7 +60,7 @@ export function ensureAccountExistsWithoutPassword(accountId: number): DBResult<
   }
 }
 
-export function getAccounts(): DBResult<Account[]> {
+export function getAccounts(): ApiResponse<Account[]> {
   const db = getDB()
   try {
     const rows = db
@@ -80,7 +80,7 @@ export function getAccounts(): DBResult<Account[]> {
   }
 }
 
-export function deleteAccount(accountId: number): DBResult<void> {
+export function deleteAccount(accountId: number): ApiResponse<void> {
   const db = getDB()
   try {
     db.pragma('foreign_keys = ON')

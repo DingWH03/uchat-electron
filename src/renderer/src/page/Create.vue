@@ -44,8 +44,8 @@
 </template>
 
 <script setup lang="ts">
-import { RequestResponse } from '@apiType/HttpRespond'
-import { friend_list_v2, group_new } from '@renderer/ipcApi'
+import { ApiResponse } from '@apiType/Model'
+import { friend_list, group_new } from '@renderer/ipcApi'
 import router from '@renderer/router'
 import { ref, computed, onMounted } from 'vue' // 替换为您的实际API路径
 
@@ -84,8 +84,8 @@ const back = (): void => {
 }
 // 获取好友列表
 const f5 = async (): Promise<void> => {
-  const flist: RequestResponse<UserSimpleInfoWithStatus[]> = await friend_list_v2()
-  if (flist.status === true && flist.data) {
+  const flist: ApiResponse<UserSimpleInfoWithStatus[]> = await friend_list()
+  if (flist.success === true && flist.data) {
     friendList.value = flist.data ?? []
     // console.log('好友列表加载完成:', friendList.value)
   }
@@ -318,4 +318,3 @@ button.back {
   color: white;
 }
 </style>
-

@@ -13,7 +13,12 @@ export default defineConfig({
     }
   },
   preload: {
-    plugins: [externalizeDepsPlugin()]
+    plugins: [externalizeDepsPlugin()],
+    resolve: {
+      alias: {
+        '@apiType': resolve('src/types')
+      }
+    }
   },
   renderer: {
     resolve: {

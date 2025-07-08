@@ -7,7 +7,7 @@ import {
   performLogout,
   performPassword
 } from '../api/anthentication'
-import { syncContacts } from '../cache'
+import { syncContacts } from '../localDB'
 import { setSessionId } from '../config'
 import { setMyID } from '../config/myID'
 import { connectWebSocket, disconnectWebSocket } from '../WebSocket/wsClient'

@@ -1,117 +1,68 @@
 // main/api/group.ts
-import { ipcMain } from 'electron'
-import { getApiBaseUrl } from '../config/url'
 import { CreateGroupRequest, GroupRequest } from '../../../types/HttpRequest'
-import { getSessionId } from '../config/session'
 import {
   GroupDetailedInfo,
   GroupSimpleInfo,
   RequestResponse,
   UserSimpleInfo
 } from '../../../types/HttpRespond'
+import { HttpMethod, request } from '@main/utils/httpRequest'
 
-export async function group_list(): Promise<RequestResponse<GroupSimpleInfo>[]> {
-  const sessionId = getSessionId()
-  const baseUrl = getApiBaseUrl()
-  const res = await fetch(`${baseUrl}/group/list`, {
-    method: 'GET',
-    headers: {
-      Cookie: `session_id=${sessionId}`
-    }
+// 服务器端的群组列表
+export async function group_list(): Promise<RequestResponse<GroupSimpleInfo[]>> {
+  return request<GroupSimpleInfo[]>('/group/list', {
+    method: HttpMethod.GET,
+    auth: true
   })
-  return res.json()
 }
 
-export function registerGroupApi(): void {
-  // 获取群聊列表的后端http api
-  ipcMain.handle('api:group/list', async (): Promise<RequestResponse<GroupSimpleInfo>[]> => {
-    return await group_list()
+// 服务器端的群组信息
+export async function group_info(data: GroupRequest): Promise<RequestResponse<GroupDetailedInfo>> {
+  return request<GroupDetailedInfo>('/group/info', {
+    method: HttpMethod.GET,
+    query: {
+      user_id: data.id
+    },
+    auth: true
   })
-  // 获取群聊信息的后端http api
-  ipcMain.handle(
-    'api:group/info',
-    async (_, Data: GroupRequest): Promise<RequestResponse<GroupDetailedInfo>> => {
-      const sessionId = getSessionId()
-      const baseUrl = getApiBaseUrl()
-      const query = new URLSearchParams({
-        user_id: Data.id.toString()
-      })
-      const res = await fetch(`${baseUrl}/group/info?${query.toString()}`, {
-        method: 'GET',
-        headers: {
-          Cookie: `session_id=${sessionId}`
-        }
-      })
-      return res.json()
-    }
-  )
-  // 获取群组成员的后端http api
-  ipcMain.handle(
-    'api:group/members',
-    async (_, Data: GroupRequest): Promise<RequestResponse<UserSimpleInfo>> => {
-      const sessionId = getSessionId()
-      const baseUrl = getApiBaseUrl()
-      const query = new URLSearchParams({
-        user_id: Data.id.toString()
-      })
-      const res = await fetch(`${baseUrl}/group/members?${query.toString()}`, {
-        method: 'GET',
-        headers: {
-          Cookie: `session_id=${sessionId}`
-        }
-      })
-      return res.json()
-    }
-  )
-  // 创建群聊的后端http api
-  ipcMain.handle(
-    'api:group/new',
-    async (_, Data: CreateGroupRequest): Promise<RequestResponse<number>> => {
-      const sessionId = getSessionId()
-      const baseUrl = getApiBaseUrl()
-      const res = await fetch(`${baseUrl}/group/new`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Cookie: `session_id=${sessionId}`
-        },
-        body: JSON.stringify(Data)
-      })
-      return res.json()
-    }
-  )
-  // 加入群聊的后端http api
-  ipcMain.handle(
-    'api:group/join',
-    async (_, Data: GroupRequest): Promise<RequestResponse<void>> => {
-      const sessionId = getSessionId()
-      const baseUrl = getApiBaseUrl()
-      const res = await fetch(`${baseUrl}/group/join`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Cookie: `session_id=${sessionId}`
-        },
-        body: JSON.stringify(Data)
-      })
-      return res.json()
-    }
-  )
-  // 退出群聊的后端http api
-  ipcMain.handle(
-    'api:group/leave',
-    async (_, Data: GroupRequest): Promise<RequestResponse<void>> => {
-      const sessionId = getSessionId()
-      const baseUrl = getApiBaseUrl()
-      const res = await fetch(`${baseUrl}/group/leave`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Cookie: `session_id=${sessionId}`
-        },
-        body: JSON.stringify(Data)
-      })
-      return res.json()
-    }
-  )
+}
+
+// 服务端的查询群组成员
+export async function group_members(
+  data: GroupRequest
+): Promise<RequestResponse<UserSimpleInfo[]>> {
+  return request<UserSimpleInfo[]>('/group/members', {
+    method: HttpMethod.GET,
+    query: {
+      user_id: data.id
+    },
+    auth: true
+  })
+}
+
+// 创建群聊，返回新群 ID
+export async function group_new(data: CreateGroupRequest): Promise<RequestResponse<number>> {
+  return request<number>('/group/new', {
+    method: HttpMethod.POST,
+    data,
+    auth: true
+  })
+}
+
+// 加入群聊
+export async function join_group(data: GroupRequest): Promise<RequestResponse<void>> {
+  return request<void>('/group/join', {
+    method: HttpMethod.POST,
+    data,
+    auth: true
+  })
+}
+
+// 退出群聊
+export async function leave_group(data: GroupRequest): Promise<RequestResponse<void>> {
+  return request<void>('/group/leave', {
+    method: HttpMethod.POST,
+    data,
+    auth: true
+  })
 }
