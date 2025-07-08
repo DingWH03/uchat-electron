@@ -99,6 +99,7 @@ export type UserDetailedInfo = {
   user_id: number
   username: string
   role: RoleType
+  avatar_url: string | null // 头像URL，可能为null
 }
 
 export type GroupDetailedInfo = {

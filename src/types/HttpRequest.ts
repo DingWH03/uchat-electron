@@ -46,3 +46,11 @@ export interface AfterTimestampQuery {
   id: number
   after: number
 }
+
+export interface PatchUserRequest {
+  username: string | null
+}
+
+export interface UpdateUserRequest {
+  username: string
+}

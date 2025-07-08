@@ -7,7 +7,9 @@ import {
   PasswordRequest,
   GroupRequest,
   CreateGroupRequest,
-  MessageRequest
+  MessageRequest,
+  PatchUserRequest,
+  UpdateUserRequest
 } from '../types/HttpRequest'
 import { Account } from '../types/Model'
 import { ServerMessage } from '../types/WebsocketRespond'
@@ -55,6 +57,26 @@ const api = {
   // 获取登陆用户的id
   myid: () => {
     return ipcRenderer.invoke('config:myid')
+  },
+  // 1. 上传头像（file: File）→ 返回 ApiResponse<string>
+  uploadAvatar: async (file: File) => {
+    return await ipcRenderer.invoke('api:user/upload-avatar', file)
+  },
+  // 2. 获取当前用户信息 → ApiResponse<UserDetailedInfo>
+  getMe: async () => {
+    return await ipcRenderer.invoke('api:user/get-me')
+  },
+  // 3. 完整更新个人信息（PUT）→ ApiResponse<void>
+  updateMe: async (data: UpdateUserRequest) => {
+    return await ipcRenderer.invoke('api:user/update-me', data)
+  },
+  // 4. 部分更新个人信息（PATCH）→ ApiResponse<void>
+  patchMe: async (data: PatchUserRequest) => {
+    return await ipcRenderer.invoke('api:user/patch-me', data)
+  },
+  // 5. 删除当前用户账号 → ApiResponse<void>
+  deleteMe: async () => {
+    return await ipcRenderer.invoke('api:user/delete-me')
   },
   // Http: 添加好友
   friend_add: async (requestData: FriendRequest) => {

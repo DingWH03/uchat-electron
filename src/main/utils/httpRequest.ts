@@ -1,12 +1,12 @@
 import { RequestResponse } from '@apiType/HttpRespond'
-import { getApiBaseUrl } from '@main/service/config'
-import { getSessionId } from '@main/service/config'
+import { getApiBaseUrl, getSessionId } from '@main/service/config'
 
 export enum HttpMethod {
   GET = 'GET',
   POST = 'POST',
   PUT = 'PUT',
-  DELETE = 'DELETE'
+  DELETE = 'DELETE',
+  PATCH = 'PATCH'
 }
 
 interface RequestOptions {
@@ -29,14 +29,16 @@ export async function request<T>(
   if (query && Object.keys(query).length > 0) {
     const queryString = new URLSearchParams(
       Object.entries(query)
-        .filter(([, value]) => value !== undefined) // 忽略 undefined
+        .filter(([, value]) => value !== undefined)
         .map(([key, value]) => [key, String(value)])
     ).toString()
     url += `?${queryString}`
   }
 
+  const isFormData = data instanceof FormData
+
   const requestHeaders: Record<string, string> = {
-    'Content-Type': 'application/json',
+    ...(isFormData ? {} : { 'Content-Type': 'application/json' }), // 自动处理 multipart
     ...headers
   }
 
@@ -48,7 +50,12 @@ export async function request<T>(
   const res = await fetch(url, {
     method,
     headers: requestHeaders,
-    body: method !== 'GET' && data ? JSON.stringify(data) : undefined
+    body:
+      method !== 'GET' && data
+        ? isFormData
+          ? (data as FormData)
+          : JSON.stringify(data)
+        : undefined
   })
 
   const raw = await res.json()

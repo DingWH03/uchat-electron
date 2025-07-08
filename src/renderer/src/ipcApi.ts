@@ -5,7 +5,9 @@ import {
   FriendRequest,
   PasswordRequest,
   GroupRequest,
-  CreateGroupRequest
+  CreateGroupRequest,
+  UpdateUserRequest,
+  PatchUserRequest
 } from '../../types/HttpRequest'
 import {
   GroupDetailedInfo,
@@ -29,6 +31,11 @@ export {
   login,
   logout,
   myid,
+  uploadAvatar,
+  updateMe,
+  getMe,
+  patchMe,
+  deleteMe,
   friend_list,
   group_list,
   getFriendsWithStatus,
@@ -111,6 +118,31 @@ const password = async (requestData: PasswordRequest): Promise<ApiResponse<void>
 /// 获取登陆user id
 const myid = async (): Promise<number> => {
   return window.api.myid()
+}
+
+// 上传头像
+const uploadAvatar = async (file: File): Promise<ApiResponse<string>> => {
+  return await window.api.uploadAvatar(file)
+}
+
+// 获取当前用户信息
+const getMe = async (): Promise<ApiResponse<UserDetailedInfo>> => {
+  return await window.api.getMe()
+}
+
+// 完整更新个人信息
+const updateMe = async (data: UpdateUserRequest): Promise<ApiResponse<void>> => {
+  return await window.api.updateMe(data)
+}
+
+// 部分更新个人信息
+const patchMe = async (data: PatchUserRequest): Promise<ApiResponse<void>> => {
+  return await window.api.patchMe(data)
+}
+
+// 删除账号
+const deleteMe = async (): Promise<ApiResponse<void>> => {
+  return await window.api.deleteMe()
 }
 
 /// 群组列表的api

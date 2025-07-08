@@ -36,6 +36,12 @@ declare global {
       logout: () => Promise<ApiResponse<void>>
       password: (requestData: PasswordRequest) => Promise<ApiResponse<void>>
       myid: () => number
+      // user
+      uploadAvatar: (file: File) => Promise<ApiResponse<string>>
+      getMe: () => Promise<ApiResponse<UserDetailedInfo>>
+      updateMe: (data: UpdateUserRequest) => Promise<ApiResponse<void>>
+      patchMe: (data: PatchUserRequest) => Promise<ApiResponse<void>>
+      deleteMe: () => Promise<ApiResponse<void>>
       // contact
       group_list: () => Promise<ApiResponse<GroupSimpleInfo[]>>
       friend_list: () => Promise<ApiResponse<UserSimpleInfoWithStatus[]>>
