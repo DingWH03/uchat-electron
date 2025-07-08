@@ -10,7 +10,6 @@ import {
 import {
   GroupDetailedInfo,
   GroupSimpleInfo,
-  RequestResponse,
   UserDetailedInfo,
   UserSimpleInfo,
   UserSimpleInfoWithStatus
@@ -60,7 +59,7 @@ export {
 const ipcHandle = (): void => window.electron.ipcRenderer.send('ping')
 
 // 测试方法：进程间通信
-const ping = async (): Promise<string> => {
+const ping = async (): Promise<ApiResponse<void>> => {
   return await window.api.ping()
 }
 
@@ -90,7 +89,7 @@ const deleteAccount = async (accountId: number): Promise<ApiResponse<void>> => {
 }
 
 /// 注册的api
-const register = async (RegisterData: RegisterRequest): Promise<RequestResponse<number>> => {
+const register = async (RegisterData: RegisterRequest): Promise<ApiResponse<number>> => {
   return await window.api.register(RegisterData)
 }
 
@@ -100,12 +99,12 @@ const login = async (LoginData: LoginRequest): Promise<boolean> => {
 }
 
 /// 注销登陆的api
-const logout = async (): Promise<RequestResponse<void>> => {
+const logout = async (): Promise<ApiResponse<void>> => {
   return window.api.logout()
 }
 
 /// 修改密码的api
-const password = async (requestData: PasswordRequest): Promise<RequestResponse<void>> => {
+const password = async (requestData: PasswordRequest): Promise<ApiResponse<void>> => {
   return window.api.password(requestData)
 }
 
@@ -139,58 +138,37 @@ const getFriendStatus = async (
 }
 
 /// 添加好友的api
-const friend_add = async (requestData: FriendRequest): Promise<RequestResponse<void>> => {
+const friend_add = async (requestData: FriendRequest): Promise<ApiResponse<void>> => {
   return window.api.friend_add(requestData)
 }
 
-// /// 好友列表的api
-// const friend_list = async (): Promise<RequestResponse<UserSimpleInfo[]>> => {
-//   return window.api.friend_list()
-// }
-
-// /// 好友列表的api v2
-// const friend_list_v2 = async (): Promise<RequestResponse<UserSimpleInfoWithStatus[]>> => {
-//   return window.api.friend_list_v2()
-// }
-
 /// 好友信息的api
-const friend_info = async (
-  requestData: FriendRequest
-): Promise<RequestResponse<UserDetailedInfo>> => {
+const friend_info = async (requestData: FriendRequest): Promise<ApiResponse<UserDetailedInfo>> => {
   return window.api.friend_info(requestData)
 }
 
-// /// 群组列表的api
-// const group_list = async (): Promise<RequestResponse<GroupSimpleInfo[]>> => {
-//   return window.api.group_list()
-// }
-
 /// 群组信息的api
-const group_info = async (
-  requestData: GroupRequest
-): Promise<RequestResponse<GroupDetailedInfo>> => {
+const group_info = async (requestData: GroupRequest): Promise<ApiResponse<GroupDetailedInfo>> => {
   return window.api.group_info(requestData)
 }
 
 /// 群组成员的api
-const group_members = async (
-  requestData: GroupRequest
-): Promise<RequestResponse<UserSimpleInfo[]>> => {
+const group_members = async (requestData: GroupRequest): Promise<ApiResponse<UserSimpleInfo[]>> => {
   return window.api.group_members(requestData)
 }
 
 /// 创建群组的api
-const group_new = async (requestData: CreateGroupRequest): Promise<RequestResponse<number>> => {
+const group_new = async (requestData: CreateGroupRequest): Promise<ApiResponse<number>> => {
   return window.api.group_new(requestData)
 }
 
 /// 加入群组的api
-const group_join = async (requestData: GroupRequest): Promise<RequestResponse<void>> => {
+const group_join = async (requestData: GroupRequest): Promise<ApiResponse<void>> => {
   return window.api.group_join(requestData)
 }
 
 /// 退出群组的api
-const group_leave = async (requestData: GroupRequest): Promise<RequestResponse<void>> => {
+const group_leave = async (requestData: GroupRequest): Promise<ApiResponse<void>> => {
   return window.api.group_leave(requestData)
 }
 

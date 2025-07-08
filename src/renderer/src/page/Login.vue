@@ -287,7 +287,7 @@ const handleRegister = async (): Promise<void> => {
     }
 
     const result = await register(request)
-    if (result.status === true && result.data !== undefined) {
+    if (result.success === true && result.data !== undefined) {
       ElMessage.success(`注册成功，用户ID: ${result.data}`)
       // 注册成功后切换到登录模式
       isLogin.value = true

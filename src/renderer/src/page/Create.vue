@@ -74,7 +74,7 @@ const create = async (): Promise<void> => {
 
   // console.log('处理后数据:', JSON.parse(JSON.stringify(request))) // 验证可序列化
   const result = await group_new(request)
-  if (result.status == true) {
+  if (result.success == true) {
     // console.log(result.message)
     back()
   }

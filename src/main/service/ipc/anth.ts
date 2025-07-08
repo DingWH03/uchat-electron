@@ -1,5 +1,4 @@
 import { RegisterRequest, LoginRequest, PasswordRequest } from '@apiType/HttpRequest'
-import { RequestResponse } from '@apiType/HttpRespond'
 import { ipcMain } from 'electron'
 import {
   performRegister,
@@ -12,14 +11,15 @@ import { setSessionId } from '../config'
 import { setMyID } from '../config/myID'
 import { connectWebSocket, disconnectWebSocket } from '../WebSocket/wsClient'
 import { setAppStatus } from '../appStatus'
+import { ApiResponse } from '@apiType/Model'
 // import { setupWebSocket } from '../WebSocket/wsClient'
 
 export function registerAuthenticationHandler(): void {
   // 注册账号的后端接口调用
   ipcMain.handle(
     'api:auth/register',
-    async (_, registerData: RegisterRequest): Promise<RequestResponse<number>> => {
-      return performRegister(registerData)
+    async (_, registerData: RegisterRequest): Promise<ApiResponse<number>> => {
+      return (await performRegister(registerData)).toApiResponse()
     }
   )
   // 登陆的后端接口调用
@@ -38,7 +38,7 @@ export function registerAuthenticationHandler(): void {
     return data.status
   })
   // 注销的后端接口调用
-  ipcMain.handle('api:auth/logout', async (): Promise<RequestResponse<void>> => {
+  ipcMain.handle('api:auth/logout', async (): Promise<ApiResponse<void>> => {
     const res = await performLogout()
     // console.log(res)
     if (res.status) {
@@ -46,13 +46,13 @@ export function registerAuthenticationHandler(): void {
       setSessionId(null)
       setAppStatus('unlogin')
     }
-    return res
+    return res.toApiResponse()
   })
   // 修改密码的后端接口调用
   ipcMain.handle(
     'api:auth/password',
-    async (_event, requestData: PasswordRequest): Promise<RequestResponse<void>> => {
-      return performPassword(requestData)
+    async (_event, requestData: PasswordRequest): Promise<ApiResponse<void>> => {
+      return (await performPassword(requestData)).toApiResponse()
     }
   )
 }

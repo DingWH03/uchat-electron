@@ -51,5 +51,6 @@ export async function request<T>(
     body: method !== 'GET' && data ? JSON.stringify(data) : undefined
   })
 
-  return res.json()
+  const raw = await res.json()
+  return RequestResponse.from<T>(raw)
 }

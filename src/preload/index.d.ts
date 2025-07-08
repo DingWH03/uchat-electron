@@ -12,7 +12,6 @@ import { ServerMessage } from '@apiType/WebsocketRespond'
 import {
   GroupDetailedInfo,
   GroupSimpleInfo,
-  RequestResponse,
   UserDetailedInfo,
   UserSimpleInfo,
   UserSimpleInfoWithStatus
@@ -24,7 +23,7 @@ declare global {
   interface Window {
     electron: ElectronAPI
     api: {
-      ping: () => Promise<string>
+      ping: () => Promise<ApiResponse<void>>
       setBaseUrl: (URL: string) => Promise<boolean>
       getBaseUrl: () => Promise<string>
       // account
@@ -32,10 +31,10 @@ declare global {
       getAccounts: () => Promise<ApiResponse<Account[]>>
       deleteAccount: (accountId: number) => Promise<ApiResponse<void>>
       // auth
-      register: (registerData: RegisterRequest) => Promise<RequestResponse<number>>
+      register: (registerData: RegisterRequest) => Promise<ApiResponse<number>>
       login: (loginData: LoginRequest) => Promise<boolean>
-      logout: () => Promise<RequestResponse<void>>
-      password: (requestData: PasswordRequest) => Promise<RequestResponse<void>>
+      logout: () => Promise<ApiResponse<void>>
+      password: (requestData: PasswordRequest) => Promise<ApiResponse<void>>
       myid: () => number
       // contact
       group_list: () => Promise<ApiResponse<GroupSimpleInfo[]>>
@@ -47,17 +46,14 @@ declare global {
         userId: number
       ) => Promise<ApiResponse<{ online: boolean; lastOnlineTime: number } | null>>
       // friend
-      friend_add: (requestData: FriendRequest) => Promise<RequestResponse<void>>
-      // friend_list: () => Promise<RequestResponse<UserSimpleInfo[]>>
-      // friend_list_v2: () => Promise<RequestResponse<UserSimpleInfoWithStatus[]>>
-      friend_info: (requestData: FriendRequest) => Promise<RequestResponse<UserDetailedInfo>>
+      friend_add: (requestData: FriendRequest) => Promise<ApiResponse<void>>
+      friend_info: (requestData: FriendRequest) => Promise<ApiResponse<UserDetailedInfo>>
       // group
-      // group_list: () => Promise<RequestResponse<GroupSimpleInfo[]>>
-      group_info: (requestData: GroupRequest) => Promise<RequestResponse<GroupDetailedInfo>>
-      group_members: (requestData: GroupRequest) => Promise<RequestResponse<UserSimpleInfo[]>>
-      group_new: (requestData: CreateGroupRequest) => Promise<RequestResponse<number>>
-      group_join: (requestData: GroupRequest) => Promise<RequestResponse<void>>
-      group_leave: (requestData: GroupRequest) => Promise<RequestResponse<void>>
+      group_info: (requestData: GroupRequest) => Promise<ApiResponse<GroupDetailedInfo>>
+      group_members: (requestData: GroupRequest) => Promise<ApiResponse<UserSimpleInfo[]>>
+      group_new: (requestData: CreateGroupRequest) => Promise<ApiResponse<number>>
+      group_join: (requestData: GroupRequest) => Promise<ApiResponse<void>>
+      group_leave: (requestData: GroupRequest) => Promise<ApiResponse<void>>
       // message
       getLocalGroupMessages: (
         groupId: number,

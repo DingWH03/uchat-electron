@@ -28,7 +28,7 @@ const search = async () => {
     id: Number(message.value)
   }
   const result = await friend_add(request)
-  if (result.status == true) {
+  if (result.success == true) {
     ElMessage('添加成功')
     // console.log('添加成功')
     router.push('/chat')

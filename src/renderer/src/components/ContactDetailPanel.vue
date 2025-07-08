@@ -123,10 +123,11 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
-import { UserSimpleInfoWithStatus, GroupSimpleInfo, RequestResponse } from '@apiType/HttpRespond'
+import { UserSimpleInfoWithStatus, GroupSimpleInfo } from '@apiType/HttpRespond'
 import { friend_add, group_new } from '../ipcApi'
 import { FriendRequest, CreateGroupRequest } from '@apiType/HttpRequest'
 import { ElMessage } from 'element-plus'
+import { ApiResponse } from '@apiType/Model'
 
 interface Props {
   selectedType: 'friend' | 'group' | ''
@@ -185,13 +186,13 @@ const addFriend = async (): Promise<void> => {
   try {
     const request: FriendRequest = { id: Number(friendId.value) }
     const result = await friend_add(request)
-    if (result.status === true) {
+    if (result.success === true) {
       ElMessage.success('添加好友成功')
       friendId.value = ''
       emit('hide-add-friend-form')
       emit('refresh-lists')
     } else {
-      ElMessage.error(result.message || '添加好友失败')
+      ElMessage.error(result.error || '添加好友失败')
     }
   } catch {
     ElMessage.error('添加好友失败')
@@ -215,7 +216,7 @@ const createGroup = async (): Promise<void> => {
       members: [...selectedFriendIds.value]
     }
     console.log(request)
-    let result: RequestResponse<number>
+    let result: ApiResponse<number>
     try {
       result = await group_new(request)
       console.log('group_new result:', result)
@@ -224,14 +225,14 @@ const createGroup = async (): Promise<void> => {
       ElMessage.error('创建群聊失败')
       return
     }
-    if (result && result.status === true) {
+    if (result && result.success === true) {
       ElMessage.success('创建群聊成功')
       groupName.value = ''
       selectedFriendIds.value = []
       emit('hide-create-group-form')
       emit('refresh-lists')
     } else {
-      ElMessage.error(result.message || '创建群聊失败')
+      ElMessage.error(result.error || '创建群聊失败')
     }
   } catch {
     ElMessage.error('创建群聊失败')

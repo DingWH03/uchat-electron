@@ -61,7 +61,7 @@
 import { ref, onMounted, watch, nextTick } from 'vue'
 import { ElButton, ElAvatar, ElTag, ElEmpty } from 'element-plus'
 import { getConversations, getConversation } from '../ipcApi'
-import type { Conversation } from '@apiType/localDBModel'
+import type { Conversation } from '@apiType/Model'
 
 interface Props {
   selectedType: string

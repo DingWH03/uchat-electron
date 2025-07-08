@@ -1,12 +1,52 @@
 // HttpRespond.ts
 
-import { RoleType } from './Model'
+import { ApiResponse, RoleType } from './Model'
 
-export interface RequestResponse<T> {
-  status: boolean // 请求是否成功
-  code: number // HTTP 状态码
-  message: string // 提示信息
-  data?: T // 成功时返回的数据（可选）
+export class RequestResponse<T> {
+  constructor(
+    public status: boolean,
+    public code: number,
+    public message: string,
+    public data?: T
+  ) {}
+
+  /**
+   * 是否成功（等价于 HTTP 2xx 且 status 为 true）
+   */
+  isSuccess(): boolean {
+    return this.status && this.code >= 200 && this.code < 300
+  }
+
+  /**
+   * 成功时返回数据，失败时抛出异常
+   */
+  getDataOrThrow(): T {
+    if (!this.isSuccess() || this.data === undefined) {
+      throw new Error(`请求失败：${this.message}（状态码：${this.code}）`)
+    }
+    return this.data
+  }
+
+  /**
+   * 转换为前端可识别的 ApiResponse 结构（用于 IPC 通信）
+   */
+  toApiResponse(): ApiResponse<T> {
+    return this.isSuccess() && this.data !== undefined
+      ? { success: true, data: this.data }
+      : { success: false, error: this.message }
+  }
+
+  /**
+   * 工厂方法：从原始对象构建类实例
+   */
+  static from<U>(raw: {
+    status: boolean
+    code: number
+    message: string
+    data?: U
+  }): RequestResponse<U> {
+    return new RequestResponse<U>(raw.status, raw.code, raw.message, raw.data)
+  }
 }
 
 // Enum for MessageType
