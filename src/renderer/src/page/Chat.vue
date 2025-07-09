@@ -76,6 +76,7 @@ import MessageBubble from '../components/MessageBubble.vue'
 import ConversationListPanel from '../components/ConversationListPanel.vue'
 import { ServerMessage } from '@apiType/WebsocketRespond'
 import type { Conversation, ApiResponse } from '@apiType/Model'
+import { getSecureFriendAvatarUrls, getSecureGroupAvatarUrls } from '../utils/fileUtils'
 
 const route = useRoute()
 const router = useRouter()
@@ -186,9 +187,17 @@ onMounted(async () => {
   notificationManager.loadSettings()
 
   const flist: ApiResponse<UserSimpleInfoWithStatus[]> = await friend_list()
-  if (flist.success === true) friendList.value = flist.data ?? []
+  if (flist.success === true) {
+    const friends = flist.data ?? []
+    // 处理好友头像
+    friendList.value = await getSecureFriendAvatarUrls(friends)
+  }
   const glist: ApiResponse<GroupSimpleInfo[]> = await group_list()
-  if (glist.success === true) groupList.value = glist.data ?? []
+  if (glist.success === true) {
+    const groups = glist.data ?? []
+    // 处理群组头像
+    groupList.value = await getSecureGroupAvatarUrls(groups)
+  }
   await loadSession()
 
   // 监听WebSocket消息

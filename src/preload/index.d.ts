@@ -24,6 +24,8 @@ declare global {
     electron: ElectronAPI
     api: {
       ping: () => Promise<ApiResponse<void>>
+      getLocalFile: (url: string, folder?: string) => Promise<ApiResponse<string>>
+      getSecureFileUrl: (appUrl: string) => Promise<ApiResponse<string>>
       setBaseUrl: (URL: string) => Promise<boolean>
       getBaseUrl: () => Promise<string>
       // account
@@ -37,7 +39,11 @@ declare global {
       password: (requestData: PasswordRequest) => Promise<ApiResponse<void>>
       myid: () => number
       // user
-      uploadAvatar: (file: File) => Promise<ApiResponse<string>>
+      uploadAvatar: (file: {
+        name: string
+        type: string
+        buffer: number[]
+      }) => Promise<ApiResponse<string>>
       getMe: () => Promise<ApiResponse<UserDetailedInfo>>
       updateMe: (data: UpdateUserRequest) => Promise<ApiResponse<void>>
       patchMe: (data: PatchUserRequest) => Promise<ApiResponse<void>>

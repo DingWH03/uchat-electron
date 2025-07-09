@@ -5,10 +5,24 @@ import { ipcMain } from 'electron'
 import { upload_avatar, get_me, update_me, patch_me, delete_me } from '../api/user'
 
 export function registerUserHandler(): void {
-  // 上传头像（file: File）
-  ipcMain.handle('api:user/upload-avatar', async (_, file: File): Promise<ApiResponse<string>> => {
-    return (await upload_avatar(file)).toApiResponse()
-  })
+  // 上传头像（file: {name, type, buffer}）
+  ipcMain.handle(
+    'api:user/upload-avatar',
+    async (
+      _,
+      file: { name: string; type: string; buffer: number[] }
+    ): Promise<ApiResponse<string>> => {
+      // 还原 Buffer
+      const buffer = Buffer.from(file.buffer)
+      // 构造一个类似 File 的对象传递给 upload_avatar
+      const fakeFile: { name: string; type: string; arrayBuffer: () => Promise<Buffer> } = {
+        name: file.name,
+        type: file.type,
+        arrayBuffer: async () => buffer
+      }
+      return (await upload_avatar(fakeFile)).toApiResponse()
+    }
+  )
 
   // 获取当前用户信息
   ipcMain.handle('api:user/get-me', async (): Promise<ApiResponse<UserDetailedInfo>> => {

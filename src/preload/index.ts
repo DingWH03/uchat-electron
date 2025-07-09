@@ -20,6 +20,14 @@ const api = {
   ping: async () => {
     return await ipcRenderer.invoke('api:ping')
   },
+  // 获取文件，缓存到本地
+  getLocalFile: async (url: string, folder?: string) => {
+    return await ipcRenderer.invoke('api:file/get-local-file', url, folder)
+  },
+  // 获取文件的安全 URL
+  getSecureFileUrl: async (appUrl: string) => {
+    return await ipcRenderer.invoke('api:file/get-secure-url', appUrl)
+  },
   // 修改后端url
   setBaseUrl: async (URL: string) => {
     return await ipcRenderer.invoke('config:setBaseUrl', URL)
@@ -59,7 +67,7 @@ const api = {
     return ipcRenderer.invoke('config:myid')
   },
   // 1. 上传头像（file: File）→ 返回 ApiResponse<string>
-  uploadAvatar: async (file: File) => {
+  uploadAvatar: async (file: { name: string; type: string; buffer: number[] }) => {
     return await ipcRenderer.invoke('api:user/upload-avatar', file)
   },
   // 2. 获取当前用户信息 → ApiResponse<UserDetailedInfo>

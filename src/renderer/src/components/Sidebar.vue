@@ -1,5 +1,21 @@
 <template>
   <nav class="sidebar" :class="{ collapsed: isCollapsed }">
+    <el-dropdown trigger="click" @command="handleMenuCommand">
+      <template #default>
+        <div class="sidebar-user">
+          <el-avatar :src="userInfo.avatar" size="large">
+            {{ userInfo.username ? userInfo.username.charAt(0) : '?' }}
+          </el-avatar>
+          <span v-if="!isCollapsed" class="username">{{ userInfo.username }}</span>
+        </div>
+      </template>
+      <template #dropdown>
+        <el-dropdown-menu>
+          <el-dropdown-item command="profile">查看个人信息</el-dropdown-item>
+          <el-dropdown-item divided command="logout">退出登录</el-dropdown-item>
+        </el-dropdown-menu>
+      </template>
+    </el-dropdown>
     <div class="sidebar-header">
       <span v-if="!isCollapsed">Uchat</span>
       <el-icon class="collapse-btn" @click="toggleCollapse">
@@ -24,9 +40,19 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { ChatDotRound, User, Setting } from '@element-plus/icons-vue'
+import {
+  ElAvatar,
+  ElDropdown,
+  ElDropdownMenu,
+  ElDropdownItem,
+  ElIcon,
+  ElMessage
+} from 'element-plus'
+import { getMe, logout } from '../ipcApi'
+import { getSecureAvatarUrl } from '../utils/fileUtils'
 
 const router = useRouter()
 const route = useRoute()
@@ -43,6 +69,30 @@ const isActive = (path: string): boolean => {
 const isCollapsed = ref(false)
 const toggleCollapse = (): void => {
   isCollapsed.value = !isCollapsed.value
+}
+
+const userInfo = ref({
+  avatar: '',
+  username: ''
+})
+
+const fetchUserInfo = async (): Promise<void> => {
+  const res = await getMe()
+  if (res.success && res.data) {
+    userInfo.value.username = res.data.username || ''
+    userInfo.value.avatar = await getSecureAvatarUrl(res.data.avatar_url)
+  }
+}
+onMounted(fetchUserInfo)
+
+const handleMenuCommand = async (command: string): Promise<void> => {
+  if (command === 'profile') {
+    router.push('/profile')
+  } else if (command === 'logout') {
+    await logout()
+    ElMessage.success('已退出登录')
+    router.push('/login')
+  }
 }
 </script>
 
@@ -61,6 +111,21 @@ const toggleCollapse = (): void => {
 .sidebar.collapsed {
   width: 60px;
   min-width: 60px;
+}
+
+.sidebar-user {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 18px 8px 18px;
+  cursor: pointer;
+}
+.sidebar-user .username {
+  font-weight: bold;
+  font-size: 16px;
+}
+.sidebar.collapsed .sidebar-user .username {
+  display: none;
 }
 
 .sidebar-header {

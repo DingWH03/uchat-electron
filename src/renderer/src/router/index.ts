@@ -6,6 +6,7 @@ import Search from '@renderer/page/Search.vue'
 import Create from '@renderer/page/Create.vue'
 import Settings from '../page/Settings.vue'
 import Contact from '../page/Contact.vue'
+import Profile from '../page/Profile.vue'
 
 const routes: RouteRecordRaw[] = [
   { path: '/', name: 'Home', component: Login, meta: { layout: 'full' } },
@@ -17,7 +18,8 @@ const routes: RouteRecordRaw[] = [
   { path: '/search', name: 'Search', component: Search },
   { path: '/create', name: 'Create', component: Create },
   { path: '/settings', name: 'Settings', component: Settings },
-  { path: '/contact', name: 'Contact', component: Contact }
+  { path: '/contact', name: 'Contact', component: Contact },
+  { path: '/profile', name: 'Profile', component: Profile }
 ]
 
 const router = createRouter({

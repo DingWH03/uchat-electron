@@ -23,7 +23,7 @@
         <div class="avatar">
           <el-avatar
             :size="40"
-            :src="conversation.target_avatar || undefined"
+            :src="getSecureAvatar(conversation)"
             :alt="conversation.target_name"
           >
             {{ conversation.target_name.charAt(0) }}
@@ -61,6 +61,7 @@
 import { ref, onMounted, watch, nextTick } from 'vue'
 import { ElButton, ElAvatar, ElTag, ElEmpty } from 'element-plus'
 import { getConversations, getConversation } from '../ipcApi'
+import { getSecureAvatarUrl } from '../utils/fileUtils'
 import type { Conversation } from '@apiType/Model'
 
 interface Props {
@@ -78,6 +79,29 @@ const emit = defineEmits<Emits>()
 const conversations = ref<Conversation[]>([])
 const loading = ref(false)
 const lastUpdateTime = ref<number>(0)
+const avatarCache = ref<Map<string, string>>(new Map())
+
+// 获取安全的头像URL
+const getSecureAvatar = (conversation: Conversation): string => {
+  const cacheKey = `${conversation.conversation_type}-${conversation.target_id}`
+  
+  // 检查缓存
+  if (avatarCache.value.has(cacheKey)) {
+    return avatarCache.value.get(cacheKey) || ''
+  }
+  
+  // 如果没有头像URL，返回空字符串
+  if (!conversation.target_avatar) {
+    return ''
+  }
+  
+  // 异步获取安全URL并缓存
+  getSecureAvatarUrl(conversation.target_avatar).then(secureUrl => {
+    avatarCache.value.set(cacheKey, secureUrl)
+  })
+  
+  return ''
+}
 
 const loadConversations = async (): Promise<void> => {
   loading.value = true
@@ -85,6 +109,18 @@ const loadConversations = async (): Promise<void> => {
     const result = await getConversations()
     if (result.success) {
       conversations.value = result.data
+      
+      // 预加载头像
+      for (const conversation of result.data) {
+        if (conversation.target_avatar) {
+          const cacheKey = `${conversation.conversation_type}-${conversation.target_id}`
+          if (!avatarCache.value.has(cacheKey)) {
+            const secureUrl = await getSecureAvatarUrl(conversation.target_avatar)
+            avatarCache.value.set(cacheKey, secureUrl)
+          }
+        }
+      }
+      
       lastUpdateTime.value = Date.now()
     }
   } catch (error) {

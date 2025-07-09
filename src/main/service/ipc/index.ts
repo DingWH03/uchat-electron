@@ -3,8 +3,10 @@ import { registerAuthenticationHandler } from './anth'
 import { registerConfigHandler } from './config'
 import { registerContactHandler } from './contact'
 import { registerConversationHandlers } from './conversation'
+import { registerFileHandler } from './file'
 import { registerMessageHandler } from './message'
 import { registerPingHandler } from './ping'
+import { registerUserHandler } from './user'
 import { registerWSIPCHandlers } from './ws'
 
 export function registerIPCHandlers(): void {
@@ -16,4 +18,6 @@ export function registerIPCHandlers(): void {
   registerMessageHandler()
   registerContactHandler()
   registerPingHandler()
+  registerUserHandler()
+  registerFileHandler()
 }

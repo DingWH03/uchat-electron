@@ -31,6 +31,7 @@ import ContactListPanel from '../components/ContactListPanel.vue'
 import ContactDetailPanel from '../components/ContactDetailPanel.vue'
 import { ApiResponse } from '@apiType/Model'
 import { friend_list, group_list } from '@renderer/ipcApi'
+import { getSecureFriendAvatarUrls, getSecureGroupAvatarUrls } from '../utils/fileUtils'
 
 const friendList = ref<UserSimpleInfoWithStatus[]>([])
 const groupList = ref<GroupSimpleInfo[]>([])
@@ -100,11 +101,15 @@ async function loadData(): Promise<void> {
   const flist: ApiResponse<UserSimpleInfoWithStatus[]> = await friend_list()
   // console.log('Friend list loaded:', flist)
   if (flist.success === true) {
-    friendList.value = flist.data ?? []
+    const friends = flist.data ?? []
+    // 处理好友头像
+    friendList.value = await getSecureFriendAvatarUrls(friends)
   }
   const glist: ApiResponse<GroupSimpleInfo[]> = await group_list()
   if (glist.success === true) {
-    groupList.value = glist.data ?? []
+    const groups = glist.data ?? []
+    // 处理群组头像
+    groupList.value = await getSecureGroupAvatarUrls(groups)
   }
 }
 

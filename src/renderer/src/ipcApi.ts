@@ -22,6 +22,8 @@ import { LocalSessionMessage } from '@apiType/Model'
 export {
   ipcHandle,
   ping,
+  getLocalFile,
+  getSecureFileUrl,
   setBaseUrl,
   getBaseUrl,
   addOrUpdateAccount,
@@ -68,6 +70,16 @@ const ipcHandle = (): void => window.electron.ipcRenderer.send('ping')
 // 测试方法：进程间通信
 const ping = async (): Promise<ApiResponse<void>> => {
   return await window.api.ping()
+}
+
+// 获取文件(并缓存到本地)
+const getLocalFile = async (url: string, folder?: string): Promise<ApiResponse<string>> => {
+  return await window.api.getLocalFile(url, folder)
+}
+
+// 获取文件的安全 URL
+const getSecureFileUrl = async (appUrl: string): Promise<ApiResponse<string>> => {
+  return await window.api.getSecureFileUrl(appUrl)
 }
 
 // 方法：修改后端URL
@@ -121,8 +133,17 @@ const myid = async (): Promise<number> => {
 }
 
 // 上传头像
-const uploadAvatar = async (file: File): Promise<ApiResponse<string>> => {
-  return await window.api.uploadAvatar(file)
+const uploadAvatar = async (file: {
+  name: string
+  type: string
+  buffer: ArrayBuffer
+}): Promise<ApiResponse<string>> => {
+  // 将 ArrayBuffer 转为 Uint8Array 以便序列化传递
+  return await window.api.uploadAvatar({
+    name: file.name,
+    type: file.type,
+    buffer: Array.from(new Uint8Array(file.buffer))
+  })
 }
 
 // 获取当前用户信息
