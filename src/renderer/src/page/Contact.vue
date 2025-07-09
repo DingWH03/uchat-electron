@@ -32,6 +32,7 @@ import ContactDetailPanel from '../components/ContactDetailPanel.vue'
 import { ApiResponse } from '@apiType/Model'
 import { friend_list, group_list } from '@renderer/ipcApi'
 import { getSecureFriendAvatarUrls, getSecureGroupAvatarUrls } from '../utils/fileUtils'
+import { avatarStore } from '../stores/avatarStore'
 
 const friendList = ref<UserSimpleInfoWithStatus[]>([])
 const groupList = ref<GroupSimpleInfo[]>([])
@@ -114,6 +115,8 @@ async function loadData(): Promise<void> {
 }
 
 onMounted(async () => {
+  // 初始化全局头像管理
+  await avatarStore.initialize()
   await loadData()
 })
 </script>

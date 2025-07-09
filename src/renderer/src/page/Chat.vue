@@ -21,22 +21,17 @@
         >
         <span v-else-if="chatType === 'group' && currentGroup">群聊：{{ currentGroup.title }}</span>
       </div>
-      <div
+      <MessageList
         v-if="
           chatType &&
           ((chatType === 'friend' && currentFriend) || (chatType === 'group' && currentGroup))
         "
-        ref="messageContainer"
-        class="chat-content"
-      >
-        <div v-for="msg in friend_msg" :key="msg.timestamp">
-          <MessageBubble
-            :msg="msg"
-            :is-mine="msg.sender_id == myidConst"
-            :is-group="chatType === 'group'"
-          />
-        </div>
-      </div>
+        ref="messageListRef"
+        :messages="friend_msg"
+        :my-id="myidConst"
+        :is-group="chatType === 'group'"
+        :loading="false"
+      />
       <div v-else class="chat-content chat-empty">
         <div class="empty-icon">💬</div>
         <div class="empty-tip">请选择联系人或群聊开始会话</div>
@@ -72,15 +67,16 @@ import {
   showMessageNotification,
   showErrorNotification
 } from '@renderer/utils/notification'
-import MessageBubble from '../components/MessageBubble.vue'
+import MessageList from '../components/MessageList.vue'
 import ConversationListPanel from '../components/ConversationListPanel.vue'
 import { ServerMessage } from '@apiType/WebsocketRespond'
 import type { Conversation, ApiResponse } from '@apiType/Model'
 import { getSecureFriendAvatarUrls, getSecureGroupAvatarUrls } from '../utils/fileUtils'
+import { avatarStore } from '../stores/avatarStore'
 
 const route = useRoute()
 const router = useRouter()
-const messageContainer = ref<HTMLElement | null>(null)
+const messageListRef = ref<InstanceType<typeof MessageList> | null>(null)
 const conversationListRef = ref<InstanceType<typeof ConversationListPanel> | null>(null)
 const myidConst = ref<number>(0)
 const friendList = ref<UserSimpleInfoWithStatus[]>([])
@@ -172,8 +168,7 @@ async function loadSession(): Promise<void> {
     }
   }
   nextTick(() => {
-    if (messageContainer.value)
-      messageContainer.value.scrollTop = messageContainer.value.scrollHeight
+    if (messageListRef.value) messageListRef.value.scrollToBottom()
   })
 }
 
@@ -186,16 +181,20 @@ onMounted(async () => {
   // 加载通知设置
   notificationManager.loadSettings()
 
+  // 初始化全局头像管理
+  await avatarStore.initialize()
+
+  // 加载好友和群组列表（用于其他功能）
   const flist: ApiResponse<UserSimpleInfoWithStatus[]> = await friend_list()
   if (flist.success === true) {
     const friends = flist.data ?? []
-    // 处理好友头像
+    // 处理好友头像（保持向后兼容）
     friendList.value = await getSecureFriendAvatarUrls(friends)
   }
   const glist: ApiResponse<GroupSimpleInfo[]> = await group_list()
   if (glist.success === true) {
     const groups = glist.data ?? []
-    // 处理群组头像
+    // 处理群组头像（保持向后兼容）
     groupList.value = await getSecureGroupAvatarUrls(groups)
   }
   await loadSession()
@@ -236,8 +235,7 @@ function handleWebSocketMessage(message: ServerMessage): void {
         timestamp: message.timestamp
       })
       nextTick(() => {
-        if (messageContainer.value)
-          messageContainer.value.scrollTop = messageContainer.value.scrollHeight
+        if (messageListRef.value) messageListRef.value.scrollToBottom()
       })
     } else {
       // 如果不是当前聊天，显示通知
@@ -275,8 +273,7 @@ function handleWebSocketMessage(message: ServerMessage): void {
         timestamp: message.timestamp
       })
       nextTick(() => {
-        if (messageContainer.value)
-          messageContainer.value.scrollTop = messageContainer.value.scrollHeight
+        if (messageListRef.value) messageListRef.value.scrollToBottom()
       })
     } else {
       // 如果不是当前聊天，显示通知
@@ -363,8 +360,7 @@ async function send_message(): Promise<void> {
     }
   }
   nextTick(() => {
-    if (messageContainer.value)
-      messageContainer.value.scrollTop = messageContainer.value.scrollHeight
+    if (messageListRef.value) messageListRef.value.scrollToBottom()
   })
 }
 </script>

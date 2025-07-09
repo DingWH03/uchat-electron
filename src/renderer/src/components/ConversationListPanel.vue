@@ -84,22 +84,22 @@ const avatarCache = ref<Map<string, string>>(new Map())
 // 获取安全的头像URL
 const getSecureAvatar = (conversation: Conversation): string => {
   const cacheKey = `${conversation.conversation_type}-${conversation.target_id}`
-  
+
   // 检查缓存
   if (avatarCache.value.has(cacheKey)) {
     return avatarCache.value.get(cacheKey) || ''
   }
-  
+
   // 如果没有头像URL，返回空字符串
   if (!conversation.target_avatar) {
     return ''
   }
-  
+
   // 异步获取安全URL并缓存
-  getSecureAvatarUrl(conversation.target_avatar).then(secureUrl => {
+  getSecureAvatarUrl(conversation.target_avatar).then((secureUrl) => {
     avatarCache.value.set(cacheKey, secureUrl)
   })
-  
+
   return ''
 }
 
@@ -109,7 +109,7 @@ const loadConversations = async (): Promise<void> => {
     const result = await getConversations()
     if (result.success) {
       conversations.value = result.data
-      
+
       // 预加载头像
       for (const conversation of result.data) {
         if (conversation.target_avatar) {
@@ -120,7 +120,7 @@ const loadConversations = async (): Promise<void> => {
           }
         }
       }
-      
+
       lastUpdateTime.value = Date.now()
     }
   } catch (error) {

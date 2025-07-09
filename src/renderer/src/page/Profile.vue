@@ -1,11 +1,11 @@
 <template>
   <div class="profile-container">
-    <div style="display: flex; justify-content: space-between; align-items: center;">
+    <div style="display: flex; justify-content: space-between; align-items: center">
       <h2>个人信息</h2>
-      <el-button v-if="!isEditing" type="primary" @click="startEdit" size="small">修改</el-button>
+      <el-button v-if="!isEditing" type="primary" size="small" @click="startEdit">修改</el-button>
       <template v-else>
-        <el-button type="primary" @click="saveProfile" size="small">保存</el-button>
-        <el-button @click="cancelEdit" size="small">取消</el-button>
+        <el-button type="primary" size="small" @click="saveProfile">保存</el-button>
+        <el-button size="small" @click="cancelEdit">取消</el-button>
       </template>
     </div>
     <div class="profile-info">
@@ -29,27 +29,33 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { ElMessage, UploadRequestOptions } from 'element-plus'
-import { getMe, uploadAvatar, updateMe } from '../ipcApi'
-import { getSecureAvatarUrl } from '../utils/fileUtils'
+import { uploadAvatar, updateMe } from '../ipcApi'
 import { ApiResponse, ErrorResult } from '@apiType/Model'
+import { avatarStore } from '../stores/avatarStore'
 
-const user = ref({
-  avatar: '',
-  username: ''
-})
+// 使用全局头像管理
+const { currentUser, loadCurrentUser } = avatarStore
+
+const user = computed(() => ({
+  avatar: currentUser.value?.avatarUrl || '',
+  username: currentUser.value?.username || ''
+}))
+
 const originalUser = ref({ avatar: '', username: '' })
 const isEditing = ref(false)
 
 const fetchUser = async (): Promise<void> => {
-  const res = await getMe()
-  if (res.success && res.data) {
-    user.value.username = res.data.username || ''
-    user.value.avatar = await getSecureAvatarUrl(res.data.avatar_url)
-    originalUser.value = { ...user.value }
+  if (!currentUser.value) {
+    await loadCurrentUser()
+  }
+  originalUser.value = {
+    avatar: currentUser.value?.avatarUrl || '',
+    username: currentUser.value?.username || ''
   }
 }
+
 onMounted(fetchUser)
 
 const startEdit = (): void => {
@@ -84,8 +90,20 @@ const handleAvatarUpload = async (option: UploadRequestOptions): Promise<void> =
     buffer: arrayBuffer
   })
   if (res.success && res.data) {
-    // 上传后用getLocalFile获取本地路径，然后转换为安全URL
-    user.value.avatar = await getSecureAvatarUrl(res.data)
+    // 更新全局头像缓存
+    if (currentUser.value) {
+      const { getSecureAvatarUrl } = await import('../utils/fileUtils')
+      const secureUrl = await getSecureAvatarUrl(res.data)
+      currentUser.value.avatarUrl = secureUrl
+
+      // 更新缓存
+      const cacheKey = `user-${currentUser.value.userId}`
+      avatarStore.avatarCache[cacheKey] = {
+        url: secureUrl,
+        timestamp: Date.now(),
+        loading: false
+      }
+    }
     ElMessage.success('头像上传成功!')
   } else {
     const { error } = res as ErrorResult

@@ -3,7 +3,11 @@ import { RequestResponse, UserDetailedInfo } from '@apiType/HttpRespond'
 import { HttpMethod, request } from '@main/utils/httpRequest'
 
 // 1. 上传头像（multipart/form-data）
-export async function upload_avatar(file: { name: string, type: string, arrayBuffer: () => Promise<Buffer> }): Promise<RequestResponse<string>> {
+export async function upload_avatar(file: {
+  name: string
+  type: string
+  arrayBuffer: () => Promise<Buffer>
+}): Promise<RequestResponse<string>> {
   const formData = new FormData()
   // 手动构造 Blob 并设置 MIME 类型
   const buffer = await file.arrayBuffer()

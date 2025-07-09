@@ -11,12 +11,7 @@
         >
           {{ getSenderName().charAt(0) }}
         </el-avatar>
-        <el-avatar
-          v-else-if="isMine && myAvatar"
-          :size="40"
-          :src="myAvatar"
-          :alt="getSenderName()"
-        >
+        <el-avatar v-else-if="isMine && myAvatar" :size="40" :src="myAvatar" :alt="getSenderName()">
           {{ getSenderName().charAt(0) }}
         </el-avatar>
         <span v-else>{{ isMine ? '🧑' : '👤' }}</span>
@@ -29,10 +24,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { computed } from 'vue'
 import { ElAvatar } from 'element-plus'
-import { getMe, friend_list } from '../ipcApi'
-import { getSecureAvatarUrl } from '../utils/fileUtils'
+import { avatarStore } from '../stores/avatarStore'
 
 interface Props {
   msg: {
@@ -46,52 +40,34 @@ interface Props {
 
 const props = defineProps<Props>()
 
-const myAvatar = ref('')
-const senderAvatar = ref('')
-const friendList = ref<any[]>([])
+// 使用全局头像管理
+const { getUserAvatar, getCurrentUserAvatar, getUsername } = avatarStore
 
+// 计算属性：获取发送者头像
+const senderAvatar = computed(() => {
+  if (props.isMine) {
+    return getCurrentUserAvatar()
+  }
+  return getUserAvatar(props.msg.sender_id)
+})
+
+// 计算属性：获取我的头像
+const myAvatar = computed(() => {
+  return getCurrentUserAvatar()
+})
+
+// 获取发送者姓名
 const getSenderName = (): string => {
   if (props.isMine) {
     return '我'
   }
-  
+
   if (props.isGroup) {
-    // 在群聊中，尝试从好友列表中找到发送者的名字
-    const friend = friendList.value.find(f => f.base.user_id === props.msg.sender_id)
-    return friend ? friend.base.username : `用户${props.msg.sender_id}`
+    return getUsername(props.msg.sender_id)
   }
-  
+
   return '好友'
 }
-
-const loadAvatars = async (): Promise<void> => {
-  try {
-    // 加载我的头像
-    const myInfo = await getMe()
-    if (myInfo.success && myInfo.data?.avatar_url) {
-      myAvatar.value = await getSecureAvatarUrl(myInfo.data.avatar_url)
-    }
-    
-    // 加载好友列表（用于群聊中显示发送者头像）
-    if (props.isGroup) {
-      const friends = await friend_list()
-      if (friends.success && friends.data) {
-        friendList.value = friends.data
-        // 找到当前消息发送者的头像
-        const sender = friends.data.find(f => f.base.user_id === props.msg.sender_id)
-        if (sender?.base.avatar_url) {
-          senderAvatar.value = await getSecureAvatarUrl(sender.base.avatar_url)
-        }
-      }
-    }
-  } catch (error) {
-    console.error('加载头像失败:', error)
-  }
-}
-
-onMounted(() => {
-  loadAvatars()
-})
 </script>
 
 <style scoped>

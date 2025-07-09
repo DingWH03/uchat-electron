@@ -20,7 +20,7 @@ export async function getSecureAvatarUrl(avatarUrl: string | null): Promise<stri
   } catch (error) {
     console.error('获取安全头像URL失败:', error)
   }
-  
+
   return ''
 }
 
@@ -47,7 +47,7 @@ export async function getSecureFriendAvatarUrls(
       return friend
     })
   )
-  
+
   return updatedFriends
 }
 
@@ -71,7 +71,7 @@ export async function getSecureGroupAvatarUrls(
       return group
     })
   )
-  
+
   return updatedGroups
 }
 
@@ -92,6 +92,6 @@ export async function getSecureAvatarUrls<T extends { avatar_url?: string | null
       return item
     })
   )
-  
+
   return updatedItems
-} 
+}

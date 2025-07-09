@@ -40,7 +40,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { ChatDotRound, User, Setting } from '@element-plus/icons-vue'
 import {
@@ -51,8 +51,8 @@ import {
   ElIcon,
   ElMessage
 } from 'element-plus'
-import { getMe, logout } from '../ipcApi'
-import { getSecureAvatarUrl } from '../utils/fileUtils'
+import { logout } from '../ipcApi'
+import { avatarStore } from '../stores/avatarStore'
 
 const router = useRouter()
 const route = useRoute()
@@ -71,19 +71,20 @@ const toggleCollapse = (): void => {
   isCollapsed.value = !isCollapsed.value
 }
 
-const userInfo = ref({
-  avatar: '',
-  username: ''
-})
+// 使用全局头像管理
+const { currentUser } = avatarStore
 
-const fetchUserInfo = async (): Promise<void> => {
-  const res = await getMe()
-  if (res.success && res.data) {
-    userInfo.value.username = res.data.username || ''
-    userInfo.value.avatar = await getSecureAvatarUrl(res.data.avatar_url)
+const userInfo = computed(() => ({
+  avatar: currentUser.value?.avatarUrl || '',
+  username: currentUser.value?.username || ''
+}))
+
+onMounted(async () => {
+  // 确保头像管理已初始化
+  if (!currentUser.value) {
+    await avatarStore.initialize()
   }
-}
-onMounted(fetchUserInfo)
+})
 
 const handleMenuCommand = async (command: string): Promise<void> => {
   if (command === 'profile') {
