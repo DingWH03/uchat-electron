@@ -1,48 +1,27 @@
 <template>
-  <div class="profile-container">
-    <div style="display: flex; justify-content: space-between; align-items: center">
-      <h2>个人信息</h2>
-      <el-button v-if="!isEditing" type="primary" size="small" @click="startEdit">修改</el-button>
-      <template v-else>
-        <el-button type="primary" size="small" @click="saveProfile">保存</el-button>
-        <el-button size="small" @click="cancelEdit">取消</el-button>
-      </template>
-    </div>
-    <div class="profile-info">
-      <el-upload
-        class="avatar-uploader"
-        :show-file-list="false"
-        :before-upload="beforeAvatarUpload"
-        :http-request="handleAvatarUpload"
-        :disabled="!isEditing"
-      >
-        <el-avatar :src="user.avatar" size="large" class="avatar" />
-        <div class="avatar-upload-text">点击更换头像</div>
-      </el-upload>
-      <el-form :model="user" label-width="80px" class="profile-form">
-        <el-form-item label="用户名">
-          <el-input v-model="user.username" :disabled="!isEditing" />
-        </el-form-item>
-      </el-form>
-    </div>
-  </div>
+  <UserProfileCard
+    :user="user"
+    mode="self"
+    :is-editing="isEditing"
+    title="个人信息"
+    @edit="startEdit"
+    @save="saveProfile"
+    @cancel="cancelEdit"
+    @avatar-change="onAvatarFileChange"
+  />
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
-import { ElMessage, UploadRequestOptions } from 'element-plus'
+import { ref, onMounted } from 'vue'
+import { ElMessage } from 'element-plus'
 import { uploadAvatar, updateMe } from '../ipcApi'
 import { ApiResponse, ErrorResult } from '@apiType/Model'
 import { avatarStore } from '../stores/avatarStore'
+import UserProfileCard from '../components/UserProfileCard.vue'
 
-// 使用全局头像管理
 const { currentUser, loadCurrentUser } = avatarStore
 
-const user = computed(() => ({
-  avatar: currentUser.value?.avatarUrl || '',
-  username: currentUser.value?.username || ''
-}))
-
+const user = ref({ avatar: '', username: '' })
 const originalUser = ref({ avatar: '', username: '' })
 const isEditing = ref(false)
 
@@ -50,10 +29,11 @@ const fetchUser = async (): Promise<void> => {
   if (!currentUser.value) {
     await loadCurrentUser()
   }
-  originalUser.value = {
+  user.value = {
     avatar: currentUser.value?.avatarUrl || '',
     username: currentUser.value?.username || ''
   }
+  originalUser.value = { ...user.value }
 }
 
 onMounted(fetchUser)
@@ -67,21 +47,20 @@ const cancelEdit = (): void => {
   isEditing.value = false
 }
 
-const beforeAvatarUpload = (file: File): boolean => {
+const onAvatarFileChange = async (e: Event): Promise<void> => {
+  const files = (e.target as HTMLInputElement).files
+  if (!files || files.length === 0) return
+  const file = files[0]
   const isImage = file.type.startsWith('image/')
   const isLt2M = file.size / 1024 / 1024 < 2
   if (!isImage) {
     ElMessage.error('只能上传图片文件!')
+    return
   }
   if (!isLt2M) {
     ElMessage.error('图片大小不能超过2MB!')
+    return
   }
-  return isImage && isLt2M
-}
-
-const handleAvatarUpload = async (option: UploadRequestOptions): Promise<void> => {
-  if (!isEditing.value) return
-  const file = option.file
   // 读取文件为 ArrayBuffer
   const arrayBuffer = await file.arrayBuffer()
   const res: ApiResponse<string> = await uploadAvatar({
@@ -90,12 +69,11 @@ const handleAvatarUpload = async (option: UploadRequestOptions): Promise<void> =
     buffer: arrayBuffer
   })
   if (res.success && res.data) {
-    // 更新全局头像缓存
     if (currentUser.value) {
       const { getSecureAvatarUrl } = await import('../utils/fileUtils')
       const secureUrl = await getSecureAvatarUrl(res.data)
       currentUser.value.avatarUrl = secureUrl
-
+      user.value.avatar = secureUrl
       // 更新缓存
       const cacheKey = `user-${currentUser.value.userId}`
       avatarStore.avatarCache[cacheKey] = {
@@ -125,33 +103,47 @@ const saveProfile = async (): Promise<void> => {
 
 <style scoped>
 .profile-container {
-  max-width: 400px;
-  margin: 40px auto;
+  max-width: 420px;
+  margin: 48px auto;
   background: #fff;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  padding: 32px 24px;
+  border-radius: 14px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.1);
+  padding: 36px 28px 32px 28px;
+}
+.profile-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 18px;
 }
 .profile-info {
   display: flex;
   flex-direction: column;
   align-items: center;
 }
-.avatar-uploader {
+.avatar-wrapper {
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin-bottom: 24px;
+  margin-bottom: 28px;
   cursor: pointer;
+  position: relative;
 }
 .avatar {
-  width: 96px;
-  height: 96px;
-  margin-bottom: 8px;
+  width: 104px;
+  height: 104px;
+  margin-bottom: 10px;
+  border: 2px solid #e6e6e6;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  transition: box-shadow 0.2s;
+}
+.avatar-wrapper:hover .avatar {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
 }
 .avatar-upload-text {
   font-size: 13px;
   color: #888;
+  margin-bottom: 2px;
 }
 .profile-form {
   width: 100%;

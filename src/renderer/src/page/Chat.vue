@@ -16,10 +16,17 @@
         "
         class="chat-header"
       >
-        <span v-if="chatType === 'friend' && currentFriend"
-          >与 {{ currentFriend.base.username }} 聊天</span
+        <div class="chat-header-title">
+          <span v-if="chatType === 'friend' && currentFriend"
+            >与 {{ currentFriend.base.username }} 聊天</span
+          >
+          <span v-else-if="chatType === 'group' && currentGroup"
+            >群聊：{{ currentGroup.title }}</span
+          >
+        </div>
+        <el-button class="profile-btn" size="small" @click="showProfileDialog = true"
+          >资料</el-button
         >
-        <span v-else-if="chatType === 'group' && currentGroup">群聊：{{ currentGroup.title }}</span>
       </div>
       <MessageList
         v-if="
@@ -43,9 +50,48 @@
         "
         class="chat-input"
       >
-        <input v-model="newMessage" placeholder="请输入你的消息…" @keyup.enter="send_message" />
-        <button @click="send_message">发送</button>
+        <input
+          v-model="newMessage"
+          class="chat-input-box"
+          placeholder="请输入你的消息…"
+          @keyup.enter="send_message"
+        />
+        <button class="chat-send-btn" @click="send_message">发送</button>
       </div>
+      <el-dialog v-model="showProfileDialog" width="360px" :show-close="true" center>
+        <template #header>
+          <span v-if="chatType === 'friend'">好友信息</span>
+          <span v-else-if="chatType === 'group'">群聊信息</span>
+        </template>
+        <div v-if="chatType === 'friend' && currentFriend" class="profile-dialog-content">
+          <div class="profile-avatar-row">
+            <el-avatar :src="currentFriend.base.avatar_url" size="large" />
+            <div class="profile-info-main">
+              <div class="profile-username">{{ currentFriend.base.username }}</div>
+              <div class="profile-id">ID: {{ currentFriend.base.user_id }}</div>
+            </div>
+          </div>
+          <div class="profile-actions">
+            <el-button type="danger" size="small" @click="deleteFriend(currentFriend.base.user_id)"
+              >删除好友</el-button
+            >
+          </div>
+        </div>
+        <div v-else-if="chatType === 'group' && currentGroup" class="profile-dialog-content">
+          <div class="profile-avatar-row">
+            <el-avatar :src="currentGroup.avatar_url" size="large" />
+            <div class="profile-info-main">
+              <div class="profile-username">{{ currentGroup.title }}</div>
+              <div class="profile-id">群ID: {{ currentGroup.group_id }}</div>
+            </div>
+          </div>
+          <div class="profile-actions">
+            <el-button type="danger" size="small" @click="quitGroup(currentGroup.group_id)"
+              >退出群聊</el-button
+            >
+          </div>
+        </div>
+      </el-dialog>
     </div>
   </div>
 </template>
@@ -58,7 +104,8 @@ import {
   group_list,
   getLocalPrivateMessages,
   getLocalGroupMessages,
-  friend_list
+  friend_list,
+  group_leave
 } from '../ipcApi'
 import { GroupSimpleInfo, SessionMessage, MessageType } from '@apiType/HttpRespond'
 import { UserSimpleInfoWithStatus } from '@apiType/HttpRespond'
@@ -73,6 +120,7 @@ import { ServerMessage } from '@apiType/WebsocketRespond'
 import type { Conversation, ApiResponse } from '@apiType/Model'
 import { getSecureFriendAvatarUrls, getSecureGroupAvatarUrls } from '../utils/fileUtils'
 import { avatarStore } from '../stores/avatarStore'
+import { ElMessage } from 'element-plus'
 
 const route = useRoute()
 const router = useRouter()
@@ -87,6 +135,24 @@ const chatType = ref('')
 const chatId = ref<number | null>(null)
 const currentFriend = ref<UserSimpleInfoWithStatus | null>(null)
 const currentGroup = ref<GroupSimpleInfo | null>(null)
+const showProfileDialog = ref(false)
+
+async function deleteFriend(userId: number): Promise<void> {
+  // TODO: 调用删除好友接口
+  ElMessage.success('已删除好友（示例）')
+  showProfileDialog.value = false
+}
+async function quitGroup(groupId: number): Promise<void> {
+  const res = await group_leave({
+    id: groupId
+  })
+  if (res.success) {
+    ElMessage.success('已退出群聊')
+  } else {
+    ElMessage.error(res.error)
+  }
+  showProfileDialog.value = false
+}
 
 // 本地数据库返回的消息结构
 interface LocalSessionMessage {
@@ -364,7 +430,7 @@ async function send_message(): Promise<void> {
   })
 }
 </script>
-<style>
+<style scoped>
 .chat-layout {
   display: flex;
   height: 100%;
@@ -376,58 +442,6 @@ async function send_message(): Promise<void> {
   background: #fff;
   border-right: 1px solid #e6e6e6;
   box-shadow: 2px 0 8px rgba(0, 0, 0, 0.03);
-  display: flex;
-  flex-direction: column;
-  padding: 0 0 0 0;
-}
-.sidebar-section {
-  padding: 24px 18px;
-}
-.sidebar-section h2 {
-  font-size: 17px;
-  margin-bottom: 10px;
-  color: #409eff;
-  font-weight: bold;
-}
-ul {
-  list-style: none;
-  padding: 0;
-  margin: 0 0 18px 0;
-}
-.sidebar-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 0;
-  border-bottom: 1px solid #f0f0f0;
-  font-size: 15px;
-  cursor: pointer;
-  transition: background 0.2s;
-  border-radius: 6px;
-}
-.sidebar-item:last-child {
-  border-bottom: none;
-}
-.sidebar-item.active {
-  background: #e6f7ff;
-  color: #409eff;
-  font-weight: bold;
-}
-.icon {
-  font-size: 18px;
-}
-.name {
-  flex: 1;
-}
-.status {
-  font-size: 13px;
-  margin-left: 6px;
-}
-.online {
-  color: #52c41a;
-}
-.offline {
-  color: #bfbfbf;
 }
 .chat-main {
   flex: 1;
@@ -448,79 +462,46 @@ ul {
   background: #fff;
   border-radius: 0 12px 0 0;
   font-weight: bold;
+  justify-content: space-between;
 }
-.chat-content {
+.chat-header-title {
   flex: 1;
-  overflow-y: auto;
-  padding: 32px 0 32px 0;
-  background: #f7faff;
-  display: flex;
-  flex-direction: column;
-  gap: 0;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
-.message-row {
-  display: flex;
-  align-items: flex-end;
-  margin-bottom: 18px;
-  padding-left: 16px;
-  padding-right: 16px;
+.profile-btn {
+  margin-left: auto;
 }
-.message-row.mine {
-  flex-direction: row-reverse;
-  justify-content: flex-end;
-}
-.message-row.theirs {
-  justify-content: flex-start;
-}
-.avatar-block {
+.profile-dialog-content {
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin: 0 8px;
-  min-width: 48px;
+  padding: 12px 0 0 0;
 }
-.msg-username {
+.profile-avatar-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 16px;
+}
+.profile-info-main {
+  margin-left: 16px;
+}
+.profile-username {
+  font-size: 18px;
+  font-weight: bold;
+  margin-bottom: 4px;
+}
+.profile-id {
   font-size: 13px;
-  color: #8a8a8a;
-  margin-bottom: 2px;
-  text-align: center;
-  word-break: break-all;
+  color: #888;
 }
-.avatar {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background: #e6f7ff;
+.profile-actions {
+  margin-top: 18px;
+  width: 100%;
   display: flex;
-  align-items: center;
   justify-content: center;
-  font-size: 26px;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
-}
-.bubble-block {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  max-width: 70%;
-}
-.message-row.mine .bubble-block {
-  align-items: flex-end;
-}
-.bubble {
-  background: #fff;
-  border-radius: 16px;
-  padding: 12px 18px;
-  font-size: 15px;
-  line-height: 1.5;
-  word-break: break-word;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
-  position: relative;
-  min-width: 36px;
-  max-width: 100%;
-  margin: 0 2px;
-}
-.bubble.mine {
-  background: #e6f7ff;
 }
 .chat-input {
   display: flex;
@@ -531,7 +512,7 @@ ul {
   border-radius: 0 0 12px 0;
   gap: 12px;
 }
-.chat-input input {
+.chat-input-box {
   flex: 1;
   padding: 10px 16px;
   border: 1px solid #ccc;
@@ -540,7 +521,7 @@ ul {
   outline: none;
   background: #f7faff;
 }
-.chat-input button {
+.chat-send-btn {
   padding: 8px 22px;
   border: none;
   background-color: #409eff;
@@ -550,50 +531,25 @@ ul {
   font-size: 15px;
   transition: background 0.2s;
 }
-.chat-input button:hover {
+.chat-send-btn:hover {
   background-color: #307fd6;
 }
-#back-container {
-  text-align: center;
-  margin-top: 10px;
-}
-.back-btn {
-  padding: 8px 16px;
-  background-color: #ff4d4f;
-  color: white;
-  border: none;
-  border-radius: 20px;
-  font-size: 14px;
-  cursor: pointer;
-  transition: background-color 0.3s;
-}
-.back-btn:hover {
-  background-color: #d9363e;
-}
-.square-btn {
-  padding: 8px 16px;
-  margin: 0;
-  background-color: #007aff;
-  color: white;
-  border: 1px solid #007aff;
-  border-radius: 0;
-  font-size: 14px;
-  cursor: pointer;
-  transition: background 0.3s ease;
-}
-.chat-empty {
+.chat-content.chat-empty {
+  flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   height: 100%;
   color: #bfbfbf;
+  background: #f7faff;
 }
 .empty-icon {
-  font-size: 64px;
+  font-size: 48px;
   margin-bottom: 18px;
 }
 .empty-tip {
   font-size: 18px;
+  color: #888;
 }
 </style>

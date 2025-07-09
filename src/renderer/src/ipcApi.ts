@@ -18,6 +18,7 @@ import {
 } from 'src/types/HttpRespond'
 import { Account, Conversation, ApiResponse } from '@apiType/Model'
 import { LocalSessionMessage } from '@apiType/Model'
+import { avatarStore } from './stores/avatarStore'
 
 export {
   ipcHandle,
@@ -119,6 +120,7 @@ const login = async (LoginData: LoginRequest): Promise<boolean> => {
 
 /// 注销登陆的api
 const logout = async (): Promise<ApiResponse<void>> => {
+  avatarStore.clearCache() // 退出时清空头像和用户信息缓存
   return window.api.logout()
 }
 

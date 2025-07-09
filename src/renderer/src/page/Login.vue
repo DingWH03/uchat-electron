@@ -123,6 +123,7 @@ import '../assets/base.scss'
 import router from '@renderer/router'
 import { Account } from '@apiType/Model'
 import ServerSettingsDialog from '../components/ServerSettingsDialog.vue'
+import { avatarStore } from '../stores/avatarStore' // 新增导入
 
 const username = ref('')
 const password = ref('')
@@ -268,6 +269,7 @@ const handleLogin = async (): Promise<void> => {
         }
       }
 
+      await avatarStore.initialize() // 登录成功后刷新用户信息
       router.push('/chat')
     } else {
       ElMessage.error('登录失败，请检查用户名和密码')

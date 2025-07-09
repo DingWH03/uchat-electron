@@ -1,21 +1,13 @@
 <template>
-  <div 
-    ref="messageContainer" 
-    class="message-list-container"
-    @scroll="handleScroll"
-  >
+  <div ref="messageContainer" class="message-list-container" @scroll="handleScroll">
     <div class="message-list">
-      <div 
-        v-for="(message, index) in visibleMessages" 
-        :key="`${message.sender_id}-${message.timestamp}-${index}`"
+      <div
+        v-for="(message, index) in visibleMessages"
         :id="getMsgDomId(message, index)"
+        :key="`${message.sender_id}-${message.timestamp}-${index}`"
         class="message-item"
       >
-        <MessageBubble
-          :msg="message"
-          :is-mine="message.sender_id === myId"
-          :is-group="isGroup"
-        />
+        <MessageBubble :msg="message" :is-mine="message.sender_id === myId" :is-group="isGroup" />
       </div>
     </div>
   </div>
@@ -23,7 +15,6 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, watch, nextTick } from 'vue'
-import { ElButton } from 'element-plus'
 import MessageBubble from './MessageBubble.vue'
 import { SessionMessage } from '@apiType/HttpRespond'
 
@@ -75,7 +66,7 @@ const handleScroll = (event: Event): void => {
 }
 
 // 生成每条消息的唯一dom id
-function getMsgDomId(msg: SessionMessage, index: number) {
+function getMsgDomId(msg: SessionMessage, index: number): string {
   return `msg-${msg.sender_id}-${msg.timestamp}-${index}`
 }
 
@@ -92,7 +83,8 @@ const loadMoreMessages = async (): Promise<void> => {
     anchorKey = `${firstMsg.sender_id}-${firstMsg.timestamp}`
     const anchorEl = document.getElementById(getMsgDomId(firstMsg, 0))
     if (anchorEl && messageContainer.value) {
-      anchorOffset = anchorEl.getBoundingClientRect().top - messageContainer.value.getBoundingClientRect().top
+      anchorOffset =
+        anchorEl.getBoundingClientRect().top - messageContainer.value.getBoundingClientRect().top
     }
   }
 
@@ -102,13 +94,16 @@ const loadMoreMessages = async (): Promise<void> => {
   // 加载后找到同一条消息在新visibleMessages中的index，生成新id
   if (anchorKey && messageContainer.value) {
     const newIndex = visibleMessages.value.findIndex(
-      m => `${m.sender_id}-${m.timestamp}` === anchorKey
+      (m) => `${m.sender_id}-${m.timestamp}` === anchorKey
     )
     if (newIndex !== -1) {
-      const anchorEl = document.getElementById(getMsgDomId(visibleMessages.value[newIndex], newIndex))
+      const anchorEl = document.getElementById(
+        getMsgDomId(visibleMessages.value[newIndex], newIndex)
+      )
       if (anchorEl) {
-        const newOffset = anchorEl.getBoundingClientRect().top - messageContainer.value.getBoundingClientRect().top
-        messageContainer.value.scrollTop += (newOffset - anchorOffset)
+        const newOffset =
+          anchorEl.getBoundingClientRect().top - messageContainer.value.getBoundingClientRect().top
+        messageContainer.value.scrollTop += newOffset - anchorOffset
       }
     }
   }
@@ -125,20 +120,28 @@ const scrollToBottom = (): void => {
 }
 
 // 监听消息变化，只有在底部时才自动滚动到底部
-watch(() => props.messages.length, (newLength, oldLength) => {
-  if (newLength > oldLength && atBottom.value) {
-    scrollToBottom()
-  }
-}, { flush: 'post' })
+watch(
+  () => props.messages.length,
+  (newLength, oldLength) => {
+    if (newLength > oldLength && atBottom.value) {
+      scrollToBottom()
+    }
+  },
+  { flush: 'post' }
+)
 
 // 监听消息内容变化
-watch(() => props.messages, () => {
-  // 重置分页，显示最新的20条
-  currentPage.value = 1
-  nextTick(() => {
-    scrollToBottom()
-  })
-}, { deep: true })
+watch(
+  () => props.messages,
+  () => {
+    // 重置分页，显示最新的20条
+    currentPage.value = 1
+    nextTick(() => {
+      scrollToBottom()
+    })
+  },
+  { deep: true }
+)
 
 onMounted(() => {
   // 初始化容器高度
@@ -203,4 +206,4 @@ defineExpose({
 .message-list-container::-webkit-scrollbar-thumb:hover {
   background: rgba(0, 0, 0, 0.3);
 }
-</style> 
+</style>

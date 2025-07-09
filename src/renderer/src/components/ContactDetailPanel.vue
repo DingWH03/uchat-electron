@@ -2,23 +2,13 @@
   <div class="contact-detail-panel">
     <!-- 好友详情 -->
     <div v-if="selectedType === 'friend' && selectedFriend" class="detail-content">
-      <h2>好友信息</h2>
-      <div class="detail-row"><b>用户名：</b>{{ selectedFriend.base.username }}</div>
-      <div class="detail-row"><b>用户ID：</b>{{ selectedFriend.base.user_id }}</div>
-      <div class="detail-row">
-        <b>状态：</b
-        ><span :class="selectedFriend.online ? 'online' : 'offline'">{{
-          selectedFriend.online ? '在线' : '离线'
-        }}</span>
-      </div>
+      <UserProfileCard :user="friendProfile" mode="friend" title="好友信息" />
       <button class="open-chat-btn" @click="openChat">打开会话</button>
     </div>
 
     <!-- 群聊详情 -->
     <div v-else-if="selectedType === 'group' && selectedGroup" class="detail-content">
-      <h2>群聊信息</h2>
-      <div class="detail-row"><b>群名：</b>{{ selectedGroup.title }}</div>
-      <div class="detail-row"><b>群ID：</b>{{ selectedGroup.group_id }}</div>
+      <UserProfileCard :user="groupProfile" mode="group" title="群聊信息" />
       <button class="open-chat-btn" @click="openChat">打开会话</button>
     </div>
 
@@ -128,6 +118,7 @@ import { friend_add, group_new } from '../ipcApi'
 import { FriendRequest, CreateGroupRequest } from '@apiType/HttpRequest'
 import { ElMessage } from 'element-plus'
 import { ApiResponse } from '@apiType/Model'
+import UserProfileCard from './UserProfileCard.vue'
 
 interface Props {
   selectedType: 'friend' | 'group' | ''
@@ -167,6 +158,24 @@ const filteredFriends = computed(() => {
       friend.base.username.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
       friend.base.user_id.toString().includes(searchQuery.value)
   )
+})
+
+const friendProfile = computed(() => {
+  if (!props.selectedFriend) return {}
+  return {
+    avatar: props.selectedFriend.base.avatar_url || '',
+    username: props.selectedFriend.base.username,
+    userId: props.selectedFriend.base.user_id
+  }
+})
+
+const groupProfile = computed(() => {
+  if (!props.selectedGroup) return {}
+  return {
+    avatar: props.selectedGroup.avatar_url || '',
+    groupName: props.selectedGroup.title,
+    groupId: props.selectedGroup.group_id
+  }
 })
 
 const openChat = (): void => {
@@ -642,5 +651,17 @@ const hideCreateGroupForm = (): void => {
 
 .confirm-btn:hover {
   background: #307fd6;
+}
+
+.profile-container {
+  width: 100%;
+  max-width: 900px;
+  min-width: 0;
+  margin: 32px auto;
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.1);
+  padding: 36px 40px 32px 40px;
+  box-sizing: border-box;
 }
 </style>
